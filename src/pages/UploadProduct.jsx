@@ -75,8 +75,8 @@ export default function UploadProduct() {
       <div className="flex items-start justify-between gap-4 mb-2">
         <div>
           <p className="font-label text-label-sm uppercase tracking-widest text-primary-container mb-2">Seller Studio</p>
-          <h1 className="font-display text-headline-md md:text-headline-lg text-on-surface">Publish New Asset</h1>
-          <p className="text-body-md text-on-surface-variant mt-2">List your AI model, prompt collection, or dataset on the marketplace.</p>
+          <h1 className="font-display text-headline-md md:text-headline-lg text-on-surface">Publikasikan Aset Baru</h1>
+          <p className="text-body-md text-on-surface-variant mt-2">Daftarkan model AI, koleksi prompt, atau dataset kamu ke marketplace.</p>
         </div>
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-white/5 text-on-surface-variant" aria-label="Close">
           <Icon name="close" size={24} />
@@ -93,15 +93,15 @@ export default function UploadProduct() {
 
       <form onSubmit={publish} className="flex flex-col gap-6">
         {/* 1. Core details */}
-        <Section number="1" title="Core Details" icon="article">
-          <Field label="Product Title">
-            <input value={form.title} onChange={set('title')} placeholder="e.g., Nexus-7 LLM Fine-tune" className="input-field" />
+        <Section number="1" title="Detail Inti" icon="article">
+          <Field label="Judul Produk">
+            <input value={form.title} onChange={set('title')} placeholder="cth. Nexus-7 LLM Fine-tune" className="input-field" />
           </Field>
           <div className="grid sm:grid-cols-2 gap-4">
-            <Field label="Category">
+            <Field label="Kategori">
               <div className="relative">
                 <select value={form.category} onChange={set('category')} className="input-field appearance-none pr-10 cursor-pointer">
-                  <option value="" className="bg-surface-container">Select a category…</option>
+                  <option value="" className="bg-surface-container">Pilih kategori…</option>
                   {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
                     <option key={c.id} value={c.id} className="bg-surface-container">{c.label}</option>
                   ))}
@@ -109,7 +109,7 @@ export default function UploadProduct() {
                 <Icon name="expand_more" size={20} className="absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" />
               </div>
             </Field>
-            <Field label="Pricing Tier">
+            <Field label="Paket Harga">
               <div className="flex gap-2">
                 {TIERS.map((t) => (
                   <button
@@ -127,8 +127,8 @@ export default function UploadProduct() {
         </Section>
 
         {/* 2. Presentation */}
-        <Section number="2" title="Presentation" icon="image">
-          <p className="text-body-sm font-medium text-on-surface mb-2">Upload Thumbnail</p>
+        <Section number="2" title="Presentasi" icon="image">
+          <p className="text-body-sm font-medium text-on-surface mb-2">Unggah Thumbnail</p>
           <div
             onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
             onDragLeave={() => setDragging(false)}
@@ -151,43 +151,43 @@ export default function UploadProduct() {
                   <Icon name="cloud_upload" size={28} />
                 </div>
                 <div>
-                  <p className="text-body-md font-semibold text-on-surface">Drag & drop your primary image</p>
-                  <p className="text-body-sm text-on-surface-variant">PNG, JPG or WebP up to 10MB · 16:9 recommended</p>
+                  <p className="text-body-md font-semibold text-on-surface">Seret & lepas gambar utama kamu</p>
+                  <p className="text-body-sm text-on-surface-variant">PNG, JPG, atau WebP maks 10MB · rasio 16:9 disarankan</p>
                 </div>
-                <span className="btn-soft px-4 py-2 text-[13px]"><Icon name="folder_open" size={16} /> Browse Files</span>
+                <span className="btn-soft px-4 py-2 text-[13px]"><Icon name="folder_open" size={16} /> Pilih File</span>
               </div>
             )}
           </div>
         </Section>
 
         {/* 3. Description & pricing */}
-        <Section number="3" title="Description & Pricing" icon="sell">
-          <Field label="Product Description">
+        <Section number="3" title="Deskripsi & Harga" icon="sell">
+          <Field label="Deskripsi Produk">
             <textarea
               value={form.description}
               onChange={set('description')}
               rows={4}
-              placeholder="Describe the capabilities, training data, and use cases…"
+              placeholder="Jelaskan kemampuan, data latih, dan kegunaannya…"
               className="input-field resize-none"
             />
           </Field>
           <div className="grid sm:grid-cols-2 gap-4">
-            <Field label="Pricing (USD / month)">
+            <Field label="Harga (USD / bulan)">
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-outline">$</span>
                 <input type="number" min="0" value={form.price} onChange={set('price')} placeholder="0.00" className="input-field pl-8" />
               </div>
             </Field>
-            <Field label="Tags (comma separated)">
-              <input value={form.tags} onChange={set('tags')} placeholder="vision, enterprise, fast" className="input-field" />
+            <Field label="Tag (pisahkan dengan koma)">
+              <input value={form.tags} onChange={set('tags')} placeholder="vision, enterprise, cepat" className="input-field" />
             </Field>
           </div>
         </Section>
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-3 sticky bottom-20 lg:bottom-4 glass-panel rounded-xl p-4 -mx-2">
-          <button type="button" onClick={saveDraft} className="btn-ghost px-5 py-3"><Icon name="save" size={18} /> Save Draft</button>
-          <button type="submit" className="btn-primary px-6 py-3"><Icon name="rocket_launch" size={18} /> Publish for Review</button>
+          <button type="button" onClick={saveDraft} className="btn-ghost px-5 py-3"><Icon name="save" size={18} /> Simpan Draf</button>
+          <button type="submit" className="btn-primary px-6 py-3"><Icon name="rocket_launch" size={18} /> Publikasikan untuk Review</button>
         </div>
       </form>
     </div>

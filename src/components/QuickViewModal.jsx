@@ -6,6 +6,7 @@ import StarRating from './StarRating.jsx'
 import { TierBadge } from './Badge.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import { getCreator } from '../data/models.js'
+import { toIDR, formatIDR } from '../data/payment.js'
 
 export default function QuickViewModal({ model, onClose }) {
   const { addToCart, isWishlisted, toggleWishlist } = useApp()
@@ -69,10 +70,10 @@ export default function QuickViewModal({ model, onClose }) {
 
             <div className="mt-auto flex items-center justify-between gap-4 pt-5 border-t hairline">
               <div>
-                <p className="text-[12px] text-on-surface-variant">Price</p>
+                <p className="text-[12px] text-on-surface-variant">Harga</p>
                 <p className="font-display text-title-md text-on-surface">
-                  {model.price === 0 ? <span className="text-success">Free</span> : `$${model.price}`}
-                  {model.price !== 0 && <span className="text-body-sm text-on-surface-variant font-normal">/mo</span>}
+                  {model.price === 0 ? <span className="text-success">Gratis</span> : formatIDR(toIDR(model.price))}
+                  {model.price !== 0 && <span className="text-body-sm text-on-surface-variant font-normal">/bln</span>}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -85,12 +86,12 @@ export default function QuickViewModal({ model, onClose }) {
                   <Icon name={saved ? 'bookmark' : 'bookmark_border'} size={20} fill={saved} />
                 </button>
                 <button type="button" onClick={() => addToCart(model.id, 1, model.name)} className="btn-primary px-5 py-3">
-                  <Icon name="add_shopping_cart" size={18} /> Add to Cart
+                  <Icon name="add_shopping_cart" size={18} /> Tambah ke Keranjang
                 </button>
               </div>
             </div>
             <Link to={`/model/${model.id}`} className="text-center mt-4 text-label-md font-label text-primary-container hover:text-primary transition-colors">
-              View full details →
+              Lihat detail lengkap →
             </Link>
           </div>
         </div>

@@ -18,8 +18,8 @@ export default function CreatorProfile() {
     return (
       <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-24 text-center">
         <Icon name="person_off" size={48} className="text-outline mb-4" />
-        <h1 className="font-display text-headline-md mb-4">Creator not found</h1>
-        <Link to="/creators" className="btn-primary px-6 py-3">All Creators</Link>
+        <h1 className="font-display text-headline-md mb-4">Kreator tidak ditemukan</h1>
+        <Link to="/creators" className="btn-primary px-6 py-3">Semua Kreator</Link>
       </div>
     )
   }
@@ -58,9 +58,9 @@ export default function CreatorProfile() {
           </div>
           <div className="flex gap-3 pb-2">
             <button onClick={toggleFollow} className={following ? 'btn-soft px-6 py-3' : 'btn-primary px-6 py-3'}>
-              <Icon name={following ? 'check' : 'add'} size={18} /> {following ? 'Following' : 'Follow'}
+              <Icon name={following ? 'check' : 'add'} size={18} /> {following ? 'Mengikuti' : 'Ikuti'}
             </button>
-            <button onClick={() => toast('Message sent!', { icon: 'send' })} className="btn-ghost px-5 py-3"><Icon name="mail" size={18} /> Contact</button>
+            <button onClick={() => toast('Pesan terkirim!', { icon: 'send' })} className="btn-ghost px-5 py-3"><Icon name="mail" size={18} /> Kontak</button>
           </div>
         </div>
 
@@ -69,9 +69,9 @@ export default function CreatorProfile() {
           <div className="surface-card rounded-xl p-6 h-fit">
             <div className="grid grid-cols-3 divide-x divide-white/10 text-center">
               {[
-                { label: 'Followers', value: creator.stats.followers },
+                { label: 'Pengikut', value: creator.stats.followers },
                 { label: 'Rating', value: creator.stats.rating },
-                { label: 'Models', value: models.length },
+                { label: 'Model', value: models.length },
               ].map((s) => (
                 <div key={s.label} className="px-2">
                   <p className="font-display text-title-md text-on-surface">{s.value}</p>
@@ -81,15 +81,15 @@ export default function CreatorProfile() {
             </div>
           </div>
           <div className="surface-card rounded-xl p-6">
-            <h2 className="font-display text-body-lg font-semibold text-on-surface mb-3">About</h2>
+            <h2 className="font-display text-body-lg font-semibold text-on-surface mb-3">Tentang</h2>
             <p className="text-body-md text-on-surface-variant leading-relaxed">{creator.bio}</p>
           </div>
         </div>
 
         {/* Models */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-title-md text-on-surface">Models by {creator.name}</h2>
-          <span className="text-body-sm text-on-surface-variant">{models.length} published</span>
+          <h2 className="font-display text-title-md text-on-surface">Model oleh {creator.name}</h2>
+          <span className="text-body-sm text-on-surface-variant">{models.length} dipublikasikan</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter pb-8">
           {models.map((m) => (

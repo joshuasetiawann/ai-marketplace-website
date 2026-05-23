@@ -9,8 +9,8 @@ export default function Categories() {
   return (
     <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12">
       <div className="mb-10">
-        <h1 className="font-display text-headline-md md:text-headline-lg text-on-surface mb-2">Browse Categories</h1>
-        <p className="text-body-md text-on-surface-variant">Find the right intelligence for every task and industry.</p>
+        <h1 className="font-display text-headline-md md:text-headline-lg text-on-surface mb-2">Telusuri Kategori</h1>
+        <p className="text-body-md text-on-surface-variant">Temukan kecerdasan yang tepat untuk setiap tugas dan industri.</p>
       </div>
 
       {/* Category tiles */}
@@ -27,9 +27,9 @@ export default function Categories() {
                 <Icon name={c.icon} size={28} />
               </div>
               <h3 className="font-display text-title-md text-on-surface mb-1 group-hover:text-primary-container transition-colors">{c.label}</h3>
-              <p className="text-body-sm text-on-surface-variant mb-4">{countFor(c.id)} model{countFor(c.id) !== 1 ? 's' : ''} available</p>
+              <p className="text-body-sm text-on-surface-variant mb-4">{countFor(c.id)} model tersedia</p>
               <span className="inline-flex items-center gap-1 text-label-md font-label text-primary-container">
-                Explore <Icon name="arrow_forward" size={16} />
+                Jelajahi <Icon name="arrow_forward" size={16} />
               </span>
             </div>
           </Link>
@@ -37,7 +37,7 @@ export default function Categories() {
       </div>
 
       {/* By use case */}
-      <SectionHeading eyebrow="Tailored" title="Shop by Use Case" className="mb-8" />
+      <SectionHeading eyebrow="Sesuai kebutuhan" title="Belanja per Kegunaan" className="mb-8" />
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {USE_CASES.map((u) => (
           <Link

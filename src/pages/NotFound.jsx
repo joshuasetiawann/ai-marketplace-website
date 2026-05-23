@@ -11,13 +11,13 @@ export default function NotFound() {
           <Icon name="hub" size={48} className="text-primary-container/40 animate-pulse" />
         </div>
       </div>
-      <h1 className="font-display text-headline-md text-on-surface mb-3">Signal lost</h1>
+      <h1 className="font-display text-headline-md text-on-surface mb-3">Sinyal hilang</h1>
       <p className="text-body-lg text-on-surface-variant max-w-md mb-8">
-        The page you're looking for has drifted out of range. Let's get you back to the marketplace.
+        Halaman yang kamu cari sudah di luar jangkauan. Yuk kembali ke marketplace.
       </p>
       <div className="flex flex-wrap justify-center gap-3">
-        <Link to="/" className="btn-primary px-6 py-3"><Icon name="home" size={18} /> Back Home</Link>
-        <Link to="/explore" className="btn-ghost px-6 py-3"><Icon name="explore" size={18} /> Explore Models</Link>
+        <Link to="/" className="btn-primary px-6 py-3"><Icon name="home" size={18} /> Ke Beranda</Link>
+        <Link to="/explore" className="btn-ghost px-6 py-3"><Icon name="explore" size={18} /> Jelajahi Model</Link>
       </div>
     </div>
   )

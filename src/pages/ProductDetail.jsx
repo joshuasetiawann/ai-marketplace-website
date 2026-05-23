@@ -35,8 +35,8 @@ export default function ProductDetail() {
     return (
       <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-24 text-center">
         <Icon name="search_off" size={48} className="text-outline mb-4" />
-        <h1 className="font-display text-headline-md mb-2">Model not found</h1>
-        <Link to="/explore" className="btn-primary px-6 py-3 mt-4">Back to Explore</Link>
+        <h1 className="font-display text-headline-md mb-2">Model tidak ditemukan</h1>
+        <Link to="/explore" className="btn-primary px-6 py-3 mt-4">Kembali ke Jelajahi</Link>
       </div>
     )
   }
@@ -55,9 +55,9 @@ export default function ProductDetail() {
     <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-body-sm text-on-surface-variant mb-6 flex-wrap">
-        <Link to="/" className="hover:text-on-surface">Home</Link>
+        <Link to="/" className="hover:text-on-surface">Beranda</Link>
         <Icon name="chevron_right" size={16} />
-        <Link to="/explore" className="hover:text-on-surface">Explore</Link>
+        <Link to="/explore" className="hover:text-on-surface">Jelajahi</Link>
         <Icon name="chevron_right" size={16} />
         <Link to={`/explore?cat=${model.category}`} className="hover:text-on-surface capitalize">{model.category}</Link>
         <Icon name="chevron_right" size={16} />
@@ -152,7 +152,7 @@ export default function ProductDetail() {
 
           {/* Specs */}
           <div className="surface-card rounded-xl p-6">
-            <h3 className="font-label text-label-sm uppercase tracking-wider text-outline mb-4">Model Specs</h3>
+            <h3 className="font-label text-label-sm uppercase tracking-wider text-outline mb-4">Spesifikasi Model</h3>
             <dl className="grid grid-cols-2 gap-4">
               {Object.entries(model.specs).map(([k, v]) => (
                 <div key={k}>
@@ -168,9 +168,9 @@ export default function ProductDetail() {
       {/* Tabs */}
       <div className="border-b hairline mb-8 flex gap-1 overflow-x-auto no-scrollbar">
         {[
-          { id: 'overview', label: 'Overview' },
-          { id: 'capabilities', label: 'Capabilities' },
-          { id: 'reviews', label: `Reviews (${model.reviews.toLocaleString()})` },
+          { id: 'overview', label: 'Ringkasan' },
+          { id: 'capabilities', label: 'Kemampuan' },
+          { id: 'reviews', label: `Ulasan (${model.reviews.toLocaleString('id-ID')})` },
         ].map((t) => (
           <button
             key={t.id}
@@ -188,9 +188,9 @@ export default function ProductDetail() {
         {tab === 'overview' && (
           <div className="grid lg:grid-cols-[1.5fr_1fr] gap-10 animate-fade-in">
             <div>
-              <h2 className="font-display text-title-md text-on-surface mb-4">Overview</h2>
+              <h2 className="font-display text-title-md text-on-surface mb-4">Ringkasan</h2>
               <p className="text-body-lg text-on-surface-variant leading-relaxed mb-8">{model.description}</p>
-              <h3 className="font-display text-body-lg font-semibold text-on-surface mb-4">Primary Use Cases</h3>
+              <h3 className="font-display text-body-lg font-semibold text-on-surface mb-4">Kegunaan Utama</h3>
               <div className="flex flex-wrap gap-2">
                 {model.useCaseTags.map((t) => (
                   <span key={t} className="chip">{t}</span>
@@ -198,9 +198,9 @@ export default function ProductDetail() {
               </div>
             </div>
             <div className="surface-card rounded-xl p-6 h-fit">
-              <h3 className="font-display text-body-lg font-semibold text-on-surface mb-4">Why choose this model</h3>
+              <h3 className="font-display text-body-lg font-semibold text-on-surface mb-4">Kenapa pilih model ini</h3>
               <ul className="flex flex-col gap-4">
-                {['Production-ready reliability', 'Transparent, predictable pricing', 'First-class API & SDK support', 'Backed by a verified creator'].map((b) => (
+                {['Keandalan siap produksi', 'Harga transparan & dapat diprediksi', 'Dukungan API & SDK kelas satu', 'Didukung kreator terverifikasi'].map((b) => (
                   <li key={b} className="flex items-start gap-3 text-body-sm text-on-surface-variant">
                     <Icon name="check_circle" size={18} className="text-primary-container shrink-0 mt-0.5" fill />
                     {b}
@@ -231,7 +231,7 @@ export default function ProductDetail() {
               <div className="text-center mb-6">
                 <p className="font-display text-display-md text-on-surface">{model.rating}</p>
                 <StarRating value={model.rating} size={20} className="justify-center my-2" />
-                <p className="text-body-sm text-on-surface-variant">{model.reviews.toLocaleString()} reviews</p>
+                <p className="text-body-sm text-on-surface-variant">{model.reviews.toLocaleString('id-ID')} ulasan</p>
               </div>
               <div className="flex flex-col gap-2">
                 {ratingBreakdown.map((pct, i) => (
@@ -273,8 +273,8 @@ export default function ProductDetail() {
       {/* Related */}
       {related.length > 0 && (
         <section>
-          <SectionHeading title="You might also like" className="mb-8" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+          <SectionHeading title="Mungkin kamu suka" className="mb-8" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-gutter">
             {related.map((m) => (
               <ModelCard key={m.id} model={m} />
             ))}

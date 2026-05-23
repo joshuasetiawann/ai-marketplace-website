@@ -14,23 +14,21 @@ export default function Wishlist() {
     <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-10">
       <div className="flex items-end justify-between mb-8">
         <div>
-          <h1 className="font-display text-headline-md md:text-headline-lg text-on-surface">My Wishlist</h1>
-          <p className="text-body-md text-on-surface-variant mt-1">
-            {wishlistDetailed.length} saved model{wishlistDetailed.length !== 1 ? 's' : ''}.
-          </p>
+          <h1 className="font-display text-headline-md md:text-headline-lg text-on-surface">Wishlist Saya</h1>
+          <p className="text-body-md text-on-surface-variant mt-1">{wishlistDetailed.length} model disimpan.</p>
         </div>
         {wishlistDetailed.length > 0 && (
           <button
             onClick={() => wishlistDetailed.forEach((m) => addToCart(m.id, 1, m.name))}
             className="btn-ghost px-5 py-2.5"
           >
-            <Icon name="shopping_cart_checkout" size={18} /> Add all to cart
+            <Icon name="shopping_cart_checkout" size={18} /> Tambah semua
           </button>
         )}
       </div>
 
       {wishlistDetailed.length ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-gutter">
           {wishlistDetailed.map((m) => (
             <ModelCard key={m.id} model={m} onQuickView={setQuickView} />
           ))}
@@ -38,11 +36,11 @@ export default function Wishlist() {
       ) : (
         <EmptyState
           icon="favorite"
-          title="No saved models yet"
-          message="Tap the bookmark icon on any model to save it here for later."
+          title="Belum ada model disimpan"
+          message="Ketuk ikon bookmark di model mana pun untuk menyimpannya di sini."
           action={
             <Link to="/explore" className="btn-primary px-6 py-3">
-              <Icon name="explore" size={18} /> Discover Models
+              <Icon name="explore" size={18} /> Jelajahi Model
             </Link>
           }
         />

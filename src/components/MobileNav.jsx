@@ -3,9 +3,9 @@ import Icon from './Icon.jsx'
 import { useApp } from '../context/AppContext.jsx'
 
 const ITEMS = [
-  { to: '/', icon: 'home', label: 'Home', end: true },
-  { to: '/explore', icon: 'explore', label: 'Explore' },
-  { to: '/cart', icon: 'shopping_cart', label: 'Cart', badge: 'cart' },
+  { to: '/', icon: 'home', label: 'Beranda', end: true },
+  { to: '/explore', icon: 'explore', label: 'Jelajahi' },
+  { to: '/cart', icon: 'shopping_cart', label: 'Keranjang', badge: 'cart' },
   { to: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
 ]
 

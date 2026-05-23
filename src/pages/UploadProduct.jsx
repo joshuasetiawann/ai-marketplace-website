@@ -1,17 +1,20 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Icon from '../components/Icon.jsx'
 import ModelArtwork from '../components/ModelArtwork.jsx'
+import { StatusPill } from '../components/DashboardKit.jsx'
 import { CATEGORIES, TIERS } from '../data/models.js'
 import { useApp } from '../context/AppContext.jsx'
+import { addProduct } from '../data/db.js'
 
 export default function UploadProduct() {
   const navigate = useNavigate()
-  const { toast } = useApp()
+  const { user, toast, bumpCatalog } = useApp()
   const fileRef = useRef(null)
   const [form, setForm] = useState({ title: '', category: '', tier: 'Pro', description: '', price: '', tags: '' })
   const [fileName, setFileName] = useState('')
   const [dragging, setDragging] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
   const handleFile = (file) => file && setFileName(file.name)
@@ -19,14 +22,50 @@ export default function UploadProduct() {
   const publish = (e) => {
     e.preventDefault()
     if (!form.title || !form.category) {
-      toast('Please add a title and category', { type: 'error', icon: 'error' })
+      toast('Lengkapi judul dan kategori dulu', { type: 'error', icon: 'error' })
       return
     }
-    toast('Product submitted for review!', { icon: 'rocket_launch' })
-    setTimeout(() => navigate('/seller'), 800)
+    addProduct({
+      name: form.title.trim(),
+      tagline: form.description.slice(0, 80) || 'Model AI baru',
+      category: form.category,
+      tier: form.tier,
+      price: Number(form.price) || 0,
+      rating: 0,
+      reviews: 0,
+      ownerId: user?.id,
+      ownerName: user?.name,
+      art: ['#0b3a44', '#00e5ff'],
+      icon: 'auto_awesome',
+      description: form.description,
+      useCases: [],
+      useCaseTags: form.tags.split(',').map((s) => s.trim()).filter(Boolean),
+      capabilities: [],
+      specs: {},
+      gallery: 3,
+    })
+    bumpCatalog()
+    setSubmitted(true)
   }
 
-  const saveDraft = () => toast('Draft saved', { icon: 'save' })
+  const saveDraft = () => toast('Draf disimpan', { icon: 'save' })
+
+  if (submitted) {
+    const home = user?.role === 'developer' ? '/developer' : '/seller'
+    return (
+      <div className="max-w-lg mx-auto px-margin-mobile py-16 text-center">
+        <div className="w-20 h-20 mx-auto rounded-full bg-secondary/15 border border-secondary/30 flex items-center justify-center mb-6"><Icon name="fact_check" size={38} className="text-secondary" /></div>
+        <StatusPill status="under_review" />
+        <h1 className="font-display text-headline-md text-on-surface mt-4 mb-3">Produk dikirim untuk ditinjau</h1>
+        <p className="text-body-md text-on-surface-variant mb-2"><b className="text-on-surface">{form.title}</b> sedang ditinjau tim moderasi kami.</p>
+        <p className="text-body-sm text-on-surface-variant mb-8">Review keamanan & kualitas biasanya selesai dalam 1–2 hari kerja. Kamu akan diberi tahu saat produk disetujui dan tayang.</p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link to={home} className="btn-primary px-6 py-3"><Icon name="dashboard" size={18} /> Ke Dashboard</Link>
+          <button onClick={() => { setSubmitted(false); setForm({ title: '', category: '', tier: 'Pro', description: '', price: '', tags: '' }); setFileName('') }} className="btn-ghost px-6 py-3"><Icon name="add" size={18} /> Upload Lagi</button>
+        </div>
+      </div>
+    )
+  }
 
   const completion =
     [form.title, form.category, form.description, form.price, fileName].filter(Boolean).length

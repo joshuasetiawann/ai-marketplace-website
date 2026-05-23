@@ -16,6 +16,8 @@ import {
   SpellCheck, Star, StarHalf, Store, Sun, Terminal, Trash2, TrendingDown, TrendingUp, Upload,
   UploadCloud, User, UserCog, UserMinus, UserPlus, UserX, Users, Video, Wallet, Wand2, Webhook,
   Workflow, X, Zap,
+  Clock, LogIn, QrCode, Copy, Landmark, TimerOff, LockOpen, MailCheck, Key, KeyRound, FileText,
+  GitBranch, Flag, Circle, History, XCircle, MonitorSmartphone,
 } from 'lucide-react'
 
 const MAP = {
@@ -152,6 +154,27 @@ const MAP = {
   waving_hand: Hand,
   wb_sunny: Sun,
   workspace_premium: Award,
+  // — extended set (roles, security, payments) —
+  schedule: Clock,
+  login: LogIn,
+  shield_person: ShieldCheck,
+  qr_code: QrCode,
+  content_copy: Copy,
+  account_balance: Landmark,
+  account_balance_wallet: Wallet,
+  timer_off: TimerOff,
+  lock_open: LockOpen,
+  mark_email_read: MailCheck,
+  key: Key,
+  description: FileText,
+  versions: GitBranch,
+  license: KeyRound,
+  flag: Flag,
+  circle: Circle,
+  history: History,
+  cancel: XCircle,
+  devices: MonitorSmartphone,
+  shopping_bag: ShoppingBag,
 }
 
 export default function Icon({ name, className = '', size = 20, fill = false, style, strokeWidth = 2, ...rest }) {

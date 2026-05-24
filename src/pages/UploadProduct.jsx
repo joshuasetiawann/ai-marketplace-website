@@ -6,6 +6,7 @@ import { StatusPill } from '../components/DashboardKit.jsx'
 import { CATEGORIES, TIERS } from '../data/models.js'
 import { useApp } from '../context/AppContext.jsx'
 import { addProduct } from '../data/db.js'
+import { USD_TO_IDR } from '../data/payment.js'
 
 export default function UploadProduct() {
   const navigate = useNavigate()
@@ -30,7 +31,7 @@ export default function UploadProduct() {
       tagline: form.description.slice(0, 80) || 'Model AI baru',
       category: form.category,
       tier: form.tier,
-      price: Number(form.price) || 0,
+      price: Math.round(((Number(String(form.price).replace(/\D/g, '')) || 0) / USD_TO_IDR) * 100) / 100,
       rating: 0,
       reviews: 0,
       ownerId: user?.id,
@@ -172,10 +173,10 @@ export default function UploadProduct() {
             />
           </Field>
           <div className="grid sm:grid-cols-2 gap-4">
-            <Field label="Harga (USD / bulan)">
+            <Field label="Harga / bulan (Rp)">
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-outline">$</span>
-                <input type="number" min="0" value={form.price} onChange={set('price')} placeholder="0.00" className="input-field pl-8" />
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-outline text-body-sm">Rp</span>
+                <input inputMode="numeric" value={form.price} onChange={set('price')} placeholder="0" className="input-field pl-10" />
               </div>
             </Field>
             <Field label="Tag (pisahkan dengan koma)">

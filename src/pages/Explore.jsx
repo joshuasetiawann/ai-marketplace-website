@@ -5,7 +5,8 @@ import ModelCard from '../components/ModelCard.jsx'
 import QuickViewModal from '../components/QuickViewModal.jsx'
 import { EmptyState } from '../components/common.jsx'
 import { CardGridSkeleton } from '../components/Skeleton.jsx'
-import { MODELS, CATEGORIES, TIERS, USE_CASES } from '../data/models.js'
+import { useApp } from '../context/AppContext.jsx'
+import { CATEGORIES, TIERS, USE_CASES } from '../data/models.js'
 
 const SORTS = [
   { id: 'trending', label: 'Trending' },
@@ -16,6 +17,7 @@ const SORTS = [
 ]
 
 export default function Explore() {
+  const { catalog } = useApp()
   const [params, setParams] = useSearchParams()
   const [query, setQuery] = useState(params.get('q') || '')
   const [category, setCategory] = useState(params.get('cat') || 'all')
@@ -46,7 +48,7 @@ export default function Explore() {
   }
 
   const results = useMemo(() => {
-    let list = [...MODELS]
+    let list = [...catalog]
     const q = query.trim().toLowerCase()
     if (q) list = list.filter((m) => m.name.toLowerCase().includes(q) || m.tagline.toLowerCase().includes(q) || m.category.toLowerCase().includes(q) || m.useCaseTags.some((t) => t.toLowerCase().includes(q)))
     if (category !== 'all') list = list.filter((m) => m.category === category)
@@ -61,7 +63,7 @@ export default function Explore() {
       default: list.sort((a, b) => (b.badge === 'trending' ? 1 : 0) - (a.badge === 'trending' ? 1 : 0) || b.reviews - a.reviews)
     }
     return list
-  }, [query, category, useCase, tiers, minRating, sort])
+  }, [catalog, query, category, useCase, tiers, minRating, sort])
 
   const activeFilterCount = (category !== 'all' ? 1 : 0) + (useCase ? 1 : 0) + tiers.length + (minRating ? 1 : 0)
 

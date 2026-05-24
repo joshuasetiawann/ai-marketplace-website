@@ -32,6 +32,8 @@ const STATUS = {
   approved: { label: 'Disetujui', cls: 'text-success bg-success/10', icon: 'check_circle' },
   under_review: { label: 'Dalam Review', cls: 'text-secondary bg-secondary/10', icon: 'schedule' },
   pending: { label: 'Menunggu', cls: 'text-secondary bg-secondary/10', icon: 'schedule' },
+  processing: { label: 'Diproses', cls: 'text-secondary bg-secondary/10', icon: 'autorenew' },
+  unpublished: { label: 'Disembunyikan', cls: 'text-on-surface-variant bg-white/5', icon: 'visibility_off' },
   draft: { label: 'Draf', cls: 'text-on-surface-variant bg-white/5', icon: 'edit' },
   refunded: { label: 'Refund', cls: 'text-on-surface-variant bg-white/5', icon: 'autorenew' },
   rejected: { label: 'Ditolak', cls: 'text-error bg-error/10', icon: 'cancel' },

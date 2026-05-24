@@ -17,8 +17,21 @@ const KEYS = {
   session: 'nexora.session.v2',
   sessionsByUser: 'nexora.sessions.v2',
   products: 'nexora.products.v2',
+  sales: 'nexora.sales.v2',
+  payouts: 'nexora.payouts.v2',
   userData: (id) => `nexora.userdata.v2.${id}`,
 }
+
+// Marketplace economics. The platform keeps a fee; sellers net the remainder —
+// this matches the "80% revenue share" promised in the Help/About copy.
+export const PLATFORM_FEE = 0.2
+export const SELLER_SHARE = 1 - PLATFORM_FEE
+export const MIN_PAYOUT_USD = 50 // ≈ Rp 790.000 minimum withdrawal
+
+// Which real seller/developer account "owns" each base-catalog creator. Lets a
+// purchase of a curated model flow through to a real seller's earnings ledger.
+const STORE_OWNER = { 'synthetix-labs': 'u_seller', 'aura-labs': 'u_dev' }
+const MODEL_OWNER = Object.fromEntries(MODELS.map((m) => [m.id, STORE_OWNER[m.creatorId] || null]))
 
 export const ROLES = {
   buyer: { id: 'buyer', label: 'Buyer', icon: 'shopping_cart', home: '/dashboard', desc: 'Discover & buy premium AI models', accent: '#00e5ff' },
@@ -84,7 +97,61 @@ export function ensureSeed() {
     })
     write(KEYS.users, map)
   }
-  if (!read(KEYS.products, null)) write(KEYS.products, [])
+  // seed the demo seller's real listings (one live, one in review)
+  if (!read(KEYS.products, null)) {
+    write(KEYS.products, [
+      {
+        id: 'aurora-diffusion-xl', name: 'Aurora Diffusion XL', tagline: 'Model difusi gambar sinematik hingga 8K',
+        category: 'vision', useCases: ['creative', 'business'], useCaseTags: ['Concept Art', 'Editorial', 'Product Shots'],
+        tier: 'Pro', price: 32, rating: 4.7, reviews: 64, ownerId: 'u_seller', ownerName: 'Synthetix Labs', creatorId: 'synthetix-labs',
+        icon: 'auto_awesome', art: ['#1a0b2e', '#c084fc'],
+        description: 'Aurora Diffusion XL menghasilkan visual sinematik beresolusi tinggi dari prompt teks, dengan kontrol gaya dan komposisi tingkat studio.',
+        capabilities: [], specs: { Parameters: '8B', Latency: '~700ms', Updated: '2026' }, gallery: 3,
+        status: 'published', createdAt: Date.now() - 86400000 * 20,
+      },
+      {
+        id: 'pixelcraft-lite', name: 'PixelCraft Lite', tagline: 'Generator ikon & aset UI ringan',
+        category: 'vision', useCases: ['creative', 'developer'], useCaseTags: ['Icons', 'UI Assets'],
+        tier: 'Free', price: 0, rating: 0, reviews: 0, ownerId: 'u_seller', ownerName: 'Synthetix Labs', creatorId: 'synthetix-labs',
+        icon: 'grid_view', art: ['#0b3a44', '#22d3ee'],
+        description: 'Aset UI dan ikon vektor instan untuk prototyping cepat.',
+        capabilities: [], specs: {}, gallery: 3, status: 'under_review', createdAt: Date.now() - 86400000 * 2,
+      },
+    ])
+  }
+
+  // seed a believable sales ledger + one completed payout for the demo seller
+  if (!read(KEYS.sales, null)) {
+    const r2 = (n) => Math.round(n * 100) / 100
+    const sellerModels = [
+      { id: 'nexus-vision-pro', name: 'Nexus Vision Pro', price: 24 },
+      { id: 'codeweaver-x', name: 'CodeWeaver X', price: 39 },
+      { id: 'forge-3d', name: 'Forge 3D', price: 35 },
+      { id: 'chroma-studio-fx', name: 'Chroma Studio FX', price: 49 },
+      { id: 'aurora-diffusion-xl', name: 'Aurora Diffusion XL', price: 32 },
+    ]
+    const BUYERS = ['A. Wijaya', 'R. Pratama', 'S. Lestari', 'B. Santoso', 'D. Putri', 'M. Hakim', 'N. Sari', 'F. Ramadhan']
+    const sales = []
+    const now = Date.now()
+    sellerModels.forEach((m, mi) => {
+      const count = 6 + ((mi * 5 + 3) % 7) // deterministic 6..12
+      for (let i = 0; i < count; i++) {
+        const daysAgo = (i * 3 + mi) % 30
+        sales.push({
+          id: uid('sale'), orderId: `NX-S${mi}${i}`, productId: m.id, productName: m.name, sellerId: 'u_seller',
+          buyerName: BUYERS[(mi + i) % BUYERS.length], buyerId: null, qty: 1,
+          gross: m.price, fee: r2(m.price * PLATFORM_FEE), net: r2(m.price * SELLER_SHARE),
+          status: 'paid', method: 'QRIS', date: now - daysAgo * 86400000,
+        })
+      }
+    })
+    write(KEYS.sales, sales)
+  }
+  if (!read(KEYS.payouts, null)) {
+    write(KEYS.payouts, [
+      { id: 'PO-3K91A2', sellerId: 'u_seller', amountUSD: 500, amountIDR: 7900000, bank: 'BCA', account: '••••4821', status: 'paid', requestedAt: Date.now() - 86400000 * 9, paidAt: Date.now() - 86400000 * 8 },
+    ])
+  }
 }
 
 // ── users ────────────────────────────────────────────────────────────────────
@@ -206,10 +273,28 @@ export function saveUploadedProducts(list) {
 }
 export function addProduct(product) {
   const list = getUploadedProducts()
-  const record = { ...product, id: product.id || uid('m'), status: 'under_review', createdAt: Date.now() }
+  const record = { ...product, id: product.id || uid('m'), status: product.status || 'under_review', createdAt: Date.now() }
   list.unshift(record)
   saveUploadedProducts(list)
   return record
+}
+// Owner-guarded mutations — a seller can only ever touch their own listings.
+export function updateProduct(id, patch, ownerId) {
+  const list = getUploadedProducts()
+  const idx = list.findIndex((p) => p.id === id)
+  if (idx < 0) return { error: 'Produk tidak ditemukan' }
+  if (ownerId && list[idx].ownerId !== ownerId) return { error: 'Bukan produk kamu' }
+  list[idx] = { ...list[idx], ...patch, updatedAt: Date.now() }
+  saveUploadedProducts(list)
+  return { product: list[idx] }
+}
+export function deleteProduct(id, ownerId) {
+  const list = getUploadedProducts()
+  const target = list.find((p) => p.id === id)
+  if (!target) return { error: 'Produk tidak ditemukan' }
+  if (ownerId && target.ownerId !== ownerId) return { error: 'Bukan produk kamu' }
+  saveUploadedProducts(list.filter((p) => p.id !== id))
+  return { ok: true }
 }
 export function getCatalog() {
   // published catalog = base models + approved user uploads
@@ -218,6 +303,106 @@ export function getCatalog() {
 }
 export function getProductsByOwner(userId) {
   return getUploadedProducts().filter((p) => p.ownerId === userId)
+}
+export function ownerOfProduct(productId) {
+  const uploaded = getUploadedProducts().find((p) => p.id === productId)
+  if (uploaded) return uploaded.ownerId || null
+  return MODEL_OWNER[productId] || null
+}
+
+// All listings a seller manages: their own uploads (editable) + the curated
+// base-catalog models attributed to their store (read-only "catalog" items).
+export function getSellerListings(sellerId) {
+  if (!sellerId) return []
+  const sales = getSales()
+  const soldQty = (pid) => sales.filter((s) => s.productId === pid && s.status === 'paid').reduce((n, s) => n + s.qty, 0)
+  const own = getProductsByOwner(sellerId).map((p) => ({
+    id: p.id, name: p.name, category: p.category, status: p.status, price: p.price,
+    art: p.art, icon: p.icon, tier: p.tier, sales: soldQty(p.id), editable: true, kind: 'upload',
+  }))
+  const curated = MODELS.filter((m) => MODEL_OWNER[m.id] === sellerId).map((m) => ({
+    id: m.id, name: m.name, category: m.category, status: 'published', price: m.price,
+    art: m.art, icon: m.icon, tier: m.tier, sales: soldQty(m.id), editable: false, kind: 'catalog',
+  }))
+  return [...own, ...curated]
+}
+
+// ── sales ledger (the marketplace's revenue source of truth) ──────────────────
+export function getSales() {
+  return read(KEYS.sales, [])
+}
+export function getSalesBySeller(sellerId) {
+  return getSales().filter((s) => s.sellerId === sellerId)
+}
+// Split a paid order into per-item sale records attributed to each product owner.
+export function recordSale(order, buyer = {}) {
+  if (!order?.items?.length) return []
+  const sales = getSales()
+  const created = []
+  order.items.forEach((it) => {
+    const sellerId = ownerOfProduct(it.id)
+    if (!sellerId) return // house / unattributed product — no seller payout
+    const gross = (it.price || 0) * (it.qty || 1)
+    const fee = Math.round(gross * PLATFORM_FEE * 100) / 100
+    const rec = {
+      id: uid('sale'), orderId: order.id, productId: it.id, productName: it.name,
+      sellerId, buyerName: buyer.name || order.contact?.name || 'Pelanggan', buyerId: buyer.id || null,
+      qty: it.qty || 1, gross, fee, net: Math.round((gross - fee) * 100) / 100,
+      status: 'paid', method: order.method || null, date: order.date || Date.now(),
+    }
+    sales.unshift(rec)
+    created.push(rec)
+  })
+  if (created.length) write(KEYS.sales, sales)
+  return created
+}
+
+// Aggregate a seller's economy: gross/net, fees, what's been withdrawn, and the
+// balance that's actually available to cash out right now.
+export function sellerEarnings(sellerId) {
+  const sales = getSalesBySeller(sellerId).filter((s) => s.status === 'paid')
+  const gross = sales.reduce((n, s) => n + s.gross, 0)
+  const fees = sales.reduce((n, s) => n + s.fee, 0)
+  const net = sales.reduce((n, s) => n + s.net, 0)
+  const payouts = getPayouts(sellerId)
+  const withdrawn = payouts.filter((p) => p.status !== 'rejected').reduce((n, p) => n + p.amountUSD, 0)
+  const customers = new Set(sales.map((s) => s.buyerName)).size
+  const unitsSold = sales.reduce((n, s) => n + s.qty, 0)
+  return {
+    gross, fees, net, withdrawn,
+    available: Math.max(0, Math.round((net - withdrawn) * 100) / 100),
+    customers, unitsSold, salesCount: sales.length,
+  }
+}
+
+// ── payouts (withdrawals to a verified bank account) ──────────────────────────
+export function getPayouts(sellerId) {
+  const all = read(KEYS.payouts, [])
+  return sellerId ? all.filter((p) => p.sellerId === sellerId) : all
+}
+export function savePayoutAccount(userId, { bank, account }) {
+  const user = getUser(userId)
+  if (!user) return { error: 'User tidak ditemukan' }
+  const masked = '••••' + String(account).replace(/\D/g, '').slice(-4)
+  const next = saveUser({ ...user, store: { ...(user.store || {}), payout: { bank, account: masked, status: 'verified' } } })
+  return { user: next }
+}
+export function requestPayout(sellerId, amountUSD, amountIDR) {
+  const user = getUser(sellerId)
+  const payout = user?.store?.payout
+  if (!payout || payout.status !== 'verified') return { error: 'Tambahkan rekening payout terverifikasi dulu.' }
+  const { available } = sellerEarnings(sellerId)
+  if (amountUSD < MIN_PAYOUT_USD) return { error: `Minimal pencairan ${Math.round(MIN_PAYOUT_USD)} USD.` }
+  if (amountUSD > available + 0.001) return { error: 'Saldo tidak mencukupi.' }
+  const all = read(KEYS.payouts, [])
+  const rec = {
+    id: 'PO-' + uid('').slice(0, 6).toUpperCase(), sellerId,
+    amountUSD: Math.round(amountUSD * 100) / 100, amountIDR,
+    bank: payout.bank, account: payout.account, status: 'processing', requestedAt: Date.now(),
+  }
+  all.unshift(rec)
+  write(KEYS.payouts, all)
+  return { payout: rec }
 }
 
 // reset helper (used by "switch demo account" UX)

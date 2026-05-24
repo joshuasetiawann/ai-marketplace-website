@@ -375,6 +375,20 @@ export function sellerEarnings(sellerId) {
   }
 }
 
+// Turn any shopper into a seller by opening a store (Shopee/Tokopedia-style) —
+// one account both buys and sells; no separate seller account needed.
+export function openStore(userId, store) {
+  const user = getUser(userId)
+  if (!user) return { error: 'User tidak ditemukan' }
+  const handle = (store.handle || store.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 24)
+  const next = saveUser({
+    ...user,
+    role: user.role === 'buyer' ? 'seller' : user.role, // keep admin/developer roles intact
+    store: { name: store.name.trim(), handle, tagline: store.tagline?.trim() || '', category: store.category || '' },
+  })
+  return { user: next }
+}
+
 // ── payouts (withdrawals to a verified bank account) ──────────────────────────
 export function getPayouts(sellerId) {
   const all = read(KEYS.payouts, [])

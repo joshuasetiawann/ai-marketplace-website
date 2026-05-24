@@ -5,7 +5,7 @@ import MobileNav from './components/MobileNav.jsx'
 import Toaster from './components/Toaster.jsx'
 import SessionExpiredModal from './components/SessionExpiredModal.jsx'
 import { ScrollToTop } from './components/common.jsx'
-import { RequireAuth, RequireRole } from './components/RouteGuards.jsx'
+import { RequireAuth, RequireStore } from './components/RouteGuards.jsx'
 
 import Home from './pages/Home.jsx'
 import Explore from './pages/Explore.jsx'
@@ -20,8 +20,7 @@ import Payment from './pages/Payment.jsx'
 import Wishlist from './pages/Wishlist.jsx'
 import BuyerDashboard from './pages/BuyerDashboard.jsx'
 import SellerDashboard from './pages/SellerDashboard.jsx'
-import DeveloperDashboard from './pages/DeveloperDashboard.jsx'
-import Admin from './pages/Admin.jsx'
+import OpenStore from './pages/OpenStore.jsx'
 import UploadProduct from './pages/UploadProduct.jsx'
 import OrderHistory from './pages/OrderHistory.jsx'
 import AccountSettings from './pages/AccountSettings.jsx'
@@ -74,12 +73,11 @@ export default function App() {
           <Route path="/payment" element={<RequireAuth><Payment /></RequireAuth>} />
           <Route path="/orders" element={<RequireAuth><OrderHistory /></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><AccountSettings /></RequireAuth>} />
-          {/* role-gated dashboards */}
+          {/* one account, both buyer & seller */}
           <Route path="/dashboard" element={<RequireAuth><BuyerDashboard /></RequireAuth>} />
-          <Route path="/seller" element={<RequireRole roles={['seller', 'admin']}><SellerDashboard /></RequireRole>} />
-          <Route path="/developer" element={<RequireRole roles={['developer', 'admin']}><DeveloperDashboard /></RequireRole>} />
-          <Route path="/admin" element={<RequireRole roles={['admin']}><Admin /></RequireRole>} />
-          <Route path="/upload" element={<RequireRole roles={['seller', 'developer', 'admin']}><UploadProduct /></RequireRole>} />
+          <Route path="/sell/start" element={<RequireAuth><OpenStore /></RequireAuth>} />
+          <Route path="/seller" element={<RequireStore><SellerDashboard /></RequireStore>} />
+          <Route path="/upload" element={<RequireStore><UploadProduct /></RequireStore>} />
           {/* content */}
           <Route path="/help" element={<HelpCenter />} />
           <Route path="/about" element={<About />} />

@@ -6,8 +6,12 @@
   "description": "Nexora AI — Precision Luxury AI model marketplace",
   "scripts": {
     "dev": "vite",
+    "dev:console": "vite --config vite.console.config.js",
     "build": "vite build",
+    "build:console": "vite build --config vite.console.config.js",
+    "build:all": "vite build && vite build --config vite.console.config.js",
     "preview": "vite preview",
+    "preview:console": "vite preview --config vite.console.config.js",
     "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {

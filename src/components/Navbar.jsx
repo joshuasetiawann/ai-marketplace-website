@@ -146,9 +146,9 @@ export default function Navbar() {
                     </div>
                     {[
                       { to: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
-                      ...(user.role === 'seller' || user.role === 'admin' ? [{ to: '/seller', icon: 'storefront', label: 'Seller Studio' }] : []),
-                      ...(user.role === 'developer' || user.role === 'admin' ? [{ to: '/developer', icon: 'code', label: 'Developer Console' }] : []),
-                      ...(user.role === 'admin' ? [{ to: '/admin', icon: 'shield_person', label: 'Admin' }] : []),
+                      user.store
+                        ? { to: '/seller', icon: 'storefront', label: 'Seller Studio' }
+                        : { to: '/sell/start', icon: 'add_business', label: 'Buka Toko' },
                       { to: '/orders', icon: 'receipt_long', label: 'Pesanan' },
                       { to: '/settings', icon: 'settings', label: 'Pengaturan' },
                     ].map((i) => (
@@ -167,7 +167,7 @@ export default function Navbar() {
                       className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-body-sm text-error hover:bg-error/10 transition-colors mt-1 border-t hairline"
                     >
                       <Icon name="logout" size={18} />
-                      Sign out
+                      Keluar
                     </button>
                   </div>
                 )}
@@ -255,6 +255,9 @@ export default function Navbar() {
                 <>
                   <Link to="/dashboard" className="btn-soft py-3">
                     <Icon name="dashboard" size={20} /> Dashboard
+                  </Link>
+                  <Link to={user.store ? '/seller' : '/sell/start'} className="btn-soft py-3">
+                    <Icon name={user.store ? 'storefront' : 'add_business'} size={20} /> {user.store ? 'Seller Studio' : 'Buka Toko'}
                   </Link>
                   <button onClick={() => logout()} className="btn-ghost py-3 text-error border-error/30">
                     <Icon name="logout" size={20} /> Keluar

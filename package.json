@@ -1,33 +1,34 @@
 {
   "name": "nexora-ai-marketplace",
-  "private": true,
   "version": "1.0.0",
-  "type": "module",
-  "description": "Nexora AI — Precision Luxury AI model marketplace",
+  "private": true,
   "scripts": {
-    "dev": "vite",
-    "dev:console": "vite --config vite.console.config.js",
-    "build": "vite build",
-    "build:console": "vite build --config vite.console.config.js",
-    "build:all": "vite build && vite build --config vite.console.config.js",
-    "preview": "vite preview",
-    "preview:console": "vite preview --config vite.console.config.js",
-    "smoke": "node scripts/smoke.mjs"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "seed:users": "node scripts/seed-users.mjs"
   },
   "dependencies": {
-    "@fontsource/geist-mono": "^5.2.8",
-    "@fontsource/geist-sans": "^5.2.5",
-    "@fontsource/inter": "^5.2.8",
-    "lucide-react": "^1.17.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.2"
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.108.2",
+    "lucide-react": "^1.21.0",
+    "next": "16.2.9",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.2",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.13",
-    "vite": "^5.4.8"
+    "@playwright/test": "^1.61.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.9",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^4.1.9"
   }
 }

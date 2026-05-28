@@ -35,3 +35,59 @@ export async function registerUser(
 
   redirect("/verify-email");
 }
+
+/** Sign in with email + password. On success, go to the buyer dashboard. */
+export async function signIn(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const email = String(formData.get("email") || "").trim();
+  const password = String(formData.get("password") || "");
+  if (!email || !password) return { error: "Email dan password wajib diisi." };
+
+  const supabase = await createServerClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    if (error.code === "email_not_confirmed")
+      return { error: "Email belum diverifikasi. Cek kotak masuk kamu." };
+    return { error: "Email atau password salah." };
+  }
+  redirect("/dashboard");
+}
+
+/** Sign out and return to the login screen. */
+export async function signOut(): Promise<void> {
+  const supabase = await createServerClient();
+  await supabase.auth.signOut();
+  redirect("/login");
+}
+
+/** Send a password-reset email with a link back to /reset-password. */
+export async function requestPasswordReset(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const email = String(formData.get("email") || "").trim();
+  if (!email) return { error: "Email wajib diisi." };
+
+  const supabase = await createServerClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
+  });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+/** Set a new password (used after following the reset link). */
+export async function updatePassword(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const password = String(formData.get("password") || "");
+  if (password.length < 8) return { error: "Password minimal 8 karakter." };
+
+  const supabase = await createServerClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: error.message };
+  redirect("/dashboard");
+}

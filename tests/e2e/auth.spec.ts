@@ -21,3 +21,10 @@ test("login with the demo account reaches the dashboard", async ({ page }) => {
   await page.click('button:has-text("Masuk")');
   await expect(page.getByText("Halo,")).toBeVisible();
 });
+
+test("forgot password shows the sent confirmation", async ({ page }) => {
+  await page.goto("/forgot-password");
+  await page.fill("input[name=email]", "user@nexora.ai");
+  await page.click('button:has-text("Kirim tautan reset")');
+  await expect(page.getByText("Tautan reset sudah dikirim")).toBeVisible();
+});

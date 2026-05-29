@@ -20,6 +20,8 @@ export const USE_CASES = [
 
 export const TIERS = ["Free", "Pro", "Enterprise"] as const;
 
+export type Capability = { icon: string; title: string; text: string };
+
 export type Model = {
   id: string;
   name: string;
@@ -36,6 +38,11 @@ export type Model = {
   description: string;
   badge?: string;
   createdAt?: string;
+  gallery: number;
+  specs: Record<string, string>;
+  capabilities: Capability[];
+  ownerId?: string | null;
+  creatorId?: string | null;
 };
 
 /** Columns to select from `products` for catalog views. */
@@ -57,6 +64,11 @@ type ProductRow = {
   art: string[] | null;
   description: string | null;
   created_at?: string;
+  gallery?: number | null;
+  specs?: Record<string, string> | null;
+  capabilities?: Capability[] | null;
+  owner_id?: string | null;
+  creator_id?: string | null;
 };
 
 export function mapProduct(row: ProductRow): Model {
@@ -77,5 +89,10 @@ export function mapProduct(row: ProductRow): Model {
     description: row.description ?? "",
     badge: rating >= 4.85 ? "trending" : undefined,
     createdAt: row.created_at,
+    gallery: row.gallery ?? 3,
+    specs: (row.specs as Record<string, string>) ?? {},
+    capabilities: (row.capabilities as Capability[]) ?? [],
+    ownerId: row.owner_id ?? null,
+    creatorId: row.creator_id ?? null,
   };
 }

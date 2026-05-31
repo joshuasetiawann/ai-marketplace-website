@@ -156,6 +156,7 @@ export default function CheckoutClient({
         <label className="mt-5 flex cursor-pointer items-start gap-2.5">
           <button
             type="button"
+            data-testid="agree-toggle"
             onClick={() => setAgree((a) => !a)}
             className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all ${
               agree ? "border-primary-container bg-primary-container" : "border-white/30"

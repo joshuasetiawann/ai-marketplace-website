@@ -1,0 +1,51 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { createServerClient } from "@/lib/supabase/server";
+
+export type AdminResult = { error?: string; ok?: boolean };
+
+async function requireAdmin() {
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login?next=/admin");
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (profile?.role !== "admin") redirect("/");
+  return { supabase, user };
+}
+
+/** Approve (-> published) or reject (-> rejected) a product. */
+export async function moderateProduct(id: string, action: "approve" | "reject"): Promise<AdminResult> {
+  const { supabase } = await requireAdmin();
+  const status = action === "approve" ? "published" : "rejected";
+  const { error } = await supabase.from("products").update({ status }).eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/products");
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/** Promote/demote a user's role. */
+export async function setUserRole(id: string, role: "user" | "admin"): Promise<AdminResult> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from("profiles").update({ role }).eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
+/** Mark a payout as paid or rejected. */
+export async function processPayout(id: string, action: "paid" | "rejected"): Promise<AdminResult> {
+  const { supabase } = await requireAdmin();
+  const patch =
+    action === "paid"
+      ? { status: "paid" as const, paid_at: new Date().toISOString() }
+      : { status: "rejected" as const };
+  const { error } = await supabase.from("payouts").update(patch).eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/payouts");
+  return { ok: true };
+}

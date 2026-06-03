@@ -66,8 +66,6 @@ It ships as **two apps in one codebase**, modelled on how Shopee / Tokopedia act
   </tr>
 </table>
 
-<div align="center"><img src="docs/preview/mobile-home.jpg" width="300" alt="Mobile" /><br/><sub>📱 Fully responsive — mobile bottom-nav</sub></div>
-
 ---
 
 ## 🏬 Two apps, one codebase

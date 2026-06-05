@@ -31,12 +31,13 @@ export async function postReview(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Masuk dulu untuk menulis ulasan." };
 
-  const { error } = await supabase.from("reviews").insert({
-    product_id: productId,
-    author_id: user.id,
-    rating,
-    body,
-  });
+  // Upsert on (product_id, author_id): one review per user, editable. The DB
+  // guard enforces verified-purchase + no self-review and surfaces a friendly
+  // message on violation.
+  const { error } = await supabase.from("reviews").upsert(
+    { product_id: productId, author_id: user.id, rating, body },
+    { onConflict: "product_id,author_id" },
+  );
   if (error) return { error: error.message };
 
   revalidatePath(`/model/${productId}`);

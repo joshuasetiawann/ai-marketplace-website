@@ -44,8 +44,16 @@ export async function processPayout(id: string, action: "paid" | "rejected"): Pr
     action === "paid"
       ? { status: "paid" as const, paid_at: new Date().toISOString() }
       : { status: "rejected" as const };
-  const { error } = await supabase.from("payouts").update(patch).eq("id", id);
+  // Only a payout still "processing" may be finalized — never re-open a terminal
+  // (paid/rejected) payout, which would corrupt the seller's available balance.
+  const { data, error } = await supabase
+    .from("payouts")
+    .update(patch)
+    .eq("id", id)
+    .eq("status", "processing")
+    .select("id");
   if (error) return { error: error.message };
+  if (!data?.length) return { error: "Payout ini sudah diproses." };
   revalidatePath("/admin/payouts");
   return { ok: true };
 }

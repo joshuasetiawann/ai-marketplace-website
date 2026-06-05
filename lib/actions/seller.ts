@@ -6,8 +6,6 @@ import { createServerClient } from "@/lib/supabase/server";
 
 export type SellerState = { error?: string };
 
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 24) || "toko";
-
 /** Open a store ("Buka Toko"): flag the profile as a seller + create the store. */
 export async function openStore(_prev: SellerState, formData: FormData): Promise<SellerState> {
   const name = String(formData.get("name") || "").trim();
@@ -24,17 +22,14 @@ export async function openStore(_prev: SellerState, formData: FormData): Promise
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/sell/start");
 
-  const { error: pErr } = await supabase.from("profiles").update({ is_seller: true }).eq("id", user.id);
-  if (pErr) return { error: pErr.message };
-
-  const base = { owner_id: user.id, name, tagline, category };
-  let handle = slug(name);
-  let { error } = await supabase.from("stores").upsert({ ...base, handle }, { onConflict: "owner_id" });
-  if (error && error.code === "23505") {
-    // handle already taken by another store — disambiguate with the user id
-    handle = `${handle}-${user.id.slice(0, 4)}`;
-    ({ error } = await supabase.from("stores").upsert({ ...base, handle }, { onConflict: "owner_id" }));
-  }
+  // is_seller is server-managed (users can't self-grant it) — open_store() is a
+  // SECURITY DEFINER RPC that flips the flag + creates the store atomically,
+  // handling handle collisions.
+  const { error } = await supabase.rpc("open_store", {
+    p_name: name,
+    p_category: category,
+    p_tagline: tagline,
+  });
   if (error) return { error: error.message };
 
   revalidatePath("/", "layout");

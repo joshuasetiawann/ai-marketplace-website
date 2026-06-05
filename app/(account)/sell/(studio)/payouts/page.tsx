@@ -1,5 +1,6 @@
 import PayoutClient from "@/components/PayoutClient";
 import { createServerClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSellerEarnings } from "@/lib/seller";
 import { toIDR, formatIDR } from "@/lib/pricing";
 
@@ -18,8 +19,12 @@ export default async function SellerPayoutsPage() {
   } = await supabase.auth.getUser();
   const uid = user!.id;
 
+  // Payout bank details are not exposed over the public API (see the RLS
+  // hardening migration); read them server-side with the service-role client,
+  // scoped to the signed-in owner only.
+  const admin = createAdminClient();
   const [{ data: store }, earnings, { data: payouts }] = await Promise.all([
-    supabase.from("stores").select("payout_bank, payout_account_masked, payout_status").eq("owner_id", uid).single(),
+    admin.from("stores").select("payout_bank, payout_account_masked, payout_status").eq("owner_id", uid).single(),
     getSellerEarnings(supabase, uid),
     supabase.from("payouts").select("id,amount_usd,bank,account_masked,status,requested_at").eq("seller_id", uid).order("requested_at", { ascending: false }),
   ]);

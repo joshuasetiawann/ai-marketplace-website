@@ -7,6 +7,7 @@ import Icon from "./Icon";
 const ITEMS = [
   { href: "/admin", icon: "shield_person", label: "Ringkasan", exact: true },
   { href: "/admin/products", icon: "fact_check", label: "Moderasi" },
+  { href: "/admin/orders", icon: "receipt_long", label: "Pesanan" },
   { href: "/admin/users", icon: "group", label: "Pengguna" },
   { href: "/admin/payouts", icon: "account_balance", label: "Payout" },
 ];

@@ -31,17 +31,24 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   if (!order) notFound();
 
   const items = (order.order_items as OrderItem[] | null) ?? [];
+  const short = order.id.slice(0, 8).toUpperCase();
+  const STATUS: Record<string, { icon: string; cls: string; head: string; sub: string }> = {
+    paid: { icon: "check_circle", cls: "bg-success/10 text-success", head: "Pembayaran berhasil", sub: `Pesanan #${short} sudah lunas.` },
+    refunded: { icon: "undo", cls: "bg-secondary/10 text-secondary", head: "Pesanan dikembalikan", sub: `Dana untuk pesanan #${short} telah dikembalikan.` },
+    cancelled: { icon: "cancel", cls: "bg-error/10 text-error", head: "Pesanan dibatalkan", sub: `Pesanan #${short} dibatalkan.` },
+    pending: { icon: "schedule", cls: "bg-secondary/10 text-secondary", head: "Menunggu pembayaran", sub: `Pesanan #${short} menunggu pembayaran.` },
+    failed: { icon: "error", cls: "bg-error/10 text-error", head: "Pembayaran gagal", sub: `Pesanan #${short} gagal diproses.` },
+  };
+  const s = STATUS[order.status] ?? STATUS.paid;
 
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-8 flex flex-col items-center text-center">
-        <span className="mb-4 grid h-16 w-16 place-items-center rounded-full bg-success/10 text-success">
-          <Icon name="check_circle" size={34} fill />
+        <span className={`mb-4 grid h-16 w-16 place-items-center rounded-full ${s.cls}`}>
+          <Icon name={s.icon} size={34} fill />
         </span>
-        <h1 className="font-display text-headline-md text-on-surface">Pembayaran berhasil</h1>
-        <p className="mt-2 text-body-md text-on-surface-variant">
-          Pesanan <span className="font-mono text-on-surface">#{order.id.slice(0, 8).toUpperCase()}</span> sudah lunas.
-        </p>
+        <h1 className="font-display text-headline-md text-on-surface">{s.head}</h1>
+        <p className="mt-2 text-body-md text-on-surface-variant">{s.sub}</p>
       </div>
 
       <div className="rounded-xl surface-card p-6">

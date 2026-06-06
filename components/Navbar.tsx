@@ -68,6 +68,7 @@ export default function Navbar({
     user?.isSeller
       ? { href: "/sell", icon: "storefront", label: "Seller Studio" }
       : { href: "/sell/start", icon: "add_business", label: "Buka Toko" },
+    { href: "/library", icon: "deployed_code", label: "Library" },
     { href: "/orders", icon: "receipt_long", label: "Pesanan" },
     { href: "/settings", icon: "settings", label: "Pengaturan" },
   ];

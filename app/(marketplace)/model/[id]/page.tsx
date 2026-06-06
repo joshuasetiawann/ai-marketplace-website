@@ -20,6 +20,25 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const model = mapProduct(row);
 
+  // seller attribution (house catalog has owner_id = null)
+  const seller = model.ownerId
+    ? (await supabase.from("stores").select("name, handle").eq("owner_id", model.ownerId).maybeSingle()).data
+    : null;
+
+  // "owned" = the signed-in buyer has a paid order line for this product
+  let owned = false;
+  if (user) {
+    const { data: paidItem } = await supabase
+      .from("order_items")
+      .select("id, orders!inner(buyer_id, status)")
+      .eq("product_id", id)
+      .eq("orders.buyer_id", user.id)
+      .eq("orders.status", "paid")
+      .limit(1)
+      .maybeSingle();
+    owned = !!paidItem;
+  }
+
   const [reviewsRes, relatedRes, wishRes] = await Promise.all([
     supabase
       .from("reviews")
@@ -70,7 +89,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         reviews={reviews}
         wishlisted={wishlisted}
         loggedIn={!!user}
-        owned={false}
+        owned={owned}
+        seller={seller}
       />
 
       {related.length > 0 && (

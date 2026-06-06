@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Icon from "@/components/Icon";
 import ModelArtwork from "@/components/ModelArtwork";
 import { EmptyState } from "@/components/common";
@@ -24,7 +25,11 @@ export default async function CreatorsPage() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {stores.map((s) => (
-            <div key={s.owner_id} className="flex items-center gap-4 rounded-xl glass-panel p-6 electric-glow-hover">
+            <Link
+              key={s.owner_id}
+              href={`/creator/${s.handle}`}
+              className="flex items-center gap-4 rounded-xl glass-panel p-6 electric-glow-hover transition-colors hover:border-primary-container/30"
+            >
               <span className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-white/10">
                 <ModelArtwork seed={s.handle} className="h-full w-full" />
               </span>
@@ -37,7 +42,7 @@ export default async function CreatorsPage() {
                   </span>
                 )}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import { useState, useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Icon from "./Icon";
 import ModelArtwork from "./ModelArtwork";
 import StarRating from "./StarRating";
@@ -24,12 +25,14 @@ export default function ProductDetailClient({
   wishlisted,
   loggedIn,
   owned,
+  seller,
 }: {
   model: Model;
   reviews: ReviewItem[];
   wishlisted: boolean;
   loggedIn: boolean;
   owned: boolean;
+  seller: { name: string; handle: string } | null;
 }) {
   const router = useRouter();
   const [activeImg, setActiveImg] = useState(0);
@@ -121,7 +124,15 @@ export default function ProductDetailClient({
             <span className="font-mono text-[11px] uppercase tracking-wide text-outline">{model.category}</span>
           </div>
           <h1 className="mb-3 font-display text-headline-md text-on-surface md:text-headline-lg">{model.name}</h1>
-          <p className="mb-5 text-body-lg text-on-surface-variant">{model.tagline}</p>
+          <p className="mb-3 text-body-lg text-on-surface-variant">{model.tagline}</p>
+          {seller && (
+            <p className="mb-5 text-body-sm text-on-surface-variant">
+              oleh{" "}
+              <Link href={`/creator/${seller.handle}`} className="font-medium text-primary-container hover:underline">
+                {seller.name}
+              </Link>
+            </p>
+          )}
 
           <div className="mb-6 flex items-center gap-4">
             <StarRating value={model.rating} count={model.reviews} showValue />
@@ -151,8 +162,17 @@ export default function ProductDetailClient({
               </span>
             </div>
             <div className="flex flex-col gap-3">
-              <button onClick={onBuyNow} disabled={busy} className="btn-primary w-full py-3.5">
-                <Icon name="bolt" size={18} fill /> {owned ? "Beli Lagi" : "Beli Sekarang"}
+              {owned && (
+                <Link href="/library" className="btn-primary w-full py-3.5">
+                  <Icon name="download" size={18} /> Akses di Library
+                </Link>
+              )}
+              <button
+                onClick={onBuyNow}
+                disabled={busy}
+                className={owned ? "btn-ghost w-full py-3.5" : "btn-primary w-full py-3.5"}
+              >
+                <Icon name="bolt" size={18} fill={!owned} /> {owned ? "Beli Lagi" : "Beli Sekarang"}
               </button>
               <div className="grid grid-cols-[1fr_auto] gap-3">
                 <button onClick={onAddToCart} disabled={busy} className="btn-ghost py-3.5">

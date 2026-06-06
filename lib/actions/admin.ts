@@ -37,6 +37,16 @@ export async function setUserRole(id: string, role: "user" | "admin"): Promise<A
   return { ok: true };
 }
 
+/** Refund a paid order (reverses the sellers' sales attribution). */
+export async function refundOrder(id: string): Promise<AdminResult> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("refund_order", { p_order: id });
+  if (error) return { error: error.message };
+  revalidatePath("/admin/orders");
+  revalidatePath("/orders");
+  return { ok: true };
+}
+
 /** Mark a payout as paid or rejected. */
 export async function processPayout(id: string, action: "paid" | "rejected"): Promise<AdminResult> {
   const { supabase } = await requireAdmin();

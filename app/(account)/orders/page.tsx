@@ -6,7 +6,13 @@ import { toIDR, formatIDR } from "@/lib/pricing";
 
 export const metadata = { title: "Pesanan — Nexora AI" };
 
-const STATUS_LABEL: Record<string, string> = { paid: "Lunas", pending: "Menunggu", failed: "Gagal" };
+const STATUS: Record<string, { label: string; cls: string; icon: string }> = {
+  paid: { label: "Lunas", cls: "text-success", icon: "check_circle" },
+  refunded: { label: "Dikembalikan", cls: "text-secondary", icon: "undo" },
+  pending: { label: "Menunggu", cls: "text-on-surface-variant", icon: "schedule" },
+  failed: { label: "Gagal", cls: "text-error", icon: "error" },
+  cancelled: { label: "Dibatalkan", cls: "text-error", icon: "cancel" },
+};
 
 export default async function OrdersPage() {
   const supabase = await createServerClient();
@@ -60,9 +66,14 @@ export default async function OrdersPage() {
                   <p className="font-display text-body-lg text-primary-container">
                     {formatIDR(toIDR(Number(o.total_usd)))}
                   </p>
-                  <span className="inline-flex items-center gap-1 text-[12px] text-success">
-                    <Icon name="check_circle" size={13} fill /> {STATUS_LABEL[o.status] ?? o.status}
-                  </span>
+                  {(() => {
+                    const s = STATUS[o.status] ?? { label: o.status, cls: "text-on-surface-variant", icon: "circle" };
+                    return (
+                      <span className={`inline-flex items-center gap-1 text-[12px] ${s.cls}`}>
+                        <Icon name={s.icon} size={13} fill /> {s.label}
+                      </span>
+                    );
+                  })()}
                 </div>
               </Link>
             );

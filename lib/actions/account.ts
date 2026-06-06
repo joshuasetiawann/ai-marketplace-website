@@ -28,10 +28,25 @@ export async function updateProfileName(_prev: AccountState, formData: FormData)
 
 /** Change password from the settings page (stays on settings, unlike the reset flow). */
 export async function changePassword(_prev: AccountState, formData: FormData): Promise<AccountState> {
+  const current = String(formData.get("current") || "");
   const password = String(formData.get("password") || "");
-  if (password.length < 8) return { error: "Password minimal 8 karakter." };
+  if (!current) return { error: "Masukkan password saat ini." };
+  if (password.length < 8) return { error: "Password baru minimal 8 karakter." };
 
   const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) redirect("/login");
+
+  // Re-authenticate with the current password before allowing a change, so a
+  // hijacked live session on an unlocked device can't silently take over.
+  const { error: reauthErr } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: current,
+  });
+  if (reauthErr) return { error: "Password saat ini salah." };
+
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: error.message };
   return { ok: true };

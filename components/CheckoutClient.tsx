@@ -13,6 +13,8 @@ export default function CheckoutClient({
   subtotal,
   taxes,
   total,
+  discount,
+  promo,
   userName,
   userEmail,
 }: {
@@ -20,6 +22,8 @@ export default function CheckoutClient({
   subtotal: number;
   taxes: number;
   total: number;
+  discount: number;
+  promo: string;
   userName: string;
   userEmail: string;
 }) {
@@ -33,6 +37,7 @@ export default function CheckoutClient({
     <form action={action} className="grid items-start gap-8 lg:grid-cols-[1.5fr_1fr]">
       <input type="hidden" name="method" value={method} />
       <input type="hidden" name="agree" value={agree ? "on" : "off"} />
+      <input type="hidden" name="promo" value={promo} />
 
       <div className="flex flex-col gap-6">
         <section className="rounded-xl surface-card p-6">
@@ -143,6 +148,12 @@ export default function CheckoutClient({
             <span className="text-on-surface-variant">Subtotal</span>
             <span className="text-on-surface">{formatIDR(toIDR(subtotal))}</span>
           </div>
+          {discount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Diskon{promo ? ` (${promo})` : ""}</span>
+              <span className="text-success">−{formatIDR(toIDR(discount))}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-on-surface-variant">PPN 11%</span>
             <span className="text-on-surface">{formatIDR(toIDR(taxes))}</span>

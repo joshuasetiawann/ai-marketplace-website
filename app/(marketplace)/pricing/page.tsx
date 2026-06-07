@@ -29,7 +29,7 @@ const TIERS = [
     tagline: "Untuk skala perusahaan.",
     features: ["Model Enterprise + SLA 99,99%", "SSO & kontrol akses", "Dukungan khusus 24/7", "Penagihan terpusat"],
     cta: "Hubungi sales",
-    href: "/help",
+    href: "/contact",
     highlight: false,
   },
 ];

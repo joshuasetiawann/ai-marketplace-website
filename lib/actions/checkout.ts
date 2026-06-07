@@ -15,6 +15,7 @@ export async function placeOrder(
   formData: FormData,
 ): Promise<CheckoutState> {
   const method = String(formData.get("method") || "qris");
+  const promo = String(formData.get("promo") || "").trim();
   const agree = formData.get("agree") === "on";
   if (!agree) return { error: "Setujui syarat & ketentuan dulu." };
 
@@ -28,6 +29,7 @@ export async function placeOrder(
   const { data: orderId, error } = await supabase.rpc("checkout", {
     p_contact: contact,
     p_method: method,
+    p_promo: promo || null,
   });
   if (error) return { error: error.message };
 

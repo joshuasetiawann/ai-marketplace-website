@@ -8,7 +8,11 @@ import { getCart } from "@/lib/cart";
 
 export const metadata = { title: "Checkout — Nexora AI" };
 
-export default async function CheckoutPage() {
+export default async function CheckoutPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ promo?: string }>;
+}) {
   const supabase = await createServerClient();
   const {
     data: { user },
@@ -19,6 +23,22 @@ export default async function CheckoutPage() {
     getCart(supabase, user.id),
     supabase.from("profiles").select("name").eq("id", user.id).single(),
   ]);
+
+  // validate any promo server-side and recompute the totals to match the RPC
+  const { promo } = await searchParams;
+  let discount = 0;
+  let promoCode = "";
+  if (promo) {
+    const { data } = await supabase.rpc("validate_promo", { p_code: promo, p_subtotal: subtotal });
+    const pct = Number(data) || 0;
+    if (pct > 0) {
+      discount = Math.round(subtotal * (pct / 100) * 100) / 100;
+      promoCode = promo.trim().toUpperCase();
+    }
+  }
+  const discSubtotal = subtotal - discount;
+  const shownTaxes = discount > 0 ? Math.round(discSubtotal * 0.11 * 100) / 100 : taxes;
+  const shownTotal = discount > 0 ? Math.round(discSubtotal * 1.11 * 100) / 100 : total;
 
   if (lines.length === 0) {
     return (
@@ -51,8 +71,10 @@ export default async function CheckoutPage() {
       <CheckoutClient
         lines={lines}
         subtotal={subtotal}
-        taxes={taxes}
-        total={total}
+        taxes={shownTaxes}
+        total={shownTotal}
+        discount={discount}
+        promo={promoCode}
         userName={profile?.name || user.email || "Pengguna"}
         userEmail={user.email || ""}
       />

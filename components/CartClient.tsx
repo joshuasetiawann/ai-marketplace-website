@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import Icon from "./Icon";
 import ModelArtwork from "./ModelArtwork";
 import { updateCartQty, removeFromCart } from "@/lib/actions/commerce";
+import { checkPromo } from "@/lib/actions/promo";
 import { toIDR, formatIDR } from "@/lib/pricing";
 import type { CartLine } from "@/lib/cart";
 
-const PROMOS: Record<string, number> = { NEXORA10: 0.1, LUXURY20: 0.2, WELCOME: 0.15 };
+const r2 = (n: number) => Math.round(n * 100) / 100;
 
 export default function CartClient({
   lines,
@@ -27,16 +28,19 @@ export default function CartClient({
   const [promo, setPromo] = useState("");
   const [applied, setApplied] = useState<{ code: string; rate: number } | null>(null);
   const [promoError, setPromoError] = useState("");
+  const [checking, setChecking] = useState(false);
 
-  const applyPromo = (e: React.FormEvent) => {
+  const applyPromo = async (e: React.FormEvent) => {
     e.preventDefault();
-    const code = promo.trim().toUpperCase();
-    if (PROMOS[code]) {
-      setApplied({ code, rate: PROMOS[code] });
-      setPromoError("");
+    setChecking(true);
+    setPromoError("");
+    const res = await checkPromo(promo, subtotal);
+    setChecking(false);
+    if (res.percent > 0) {
+      setApplied({ code: promo.trim().toUpperCase(), rate: res.percent / 100 });
     } else {
       setApplied(null);
-      setPromoError("Kode promo tidak valid");
+      setPromoError(res.error ?? "Kode promo tidak valid");
     }
   };
 
@@ -51,8 +55,12 @@ export default function CartClient({
       router.refresh();
     });
 
-  const discount = applied ? Math.round(subtotal * applied.rate * 100) / 100 : 0;
-  const grandTotal = Math.max(0, total - discount);
+  // Discount is applied to the subtotal before PPN — mirrors the checkout RPC so
+  // the total shown here equals the amount actually charged.
+  const discount = applied ? r2(subtotal * applied.rate) : 0;
+  const discSubtotal = subtotal - discount;
+  const shownTaxes = discount > 0 ? r2(discSubtotal * 0.11) : taxes;
+  const grandTotal = discount > 0 ? r2(discSubtotal * 1.11) : total;
 
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[1.6fr_1fr]">
@@ -96,8 +104,8 @@ export default function CartClient({
         <h2 className="mb-5 font-display text-title-md text-on-surface">Ringkasan Pesanan</h2>
 
         <form onSubmit={applyPromo} className="mb-5 flex gap-2">
-          <input value={promo} onChange={(e) => setPromo(e.target.value)} placeholder="Kode promo" className="input-field flex-1" />
-          <button type="submit" className="btn-soft px-5">Pakai</button>
+          <input value={promo} onChange={(e) => setPromo(e.target.value)} placeholder="Kode promo" aria-label="Kode promo" className="input-field flex-1" />
+          <button type="submit" disabled={checking} className="btn-soft px-5">{checking ? "…" : "Pakai"}</button>
         </form>
         {promoError && <p className="-mt-3 mb-4 text-body-sm text-error">{promoError}</p>}
         {applied && (
@@ -115,14 +123,14 @@ export default function CartClient({
         <div className="flex flex-col gap-3 border-t pt-5 text-body-md hairline">
           <Row label="Subtotal" value={formatIDR(toIDR(subtotal))} />
           {discount > 0 && <Row label="Diskon" value={`−${formatIDR(toIDR(discount))}`} accent />}
-          <Row label="PPN 11%" value={formatIDR(toIDR(taxes))} muted />
+          <Row label="PPN 11%" value={formatIDR(toIDR(shownTaxes))} muted />
         </div>
         <div className="mt-5 flex items-center justify-between border-t pt-5 hairline">
           <span className="font-display text-title-md text-on-surface">Total</span>
           <span className="font-display text-headline-md text-primary-container">{formatIDR(toIDR(grandTotal))}</span>
         </div>
 
-        <Link href="/checkout" className="btn-primary mt-6 w-full py-3.5">
+        <Link href={applied ? `/checkout?promo=${encodeURIComponent(applied.code)}` : "/checkout"} className="btn-primary mt-6 w-full py-3.5">
           Lanjut ke Pembayaran <Icon name="arrow_forward" size={18} />
         </Link>
         <div className="mt-4 flex items-center justify-center gap-2 text-[12px] text-on-surface-variant">

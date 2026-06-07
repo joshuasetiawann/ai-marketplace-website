@@ -49,7 +49,7 @@ export default function HelpPage() {
           <p className="font-display text-body-lg font-semibold text-on-surface">Masih butuh bantuan?</p>
           <p className="text-body-sm text-on-surface-variant">Tim dukungan kami siap membantu.</p>
         </div>
-        <Link href="/dashboard" className="btn-primary px-5 py-2.5">
+        <Link href="/contact" className="btn-primary px-5 py-2.5">
           <Icon name="support_agent" size={18} /> Hubungi kami
         </Link>
       </div>

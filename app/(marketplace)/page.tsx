@@ -3,8 +3,14 @@ import Icon from "@/components/Icon";
 import ModelCard from "@/components/ModelCard";
 import HeroSearch from "@/components/HeroSearch";
 import { SectionHeading, GlowOrb } from "@/components/common";
+import type { Metadata } from "next";
 import { createServerClient } from "@/lib/supabase/server";
 import { CATEGORIES, USE_CASES, PRODUCT_COLUMNS, mapProduct } from "@/lib/catalog";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { url: "/" },
+};
 
 const STATS = [
   { value: "2.400+", label: "Model Kurasi" },

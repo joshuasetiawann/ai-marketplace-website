@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { logError } from "@/lib/log";
 
 export type PayoutState = { error?: string; ok?: boolean };
 
@@ -41,7 +42,10 @@ export async function requestPayout(_prev: PayoutState, formData: FormData): Pro
 
   const { supabase } = await requireUser();
   const { error } = await supabase.rpc("request_payout", { p_amount_usd: amount });
-  if (error) return { error: error.message };
+  if (error) {
+    logError("request_payout RPC failed", error);
+    return { error: error.message };
+  }
 
   revalidatePath("/sell/payouts");
   revalidatePath("/sell/earnings");

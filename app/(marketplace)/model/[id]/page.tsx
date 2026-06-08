@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Icon from "@/components/Icon";
 import ModelCard from "@/components/ModelCard";
 import ProductDetailClient from "@/components/ProductDetailClient";
@@ -7,6 +8,30 @@ import { SectionHeading } from "@/components/common";
 import { createServerClient } from "@/lib/supabase/server";
 import { PRODUCT_COLUMNS, mapProduct } from "@/lib/catalog";
 import type { ReviewItem } from "@/lib/actions/reviews";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createServerClient();
+  const { data } = await supabase
+    .from("products")
+    .select("name, tagline, description")
+    .eq("id", id)
+    .maybeSingle();
+  if (!data) return { title: "Model tidak ditemukan — Nexora AI" };
+  const title = `${data.name} — Nexora AI`;
+  const description = data.tagline || data.description || "Model AI premium di Nexora.";
+  return {
+    title,
+    description,
+    openGraph: { title, description, type: "website", url: `/model/${id}` },
+    twitter: { card: "summary_large_image", title, description },
+    alternates: { canonical: `/model/${id}` },
+  };
+}
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

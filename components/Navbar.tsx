@@ -42,9 +42,12 @@ export default function Navbar({
   }, []);
 
   useEffect(() => {
+    // close any open menus when the route changes
+    /* eslint-disable react-hooks/set-state-in-effect */
     setMenuOpen(false);
     setSearchOpen(false);
     setAccountOpen(false);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [pathname]);
 
   useEffect(() => {

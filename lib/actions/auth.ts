@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
+import { env } from "@/lib/env";
 
 export type AuthState = { error?: string; ok?: boolean };
 
@@ -28,7 +29,7 @@ export async function registerUser(
     password,
     options: {
       data: { name },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/dashboard`,
+      emailRedirectTo: `${env.SITE_URL}/auth/callback?next=/dashboard`,
     },
   });
   if (error) return { error: error.message };
@@ -79,7 +80,7 @@ export async function requestPasswordReset(
 
   const supabase = await createServerClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/reset-password`,
+    redirectTo: `${env.SITE_URL}/auth/callback?next=/reset-password`,
   });
   if (error) return { error: error.message };
   return { ok: true };

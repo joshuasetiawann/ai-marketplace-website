@@ -48,6 +48,19 @@ npm run preview  # preview the build      → http://localhost:4173
 npm run smoke    # SSR render-check every route (no browser needed)
 ```
 
+## 🌐 Deploy
+
+This is a static SPA — it deploys to any static host. Build command `npm run build`,
+output directory `dist`. SPA deep-link fallback is preconfigured for both platforms
+(`vercel.json`, `netlify.toml` + `public/_redirects`).
+
+**One-click:**
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/joshuasetiawann/ai-marketplace-website)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/joshuasetiawann/ai-marketplace-website)
+
+Or connect the repo manually — both auto-detect Vite and need no extra settings.
+
 ## 🗂 Project structure
 
 ```

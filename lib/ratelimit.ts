@@ -21,8 +21,16 @@ function sweep(now: number, windowMs: number) {
     if (live.length === 0) buckets.delete(k);
     else buckets.set(k, live);
   }
-  // hard backstop if a burst of unique keys still blows past the cap
-  if (buckets.size > MAX_KEYS) buckets.clear();
+  // If a burst of unique keys still blows past the cap, evict only the OLDEST
+  // (least-recently-active) buckets — never wipe all state, which would reset
+  // every active limit at once and let a flooder clear their own counter.
+  if (buckets.size > MAX_KEYS) {
+    const byAge = [...buckets.entries()]
+      .map(([k, arr]) => [k, arr[arr.length - 1] ?? 0] as const)
+      .sort((a, b) => a[1] - b[1]);
+    const dropCount = buckets.size - MAX_KEYS + Math.ceil(MAX_KEYS * 0.1);
+    for (let i = 0; i < dropCount && i < byAge.length; i++) buckets.delete(byAge[i][0]);
+  }
 }
 
 export function rateLimit(key: string, limit: number, windowMs: number): boolean {

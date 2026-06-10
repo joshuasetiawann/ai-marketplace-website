@@ -12,7 +12,7 @@ const NAV_LINKS = [
 ]
 
 export default function Navbar() {
-  const { cartCount, wishlist, user, logout } = useApp()
+  const { cartCount, wishlist, user, roleMeta, logout } = useApp()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -138,12 +138,19 @@ export default function Navbar() {
                     <div className="px-3 py-2 border-b hairline mb-1">
                       <p className="text-body-sm font-semibold text-on-surface truncate">{user.name}</p>
                       <p className="text-[12px] text-on-surface-variant truncate">{user.email}</p>
+                      {roleMeta && (
+                        <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[11px]" style={{ background: `${roleMeta.accent}1a`, color: roleMeta.accent }}>
+                          <Icon name={roleMeta.icon} size={12} /> {roleMeta.label}
+                        </span>
+                      )}
                     </div>
                     {[
                       { to: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
-                      { to: '/seller', icon: 'storefront', label: 'Seller Studio' },
-                      { to: '/orders', icon: 'receipt_long', label: 'Order History' },
-                      { to: '/settings', icon: 'settings', label: 'Settings' },
+                      ...(user.role === 'seller' || user.role === 'admin' ? [{ to: '/seller', icon: 'storefront', label: 'Seller Studio' }] : []),
+                      ...(user.role === 'developer' || user.role === 'admin' ? [{ to: '/developer', icon: 'code', label: 'Developer Console' }] : []),
+                      ...(user.role === 'admin' ? [{ to: '/admin', icon: 'shield_person', label: 'Admin' }] : []),
+                      { to: '/orders', icon: 'receipt_long', label: 'Pesanan' },
+                      { to: '/settings', icon: 'settings', label: 'Pengaturan' },
                     ].map((i) => (
                       <Link
                         key={i.to}

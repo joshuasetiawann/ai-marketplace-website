@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import Icon from '../components/Icon.jsx'
 import ModelArtwork from '../components/ModelArtwork.jsx'
@@ -8,6 +8,7 @@ import { TierBadge, StatusBadge } from '../components/Badge.jsx'
 import { SectionHeading } from '../components/common.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import { getModel, getCreator, MODELS } from '../data/models.js'
+import { toIDR, formatIDR } from '../data/payment.js'
 
 const REVIEWS = [
   { name: 'Maya Chen', role: 'Creative Director', rating: 5, text: 'Genuinely the most coherent output I have seen. It cut our production time in half and the quality is editorial-grade.', when: '2 weeks ago' },
@@ -19,9 +20,16 @@ export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const model = getModel(id)
-  const { addToCart, isWishlisted, toggleWishlist } = useApp()
+  const { addToCart, isWishlisted, toggleWishlist, recordView, orders, toast } = useApp()
   const [activeImg, setActiveImg] = useState(0)
   const [tab, setTab] = useState('overview')
+
+  useEffect(() => {
+    if (model) recordView(model.id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  const owned = orders.some((o) => o.items.some((it) => it.id === id))
 
   if (!model) {
     return (
@@ -101,23 +109,31 @@ export default function ProductDetail() {
           <div className="surface-card rounded-xl p-6 mb-4">
             <div className="flex items-end justify-between mb-5">
               <div>
-                <p className="text-body-sm text-on-surface-variant">Subscription</p>
-                <p className="font-display text-display-md text-on-surface leading-none mt-1">
-                  {model.price === 0 ? <span className="text-success">Free</span> : `$${model.price}`}
-                  {model.price !== 0 && <span className="text-body-lg text-on-surface-variant font-normal">/mo</span>}
+                <p className="text-body-sm text-on-surface-variant">Langganan</p>
+                <p className="font-display text-headline-md text-on-surface leading-none mt-1">
+                  {model.price === 0 ? <span className="text-success">Gratis</span> : formatIDR(toIDR(model.price))}
+                  {model.price !== 0 && <span className="text-body-md text-on-surface-variant font-normal">/bln</span>}
                 </p>
               </div>
-              <span className="inline-flex items-center gap-1 text-success text-body-sm bg-success/10 px-3 py-1 rounded-full">
-                <Icon name="check_circle" size={16} fill /> Available
-              </span>
+              {owned ? (
+                <span className="inline-flex items-center gap-1 text-primary-container text-body-sm bg-primary-container/10 px-3 py-1 rounded-full"><Icon name="check_circle" size={16} fill /> Dimiliki</span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-success text-body-sm bg-success/10 px-3 py-1 rounded-full"><Icon name="check_circle" size={16} fill /> Tersedia</span>
+              )}
             </div>
             <div className="flex flex-col gap-3">
-              <button onClick={buyNow} className="btn-primary w-full py-3.5">
-                <Icon name="bolt" size={18} fill /> Buy Now
-              </button>
+              {owned ? (
+                <button onClick={() => toast('Membuka studio produk…', { icon: 'rocket_launch' })} className="btn-primary w-full py-3.5">
+                  <Icon name="lock_open" size={18} /> Akses Produk
+                </button>
+              ) : (
+                <button onClick={buyNow} className="btn-primary w-full py-3.5">
+                  <Icon name="bolt" size={18} fill /> Beli Sekarang
+                </button>
+              )}
               <div className="grid grid-cols-[1fr_auto] gap-3">
                 <button onClick={() => addToCart(model.id, 1, model.name)} className="btn-ghost py-3.5">
-                  <Icon name="add_shopping_cart" size={18} /> Add to Cart
+                  <Icon name="add_shopping_cart" size={18} /> Tambah Keranjang
                 </button>
                 <button
                   onClick={() => toggleWishlist(model.id, model.name)}
@@ -128,8 +144,9 @@ export default function ProductDetail() {
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-center gap-2 mt-4 text-[12px] text-on-surface-variant">
-              <Icon name="lock" size={14} /> Secure checkout · Cancel anytime
+            <div className="flex items-center justify-between gap-2 mt-4 text-[12px] text-on-surface-variant">
+              <span className="flex items-center gap-1.5"><Icon name="lock" size={14} className="text-primary-container" /> Checkout aman · batal kapan saja</span>
+              <button onClick={() => toast('Laporan terkirim. Tim kami akan meninjau produk ini.', { icon: 'flag' })} className="flex items-center gap-1 hover:text-error transition-colors"><Icon name="flag" size={14} /> Laporkan</button>
             </div>
           </div>
 

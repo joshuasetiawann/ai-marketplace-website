@@ -3,7 +3,9 @@ import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
 import MobileNav from './components/MobileNav.jsx'
 import Toaster from './components/Toaster.jsx'
+import SessionExpiredModal from './components/SessionExpiredModal.jsx'
 import { ScrollToTop } from './components/common.jsx'
+import { RequireAuth, RequireRole } from './components/RouteGuards.jsx'
 
 import Home from './pages/Home.jsx'
 import Explore from './pages/Explore.jsx'
@@ -14,9 +16,12 @@ import ProductDetail from './pages/ProductDetail.jsx'
 import Pricing from './pages/Pricing.jsx'
 import Cart from './pages/Cart.jsx'
 import Checkout from './pages/Checkout.jsx'
+import Payment from './pages/Payment.jsx'
 import Wishlist from './pages/Wishlist.jsx'
 import BuyerDashboard from './pages/BuyerDashboard.jsx'
 import SellerDashboard from './pages/SellerDashboard.jsx'
+import DeveloperDashboard from './pages/DeveloperDashboard.jsx'
+import Admin from './pages/Admin.jsx'
 import UploadProduct from './pages/UploadProduct.jsx'
 import OrderHistory from './pages/OrderHistory.jsx'
 import AccountSettings from './pages/AccountSettings.jsx'
@@ -24,6 +29,8 @@ import HelpCenter from './pages/HelpCenter.jsx'
 import About from './pages/About.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
+import VerifyEmail from './pages/VerifyEmail.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
 import NotFound from './pages/NotFound.jsx'
 
 function MainLayout() {
@@ -61,13 +68,19 @@ export default function App() {
           <Route path="/model/:id" element={<ProductDetail />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
           <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/dashboard" element={<BuyerDashboard />} />
-          <Route path="/seller" element={<SellerDashboard />} />
-          <Route path="/upload" element={<UploadProduct />} />
-          <Route path="/orders" element={<OrderHistory />} />
-          <Route path="/settings" element={<AccountSettings />} />
+          {/* auth-gated commerce */}
+          <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
+          <Route path="/payment" element={<RequireAuth><Payment /></RequireAuth>} />
+          <Route path="/orders" element={<RequireAuth><OrderHistory /></RequireAuth>} />
+          <Route path="/settings" element={<RequireAuth><AccountSettings /></RequireAuth>} />
+          {/* role-gated dashboards */}
+          <Route path="/dashboard" element={<RequireAuth><BuyerDashboard /></RequireAuth>} />
+          <Route path="/seller" element={<RequireRole roles={['seller', 'admin']}><SellerDashboard /></RequireRole>} />
+          <Route path="/developer" element={<RequireRole roles={['developer', 'admin']}><DeveloperDashboard /></RequireRole>} />
+          <Route path="/admin" element={<RequireRole roles={['admin']}><Admin /></RequireRole>} />
+          <Route path="/upload" element={<RequireRole roles={['seller', 'developer', 'admin']}><UploadProduct /></RequireRole>} />
+          {/* content */}
           <Route path="/help" element={<HelpCenter />} />
           <Route path="/about" element={<About />} />
           <Route path="*" element={<NotFound />} />
@@ -75,8 +88,11 @@ export default function App() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Route>
       </Routes>
+      <SessionExpiredModal />
       <Toaster />
     </>
   )

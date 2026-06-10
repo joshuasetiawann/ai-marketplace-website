@@ -1,160 +1,220 @@
-import { createContext, useContext, useEffect, useMemo, useReducer, useState, useCallback } from 'react'
-import { MODELS } from '../data/models.js'
+import { createContext, useContext, useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import {
+  ensureSeed, getUser, getSession, startSession, endSession, touchSession,
+  registerUser, authenticate, saveUser, getUserData, saveUserData,
+  getCatalog, getDevices, revokeDevice, ROLES,
+} from '../data/db.js'
+import { recommendFor } from '../data/recommend.js'
 
 const AppContext = createContext(null)
-
-const STORAGE_KEY = 'nexora.state.v1'
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw)
-  } catch {
-    /* ignore */
-  }
-  return null
-}
-
-const initialState = loadState() || {
-  cart: [], // [{ id, qty }]
-  wishlist: [], // [id]
-  user: null, // { name, email }
-  orders: [], // [{ id, date, items, total, status }]
-}
-
-function reducer(state, action) {
-  switch (action.type) {
-    case 'ADD_TO_CART': {
-      const existing = state.cart.find((c) => c.id === action.id)
-      if (existing) {
-        return {
-          ...state,
-          cart: state.cart.map((c) => (c.id === action.id ? { ...c, qty: c.qty + (action.qty || 1) } : c)),
-        }
-      }
-      return { ...state, cart: [...state.cart, { id: action.id, qty: action.qty || 1 }] }
-    }
-    case 'REMOVE_FROM_CART':
-      return { ...state, cart: state.cart.filter((c) => c.id !== action.id) }
-    case 'SET_QTY':
-      return {
-        ...state,
-        cart: state.cart
-          .map((c) => (c.id === action.id ? { ...c, qty: Math.max(1, action.qty) } : c))
-          .filter((c) => c.qty > 0),
-      }
-    case 'CLEAR_CART':
-      return { ...state, cart: [] }
-    case 'TOGGLE_WISHLIST': {
-      const inList = state.wishlist.includes(action.id)
-      return {
-        ...state,
-        wishlist: inList ? state.wishlist.filter((x) => x !== action.id) : [...state.wishlist, action.id],
-      }
-    }
-    case 'LOGIN':
-      return { ...state, user: action.user }
-    case 'LOGOUT':
-      return { ...state, user: null }
-    case 'PLACE_ORDER':
-      return { ...state, orders: [action.order, ...state.orders], cart: [] }
-    default:
-      return state
-  }
-}
+const GUEST = '__guest__'
 
 export function AppProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, initialState)
+  ensureSeed()
+
+  const [userId, setUserId] = useState(() => {
+    const s = getSession()
+    return s && !s.expired ? s.userId : GUEST
+  })
+  const [user, setUser] = useState(() => (userId !== GUEST ? getUser(userId) : null))
+  const [data, setData] = useState(() => getUserData(userId === GUEST ? GUEST : userId))
+  const [sessionExpired, setSessionExpired] = useState(() => {
+    const s = getSession()
+    return Boolean(s && s.expired)
+  })
   const [toasts, setToasts] = useState([])
+  const [catalogVersion, setCatalogVersion] = useState(0)
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-    } catch {
-      /* ignore */
-    }
-  }, [state])
+  const catalog = useMemo(() => getCatalog(), [catalogVersion])
 
+  // ── toasts ──────────────────────────────────────────────────────────────────
   const toast = useCallback((message, opts = {}) => {
     const id = Math.random().toString(36).slice(2)
     setToasts((t) => [...t, { id, message, type: opts.type || 'success', icon: opts.icon }])
-    setTimeout(() => {
-      setToasts((t) => t.filter((x) => x.id !== id))
-    }, opts.duration || 2600)
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), opts.duration || 2800)
   }, [])
-
   const dismissToast = useCallback((id) => setToasts((t) => t.filter((x) => x.id !== id)), [])
 
-  // Derived helpers
-  const cartDetailed = useMemo(
-    () =>
-      state.cart
-        .map(({ id, qty }) => {
-          const model = MODELS.find((m) => m.id === id)
-          return model ? { ...model, qty } : null
-        })
-        .filter(Boolean),
-    [state.cart],
+  // ── per-user data persistence ────────────────────────────────────────────────
+  const mutate = useCallback(
+    (updater) => {
+      setData((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater
+        saveUserData(userId === GUEST ? GUEST : userId, next)
+        return next
+      })
+    },
+    [userId],
   )
 
-  const wishlistDetailed = useMemo(
-    () => state.wishlist.map((id) => MODELS.find((m) => m.id === id)).filter(Boolean),
-    [state.wishlist],
+  // reload data whenever the active account changes
+  useEffect(() => {
+    setData(getUserData(userId === GUEST ? GUEST : userId))
+  }, [userId])
+
+  // ── session lifecycle: keep-alive on activity + expiry watcher ────────────────
+  const lastTouch = useRef(0)
+  useEffect(() => {
+    if (userId === GUEST) return
+    const onActivity = () => {
+      const now = Date.now()
+      if (now - lastTouch.current > 20000) {
+        lastTouch.current = now
+        touchSession()
+      }
+    }
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart']
+    events.forEach((e) => window.addEventListener(e, onActivity, { passive: true }))
+    const interval = setInterval(() => {
+      const s = getSession()
+      if (!s || s.expired) {
+        setSessionExpired(true)
+        setUser(null)
+        setUserId(GUEST)
+      }
+    }, 15000)
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, onActivity))
+      clearInterval(interval)
+    }
+  }, [userId])
+
+  // ── auth ─────────────────────────────────────────────────────────────────────
+  const establish = useCallback(
+    (u, { silent } = {}) => {
+      // merge guest cart/wishlist into the account on first sign-in
+      const guest = getUserData(GUEST)
+      const mine = getUserData(u.id)
+      if (guest.cart.length || guest.wishlist.length) {
+        const cart = [...mine.cart]
+        guest.cart.forEach((g) => {
+          const hit = cart.find((c) => c.id === g.id)
+          if (hit) hit.qty += g.qty
+          else cart.push({ ...g })
+        })
+        const wishlist = [...new Set([...mine.wishlist, ...guest.wishlist])]
+        saveUserData(u.id, { ...mine, cart, wishlist })
+        saveUserData(GUEST, { cart: [], wishlist: [], orders: [], recentlyViewed: [], prefs: { interests: [] } })
+      }
+      startSession(u.id, u.role)
+      setUser(u)
+      setUserId(u.id)
+      setSessionExpired(false)
+      if (!silent) toast(`Selamat datang, ${u.name.split(' ')[0]}`, { icon: 'waving_hand' })
+    },
+    [toast],
   )
 
-  const cartCount = useMemo(() => state.cart.reduce((sum, c) => sum + c.qty, 0), [state.cart])
-  const subtotal = useMemo(() => cartDetailed.reduce((sum, m) => sum + m.price * m.qty, 0), [cartDetailed])
-  const taxes = useMemo(() => Math.round(subtotal * 0.05 * 100) / 100, [subtotal])
-  const total = useMemo(() => subtotal + taxes, [subtotal, taxes])
+  const api = useMemo(() => {
+    // ── derived per-user collections ────────────────────────────────────────────
+    const find = (id) => catalog.find((m) => m.id === id)
+    const cartDetailed = data.cart.map(({ id, qty }) => { const m = find(id); return m ? { ...m, qty } : null }).filter(Boolean)
+    const wishlistDetailed = data.wishlist.map(find).filter(Boolean)
+    const recentlyViewedDetailed = data.recentlyViewed.map(find).filter(Boolean)
+    const cartCount = data.cart.reduce((s, c) => s + c.qty, 0)
+    const subtotal = cartDetailed.reduce((s, m) => s + m.price * m.qty, 0)
+    const taxes = Math.round(subtotal * 0.11 * 100) / 100 // PPN 11%
+    const total = subtotal + taxes
+    const recommendations = recommendFor(data, 4)
 
-  const api = useMemo(
-    () => ({
-      state,
-      dispatch,
-      // cart
-      cartDetailed,
-      cartCount,
-      subtotal,
-      taxes,
-      total,
-      addToCart: (id, qty = 1, name) => {
-        dispatch({ type: 'ADD_TO_CART', id, qty })
-        toast(`${name || 'Item'} added to cart`, { icon: 'shopping_cart' })
-      },
-      removeFromCart: (id) => dispatch({ type: 'REMOVE_FROM_CART', id }),
-      setQty: (id, qty) => dispatch({ type: 'SET_QTY', id, qty }),
-      clearCart: () => dispatch({ type: 'CLEAR_CART' }),
-      // wishlist
-      wishlist: state.wishlist,
-      wishlistDetailed,
-      isWishlisted: (id) => state.wishlist.includes(id),
-      toggleWishlist: (id, name) => {
-        const wasIn = state.wishlist.includes(id)
-        dispatch({ type: 'TOGGLE_WISHLIST', id })
-        toast(wasIn ? `${name || 'Item'} removed from wishlist` : `${name || 'Item'} saved to wishlist`, {
-          icon: wasIn ? 'bookmark_remove' : 'bookmark_added',
-        })
-      },
+    return {
+      // identity
+      user,
+      role: user?.role || null,
+      roleMeta: user ? ROLES[user.role] : null,
+      isAuthenticated: Boolean(user),
+      ROLES,
+
       // auth
-      user: state.user,
-      login: (user) => {
-        dispatch({ type: 'LOGIN', user })
-        toast(`Welcome back, ${user.name.split(' ')[0]}`, { icon: 'waving_hand' })
+      register: ({ name, email, password, role }) => {
+        const res = registerUser({ name, email, password, role })
+        return res
       },
+      signIn: (email, password) => {
+        const res = authenticate(email, password)
+        if (res.error) return res
+        const u = res.user
+        if (!u.verified) return { needVerify: true, user: u }
+        if (u.twoFactor) return { need2FA: true, user: u }
+        establish(u)
+        return { ok: true, user: u }
+      },
+      establish, // call after passing verify / 2FA
       logout: () => {
-        dispatch({ type: 'LOGOUT' })
-        toast('Signed out', { icon: 'logout' })
+        endSession()
+        setUser(null)
+        setUserId(GUEST)
+        toast('Berhasil keluar', { icon: 'logout' })
       },
-      // orders
-      orders: state.orders,
-      placeOrder: (order) => dispatch({ type: 'PLACE_ORDER', order }),
+      updateProfile: (patch) => {
+        if (!user) return
+        const next = saveUser({ ...user, ...patch })
+        setUser(next)
+        toast('Profil diperbarui', { icon: 'check' })
+      },
+      verifyEmail: (id) => {
+        const u = getUser(id)
+        if (u) { saveUser({ ...u, verified: true }) }
+      },
+      setTwoFactor: (on) => {
+        if (!user) return
+        const next = saveUser({ ...user, twoFactor: on })
+        setUser(next)
+        toast(on ? '2FA diaktifkan' : '2FA dimatikan', { icon: on ? 'verified_user' : 'lock' })
+      },
+      refreshUser: () => user && setUser(getUser(user.id)),
+
+      // session
+      sessionExpired,
+      resolveSessionExpired: () => { endSession(); setSessionExpired(false) },
+      devices: user ? getDevices(user.id) : [],
+      revokeDevice: (devId) => { if (user) { revokeDevice(user.id, devId); toast('Perangkat dikeluarkan', { icon: 'logout' }) } },
+
+      // catalog
+      catalog,
+      bumpCatalog: () => setCatalogVersion((v) => v + 1),
+
+      // cart (per-user)
+      cart: data.cart,
+      cartDetailed, cartCount, subtotal, taxes, total,
+      addToCart: (id, qty = 1, name) => {
+        mutate((d) => {
+          const hit = d.cart.find((c) => c.id === id)
+          const cart = hit
+            ? d.cart.map((c) => (c.id === id ? { ...c, qty: c.qty + qty } : c))
+            : [...d.cart, { id, qty }]
+          return { ...d, cart }
+        })
+        toast(`${name || 'Item'} masuk keranjang`, { icon: 'shopping_cart' })
+      },
+      removeFromCart: (id) => mutate((d) => ({ ...d, cart: d.cart.filter((c) => c.id !== id) })),
+      setQty: (id, qty) => mutate((d) => ({ ...d, cart: d.cart.map((c) => (c.id === id ? { ...c, qty: Math.max(1, qty) } : c)).filter((c) => c.qty > 0) })),
+      clearCart: () => mutate((d) => ({ ...d, cart: [] })),
+
+      // wishlist (per-user)
+      wishlist: data.wishlist,
+      wishlistDetailed,
+      isWishlisted: (id) => data.wishlist.includes(id),
+      toggleWishlist: (id, name) => {
+        const wasIn = data.wishlist.includes(id)
+        mutate((d) => ({ ...d, wishlist: wasIn ? d.wishlist.filter((x) => x !== id) : [...d.wishlist, id] }))
+        toast(wasIn ? `${name || 'Item'} dihapus dari wishlist` : `${name || 'Item'} disimpan`, { icon: wasIn ? 'bookmark_remove' : 'bookmark_added' })
+      },
+
+      // recently viewed + recommendations (per-user)
+      recentlyViewed: data.recentlyViewed,
+      recentlyViewedDetailed,
+      recordView: (id) => mutate((d) => ({ ...d, recentlyViewed: [id, ...d.recentlyViewed.filter((x) => x !== id)].slice(0, 12) })),
+      recommendations,
+
+      // orders (per-user)
+      orders: data.orders,
+      placeOrder: (order) => mutate((d) => ({ ...d, orders: [order, ...d.orders], cart: [] })),
+
       // toasts
-      toast,
-      toasts,
-      dismissToast,
-    }),
-    [state, cartDetailed, cartCount, subtotal, taxes, total, wishlistDetailed, toast, toasts, dismissToast],
-  )
+      toast, toasts, dismissToast,
+    }
+  }, [user, data, catalog, sessionExpired, toasts, mutate, establish, toast, dismissToast])
 
   return <AppContext.Provider value={api}>{children}</AppContext.Provider>
 }

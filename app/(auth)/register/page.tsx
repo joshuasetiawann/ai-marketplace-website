@@ -12,16 +12,17 @@ export default function RegisterPage() {
   return (
     <AuthCard title="Buat akun" sub="Gratis. Belanja & jual model AI dalam satu akun.">
       <form action={action} className="space-y-4">
-        <input name="name" placeholder="Nama lengkap" autoComplete="name" className={fieldClass} />
-        <input name="email" type="email" placeholder="Email" autoComplete="email" className={fieldClass} />
+        <input name="name" placeholder="Nama lengkap" aria-label="Nama lengkap" autoComplete="name" className={fieldClass} />
+        <input name="email" type="email" placeholder="Email" aria-label="Email" autoComplete="email" className={fieldClass} />
         <input
           name="password"
           type="password"
           placeholder="Password (min. 8 karakter)"
+          aria-label="Password"
           autoComplete="new-password"
           className={fieldClass}
         />
-        {state.error && <p className="text-sm text-red-400">{state.error}</p>}
+        {state.error && <p role="alert" className="text-sm text-red-400">{state.error}</p>}
         <button
           type="submit"
           disabled={pending}

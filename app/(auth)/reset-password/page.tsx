@@ -15,10 +15,11 @@ export default function ResetPasswordPage() {
           name="password"
           type="password"
           placeholder="Password baru (min. 8 karakter)"
+          aria-label="Password baru"
           autoComplete="new-password"
           className={fieldClass}
         />
-        {state.error && <p className="text-sm text-red-400">{state.error}</p>}
+        {state.error && <p role="alert" className="text-sm text-red-400">{state.error}</p>}
         <button
           type="submit"
           disabled={pending}

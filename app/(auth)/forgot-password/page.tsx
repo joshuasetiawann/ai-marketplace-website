@@ -16,7 +16,7 @@ export default function ForgotPasswordPage() {
     >
       {state.ok ? (
         <div className="space-y-4">
-          <p className="text-sm text-accent">
+          <p role="status" className="text-sm text-accent">
             Tautan reset sudah dikirim. Cek email kamu.
           </p>
           <Link href="/login" className="text-sm text-muted hover:text-accent">
@@ -25,8 +25,8 @@ export default function ForgotPasswordPage() {
         </div>
       ) : (
         <form action={action} className="space-y-4">
-          <input name="email" type="email" placeholder="Email" autoComplete="email" className={fieldClass} />
-          {state.error && <p className="text-sm text-red-400">{state.error}</p>}
+          <input name="email" type="email" placeholder="Email" aria-label="Email" autoComplete="email" className={fieldClass} />
+          {state.error && <p role="alert" className="text-sm text-red-400">{state.error}</p>}
           <button
             type="submit"
             disabled={pending}

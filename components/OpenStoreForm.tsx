@@ -20,7 +20,7 @@ export default function OpenStoreForm() {
       </p>
 
       {state.error && (
-        <div className="mb-4 flex items-center gap-2 rounded-lg border border-error/20 bg-error/10 px-3 py-2 text-body-sm text-error">
+        <div role="alert" className="mb-4 flex items-center gap-2 rounded-lg border border-error/20 bg-error/10 px-3 py-2 text-body-sm text-error">
           <Icon name="error" size={18} fill /> {state.error}
         </div>
       )}
@@ -58,6 +58,9 @@ export default function OpenStoreForm() {
         <label className="mt-1 flex cursor-pointer items-start gap-3">
           <button
             type="button"
+            role="checkbox"
+            aria-checked={agree}
+            aria-label="Setuju dengan Perjanjian Penjual"
             onClick={() => setAgree((a) => !a)}
             className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all ${
               agree ? "border-primary-container bg-primary-container" : "border-white/30"

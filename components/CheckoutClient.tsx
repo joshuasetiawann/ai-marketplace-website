@@ -68,6 +68,8 @@ export default function CheckoutClient({
                 key={g.id}
                 type="button"
                 onClick={() => setMethod(g.id)}
+                aria-pressed={method === g.id}
+                aria-label={`Metode pembayaran ${g.label}`}
                 className={`rounded-xl border p-4 text-left transition-all ${
                   method === g.id ? "border-primary-container bg-primary-container/10" : "border-white/10 hover:border-white/25"
                 }`}
@@ -94,6 +96,8 @@ export default function CheckoutClient({
                   key={b.id}
                   type="button"
                   onClick={() => setBank(b.id)}
+                  aria-pressed={bank === b.id}
+                  aria-label={`Bank ${b.short}`}
                   className={`flex items-center gap-2 rounded-lg border p-3 transition-all ${
                     bank === b.id ? "border-primary-container bg-primary-container/10" : "border-white/10 hover:border-white/25"
                   }`}
@@ -113,6 +117,8 @@ export default function CheckoutClient({
                   key={w.id}
                   type="button"
                   onClick={() => setEwallet(w.id)}
+                  aria-pressed={ewallet === w.id}
+                  aria-label={`E-wallet ${w.name}`}
                   className={`flex items-center gap-2 rounded-lg border p-3 transition-all ${
                     ewallet === w.id ? "border-primary-container bg-primary-container/10" : "border-white/10 hover:border-white/25"
                   }`}
@@ -168,6 +174,9 @@ export default function CheckoutClient({
           <button
             type="button"
             data-testid="agree-toggle"
+            role="checkbox"
+            aria-checked={agree}
+            aria-label="Setuju dengan Syarat & Ketentuan"
             onClick={() => setAgree((a) => !a)}
             className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all ${
               agree ? "border-primary-container bg-primary-container" : "border-white/30"
@@ -180,7 +189,7 @@ export default function CheckoutClient({
           </span>
         </label>
 
-        {state.error && <p className="mt-3 text-body-sm text-error">{state.error}</p>}
+        {state.error && <p role="alert" className="mt-3 text-body-sm text-error">{state.error}</p>}
 
         <button type="submit" disabled={pending} className="btn-primary mt-5 w-full py-3.5">
           <Icon name="lock" size={18} /> {pending ? "Memproses…" : `Bayar ${formatIDR(toIDR(total))}`}

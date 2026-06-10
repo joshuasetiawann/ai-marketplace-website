@@ -58,7 +58,8 @@ export default function ModelArtwork({
   const [c0, c1] = colors;
 
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    // decorative — the surrounding link/card carries the accessible name
+    <div aria-hidden className={`relative overflow-hidden ${className}`}>
       <svg viewBox="0 0 200 130" preserveAspectRatio="xMidYMid slice" className="block h-full w-full">
         <defs>
           <radialGradient id={`${gid}-bg`} cx="65%" cy="20%" r="90%">

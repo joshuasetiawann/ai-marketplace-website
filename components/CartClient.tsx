@@ -24,7 +24,7 @@ export default function CartClient({
   total: number;
 }) {
   const router = useRouter();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [promo, setPromo] = useState("");
   const [applied, setApplied] = useState<{ code: string; rate: number } | null>(null);
   const [promoError, setPromoError] = useState("");
@@ -67,7 +67,7 @@ export default function CartClient({
       <div className="flex flex-col gap-4">
         {lines.map((m) => (
           <div key={m.id} className="flex items-center gap-4 rounded-xl surface-card p-4 animate-fade-in">
-            <Link href={`/model/${m.id}`} className="h-20 w-24 shrink-0 overflow-hidden rounded-lg">
+            <Link href={`/model/${m.id}`} aria-label={m.name} className="h-20 w-24 shrink-0 overflow-hidden rounded-lg">
               <ModelArtwork seed={m.id} colors={m.art} icon={m.icon} className="h-full w-full" />
             </Link>
             <div className="min-w-0 flex-1">
@@ -83,15 +83,15 @@ export default function CartClient({
               </p>
             </div>
             <div className="flex flex-col items-end gap-3">
-              <button onClick={() => remove(m.id)} className="p-1 text-on-surface-variant transition-colors hover:text-error" aria-label="Hapus">
+              <button onClick={() => remove(m.id)} disabled={isPending} className="p-1 text-on-surface-variant transition-colors hover:text-error disabled:opacity-40" aria-label="Hapus">
                 <Icon name="delete" size={20} />
               </button>
               <div className="flex items-center rounded-full border border-white/10">
-                <button onClick={() => setQty(m.id, m.qty - 1)} className="flex h-8 w-8 items-center justify-center text-on-surface-variant hover:text-on-surface" aria-label="Kurangi">
+                <button onClick={() => setQty(m.id, m.qty - 1)} disabled={isPending} className="flex h-8 w-8 items-center justify-center text-on-surface-variant hover:text-on-surface disabled:opacity-40" aria-label="Kurangi">
                   <Icon name="remove" size={16} />
                 </button>
                 <span className="w-8 text-center text-body-sm font-medium text-on-surface">{m.qty}</span>
-                <button onClick={() => setQty(m.id, m.qty + 1)} className="flex h-8 w-8 items-center justify-center text-on-surface-variant hover:text-on-surface" aria-label="Tambah">
+                <button onClick={() => setQty(m.id, m.qty + 1)} disabled={isPending} className="flex h-8 w-8 items-center justify-center text-on-surface-variant hover:text-on-surface disabled:opacity-40" aria-label="Tambah">
                   <Icon name="add" size={16} />
                 </button>
               </div>

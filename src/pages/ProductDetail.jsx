@@ -7,7 +7,7 @@ import StarRating from '../components/StarRating.jsx'
 import { TierBadge, StatusBadge } from '../components/Badge.jsx'
 import { SectionHeading } from '../components/common.jsx'
 import { useApp } from '../context/AppContext.jsx'
-import { getModel, getCreator, MODELS } from '../data/models.js'
+import { getModel, getCreator } from '../data/models.js'
 import { toIDR, formatIDR } from '../data/payment.js'
 
 const REVIEWS = [
@@ -19,8 +19,8 @@ const REVIEWS = [
 export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const model = getModel(id)
-  const { addToCart, isWishlisted, toggleWishlist, recordView, orders, toast } = useApp()
+  const { catalog, addToCart, isWishlisted, toggleWishlist, recordView, orders, toast } = useApp()
+  const model = catalog.find((m) => m.id === id) || getModel(id)
   const [activeImg, setActiveImg] = useState(0)
   const [tab, setTab] = useState('overview')
 
@@ -41,9 +41,13 @@ export default function ProductDetail() {
     )
   }
 
-  const creator = getCreator(model.creatorId)
+  const creator = getCreator(model.creatorId) || {
+    id: model.ownerId || 'studio', name: model.ownerName || 'Studio Independen',
+    verified: false, art: model.art || ['#0b3a44', '#00e5ff'], title: 'Kreator marketplace',
+    stats: { followers: '—' },
+  }
   const saved = isWishlisted(model.id)
-  const related = MODELS.filter((m) => m.id !== model.id && (m.category === model.category || m.creatorId === model.creatorId)).slice(0, 4)
+  const related = catalog.filter((m) => m.id !== model.id && (m.category === model.category || m.creatorId === model.creatorId)).slice(0, 4)
   const ratingBreakdown = [76, 18, 4, 1, 1]
 
   const buyNow = () => {

@@ -3,6 +3,9 @@ import {
   ensureSeed, getUser, getSession, startSession, endSession, touchSession,
   registerUser, authenticate, saveUser, getUserData, saveUserData,
   getCatalog, getDevices, revokeDevice, ROLES,
+  recordSale, getSellerListings, getSalesBySeller, sellerEarnings as computeEarnings,
+  getPayouts, requestPayout as dbRequestPayout, savePayoutAccount as dbSavePayoutAccount,
+  updateProduct as dbUpdateProduct, deleteProduct as dbDeleteProduct,
 } from '../data/db.js'
 import { recommendFor } from '../data/recommend.js'
 
@@ -207,9 +210,48 @@ export function AppProvider({ children }) {
       recordView: (id) => mutate((d) => ({ ...d, recentlyViewed: [id, ...d.recentlyViewed.filter((x) => x !== id)].slice(0, 12) })),
       recommendations,
 
-      // orders (per-user)
+      // orders (per-user) — paid orders also fan out into the seller sales ledger
       orders: data.orders,
-      placeOrder: (order) => mutate((d) => ({ ...d, orders: [order, ...d.orders], cart: [] })),
+      placeOrder: (order) => {
+        recordSale(order, { name: user?.name, id: user?.id })
+        mutate((d) => ({ ...d, orders: [order, ...d.orders], cart: [] }))
+      },
+
+      // ── seller economy (listings, sales ledger, earnings, payouts) ────────────
+      sellerListings: user ? getSellerListings(user.id) : [],
+      sellerSales: user ? getSalesBySeller(user.id) : [],
+      sellerEarnings: user ? computeEarnings(user.id) : null,
+      payoutHistory: user ? getPayouts(user.id) : [],
+      payoutAccount: user?.store?.payout || null,
+      updateProduct: (id, patch) => {
+        const res = dbUpdateProduct(id, patch, user?.id)
+        if (res.error) toast(res.error, { type: 'error', icon: 'error' })
+        else { toast('Produk diperbarui', { icon: 'check' }); setCatalogVersion((v) => v + 1) }
+        return res
+      },
+      setProductStatus: (id, status) => {
+        const res = dbUpdateProduct(id, { status }, user?.id)
+        if (!res.error) { toast(status === 'published' ? 'Produk ditayangkan' : 'Produk disembunyikan', { icon: status === 'published' ? 'visibility' : 'visibility_off' }); setCatalogVersion((v) => v + 1) }
+        return res
+      },
+      deleteProduct: (id) => {
+        const res = dbDeleteProduct(id, user?.id)
+        if (res.error) toast(res.error, { type: 'error', icon: 'error' })
+        else { toast('Produk dihapus', { icon: 'delete' }); setCatalogVersion((v) => v + 1) }
+        return res
+      },
+      savePayoutAccount: ({ bank, account }) => {
+        const res = dbSavePayoutAccount(user?.id, { bank, account })
+        if (res.error) toast(res.error, { type: 'error', icon: 'error' })
+        else { setUser(res.user); toast('Rekening payout terverifikasi', { icon: 'verified_user' }) }
+        return res
+      },
+      requestPayout: (amountUSD, amountIDR) => {
+        const res = dbRequestPayout(user?.id, amountUSD, amountIDR)
+        if (res.error) toast(res.error, { type: 'error', icon: 'error' })
+        else { toast('Pencairan diproses', { icon: 'payments' }); setCatalogVersion((v) => v + 1) }
+        return res
+      },
 
       // toasts
       toast, toasts, dismissToast,

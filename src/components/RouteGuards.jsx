@@ -26,6 +26,18 @@ export function RequireRole({ roles, children }) {
   return children
 }
 
+// Requires the signed-in shopper to have opened a store; otherwise sends them to
+// the "Buka Toko" onboarding. This is how one account becomes a seller.
+export function RequireStore({ children }) {
+  const { isAuthenticated, hasStore } = useApp()
+  const location = useLocation()
+  if (!isAuthenticated) {
+    return <Navigate to={`/login?next=${encodeURIComponent(location.pathname + location.search)}`} replace />
+  }
+  if (!hasStore) return <Navigate to="/sell/start" replace />
+  return children
+}
+
 export function Unauthorized({ need = [], have }) {
   const homes = { buyer: '/dashboard', seller: '/seller', developer: '/developer', admin: '/admin' }
   return (

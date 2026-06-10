@@ -150,7 +150,7 @@ export default function Home() {
           <h2 className="font-display text-headline-md md:text-headline-lg text-on-surface mb-4 max-w-2xl mx-auto">Bangun, publikasikan & hasilkan dari model AI buatanmu</h2>
           <p className="text-body-lg text-on-surface-variant max-w-xl mx-auto mb-8">Bergabung dengan ribuan kreator yang memonetisasi kecerdasan mereka di marketplace paling premium di industrinya.</p>
           <div className="flex flex-wrap justify-center gap-3">
-            <Link to="/register" className="btn-primary px-7 py-3.5">Mulai Jualan <Icon name="rocket_launch" size={18} /></Link>
+            <Link to="/sell/start" className="btn-primary px-7 py-3.5">Mulai Jualan <Icon name="rocket_launch" size={18} /></Link>
             <Link to="/about" className="btn-ghost px-7 py-3.5">Selengkapnya</Link>
           </div>
         </div>

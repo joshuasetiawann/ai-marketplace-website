@@ -5,7 +5,7 @@ import {
   getCatalog, getDevices, revokeDevice, ROLES,
   recordSale, getSellerListings, getSalesBySeller, sellerEarnings as computeEarnings,
   getPayouts, requestPayout as dbRequestPayout, savePayoutAccount as dbSavePayoutAccount,
-  updateProduct as dbUpdateProduct, deleteProduct as dbDeleteProduct,
+  updateProduct as dbUpdateProduct, deleteProduct as dbDeleteProduct, openStore as dbOpenStore,
 } from '../data/db.js'
 import { recommendFor } from '../data/recommend.js'
 
@@ -218,6 +218,13 @@ export function AppProvider({ children }) {
       },
 
       // ── seller economy (listings, sales ledger, earnings, payouts) ────────────
+      hasStore: Boolean(user?.store),
+      openStore: (store) => {
+        const res = dbOpenStore(user?.id, store)
+        if (res.error) toast(res.error, { type: 'error', icon: 'error' })
+        else { setUser(res.user); toast('Toko kamu aktif! Selamat berjualan 🎉', { icon: 'storefront' }) }
+        return res
+      },
       sellerListings: user ? getSellerListings(user.id) : [],
       sellerSales: user ? getSalesBySeller(user.id) : [],
       sellerEarnings: user ? computeEarnings(user.id) : null,

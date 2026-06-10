@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import Icon from '../components/Icon.jsx'
 import AreaChart from '../components/AreaChart.jsx'
 import { DashHeader, DashTabs, StatusPill } from '../components/DashboardKit.jsx'
@@ -42,7 +41,7 @@ export default function DeveloperDashboard() {
   return (
     <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8">
       <DashHeader accent={ACCENT} roleLabel="Developer Console" title={user?.store?.name || 'Developer Hub'} subtitle="Kelola integrasi, versi, dokumentasi & keamanan produk." icon="code"
-        action={<Link to="/upload" className="btn-primary px-5 py-2.5" style={{ background: ACCENT, color: '#fff' }}><Icon name="upload" size={18} /> Publish Versi</Link>} />
+        action={<button onClick={() => toast('Versi baru dikirim untuk review', { icon: 'rocket_launch' })} className="btn-primary px-5 py-2.5" style={{ background: ACCENT, color: '#fff' }}><Icon name="upload" size={18} /> Publish Versi</button>} />
 
       <DashTabs tabs={TABS} active={tab} onChange={setTab} accent={ACCENT} />
 

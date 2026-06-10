@@ -9,8 +9,8 @@ export default function Creators() {
   return (
     <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12">
       <div className="mb-10">
-        <h1 className="font-display text-headline-md md:text-headline-lg text-on-surface mb-2">Featured Creators</h1>
-        <p className="text-body-md text-on-surface-variant">The elite studios and researchers building the future of intelligence.</p>
+        <h1 className="font-display text-headline-md md:text-headline-lg text-on-surface mb-2">Kreator Pilihan</h1>
+        <p className="text-body-md text-on-surface-variant">Studio elit dan peneliti yang membangun masa depan kecerdasan.</p>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -42,8 +42,8 @@ export default function Creators() {
                 <p className="font-label text-label-sm uppercase tracking-wider text-on-surface-variant mb-3">{c.title}</p>
                 <p className="text-body-sm text-on-surface-variant line-clamp-2 mb-5">{c.bio}</p>
                 <div className="flex items-center gap-5 text-body-sm text-on-surface-variant pt-4 border-t hairline">
-                  <span className="flex items-center gap-1.5"><Icon name="group" size={16} /> {c.stats.followers}</span>
-                  <span className="flex items-center gap-1.5"><Icon name="inventory_2" size={16} /> {models.length} models</span>
+                  <span className="flex items-center gap-1.5"><Icon name="group" size={16} /> {c.stats.followers} pengikut</span>
+                  <span className="flex items-center gap-1.5"><Icon name="inventory_2" size={16} /> {models.length} model</span>
                 </div>
               </div>
             </Link>

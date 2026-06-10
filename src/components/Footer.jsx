@@ -6,28 +6,28 @@ const COLUMNS = [
   {
     title: 'Marketplace',
     links: [
-      { label: 'Explore Models', to: '/explore' },
-      { label: 'Categories', to: '/categories' },
-      { label: 'Creators', to: '/creators' },
-      { label: 'Pricing', to: '/pricing' },
+      { label: 'Jelajahi Model', to: '/explore' },
+      { label: 'Kategori', to: '/categories' },
+      { label: 'Kreator', to: '/creators' },
+      { label: 'Harga', to: '/pricing' },
     ],
   },
   {
-    title: 'Sell',
+    title: 'Jualan',
     links: [
-      { label: 'Become a Creator', to: '/upload' },
+      { label: 'Jadi Kreator', to: '/upload' },
       { label: 'Seller Studio', to: '/seller' },
-      { label: 'Upload Product', to: '/upload' },
-      { label: 'Guidelines', to: '/help' },
+      { label: 'Upload Produk', to: '/upload' },
+      { label: 'Panduan', to: '/help' },
     ],
   },
   {
-    title: 'Company',
+    title: 'Perusahaan',
     links: [
-      { label: 'About Us', to: '/about' },
-      { label: 'Our Mission', to: '/about#mission' },
-      { label: 'Help Center', to: '/help' },
-      { label: 'Contact', to: '/help' },
+      { label: 'Tentang Kami', to: '/about' },
+      { label: 'Misi Kami', to: '/about#mission' },
+      { label: 'Pusat Bantuan', to: '/help' },
+      { label: 'Kontak', to: '/help' },
     ],
   },
 ]
@@ -40,8 +40,8 @@ export default function Footer() {
           <div className="col-span-2">
             <Logo className="mb-4" />
             <p className="text-body-sm text-on-surface-variant max-w-xs mb-5">
-              The premium digital marketplace for curated, high-performance AI models. Precision luxury intelligence,
-              tailored for visionaries.
+              Marketplace digital premium untuk model AI kurasi berperforma tinggi. Kecerdasan mewah nan presisi,
+              dirancang untuk para visioner.
             </p>
             <div className="flex items-center gap-2">
               {['public', 'forum', 'rss_feed', 'photo_camera'].map((s) => (
@@ -78,7 +78,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Nexora AI. Precision Luxury Intelligence.
           </p>
           <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 order-1 md:order-2">
-            {['Privacy Policy', 'Terms of Service', 'Security', 'Documentation'].map((l) => (
+            {['Kebijakan Privasi', 'Ketentuan Layanan', 'Keamanan', 'Dokumentasi'].map((l) => (
               <a key={l} href="#" onClick={(e) => e.preventDefault()} className="text-[13px] text-on-surface-variant hover:text-primary-container transition-colors">
                 {l}
               </a>

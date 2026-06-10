@@ -4,7 +4,7 @@ import ModelArtwork from './ModelArtwork.jsx'
 import StarRating from './StarRating.jsx'
 import { StatusBadge, TierBadge } from './Badge.jsx'
 import { useApp } from '../context/AppContext.jsx'
-import { formatPrice } from '../data/models.js'
+import { toIDR, formatIDRShort } from '../data/payment.js'
 
 export default function ModelCard({ model, onQuickView, className = '' }) {
   const { isWishlisted, toggleWishlist, addToCart } = useApp()
@@ -37,7 +37,7 @@ export default function ModelCard({ model, onQuickView, className = '' }) {
             className="absolute bottom-3 right-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 inline-flex items-center gap-1.5 bg-surface-container-high/90 backdrop-blur-md border border-white/15 text-on-surface text-[12px] font-label px-3 py-1.5 rounded-full hover:border-primary-container/50"
             aria-label={`Quick view ${model.name}`}
           >
-            <Icon name="visibility" size={15} /> Quick view
+            <Icon name="visibility" size={15} /> Lihat cepat
           </button>
         )}
       </Link>
@@ -64,11 +64,11 @@ export default function ModelCard({ model, onQuickView, className = '' }) {
         <div className="flex items-center justify-between mt-1 pt-4 border-t hairline">
           <span className="font-label text-label-md text-on-surface">
             {model.price === 0 ? (
-              <span className="text-success">Free</span>
+              <span className="text-success">Gratis</span>
             ) : (
               <>
-                ${model.price}
-                <span className="text-on-surface-variant text-[12px] font-normal">/mo</span>
+                {formatIDRShort(toIDR(model.price))}
+                <span className="text-on-surface-variant text-[12px] font-normal">/bln</span>
               </>
             )}
           </span>

@@ -83,7 +83,7 @@ export default function BuyerDashboard() {
         <div className="flex items-center justify-between mb-5">
           <div><h2 className="font-display text-title-md text-on-surface flex items-center gap-2"><Icon name="auto_awesome" size={20} className="text-primary-container" /> Rekomendasi untukmu</h2><p className="text-body-sm text-on-surface-variant">Dipersonalisasi dari aktivitas akun kamu.</p></div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-gutter">
           {recommendations.map((m) => (
             <div key={m.id} className="relative">
               <span className="absolute top-2 left-2 z-10 text-[10px] bg-surface-container-high/90 backdrop-blur text-on-surface-variant px-2 py-1 rounded-full border border-white/10">{recommendReason(m, data)}</span>

@@ -5,10 +5,10 @@ import Logo from './Logo.jsx'
 import { useApp } from '../context/AppContext.jsx'
 
 const NAV_LINKS = [
-  { to: '/explore', label: 'Explore' },
-  { to: '/categories', label: 'Categories' },
-  { to: '/creators', label: 'Creators' },
-  { to: '/pricing', label: 'Pricing' },
+  { to: '/explore', label: 'Jelajahi' },
+  { to: '/categories', label: 'Kategori' },
+  { to: '/creators', label: 'Kreator' },
+  { to: '/pricing', label: 'Harga' },
 ]
 
 export default function Navbar() {
@@ -178,10 +178,10 @@ export default function Navbar() {
                   to="/login"
                   className="hidden md:block font-label text-label-md text-on-surface/70 hover:text-on-surface transition-colors px-3 py-2"
                 >
-                  Login
+                  Masuk
                 </Link>
                 <Link to="/register" className="btn-primary hidden md:inline-flex px-5 py-2.5">
-                  Get Started
+                  Daftar
                   <Icon name="arrow_forward" size={18} />
                 </Link>
               </>
@@ -210,7 +210,7 @@ export default function Navbar() {
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search models, creators, categories…"
+                placeholder="Cari model, kreator, kategori…"
                 className="flex-1 bg-transparent outline-none text-body-md text-on-surface placeholder:text-outline/70"
               />
               <button type="button" onClick={() => setSearchOpen(false)} className="p-1 text-on-surface-variant hover:text-on-surface">
@@ -257,16 +257,16 @@ export default function Navbar() {
                     <Icon name="dashboard" size={20} /> Dashboard
                   </Link>
                   <button onClick={() => logout()} className="btn-ghost py-3 text-error border-error/30">
-                    <Icon name="logout" size={20} /> Sign out
+                    <Icon name="logout" size={20} /> Keluar
                   </button>
                 </>
               ) : (
                 <>
                   <Link to="/login" className="btn-soft py-3">
-                    Login
+                    Masuk
                   </Link>
                   <Link to="/register" className="btn-primary py-3">
-                    Get Started <Icon name="arrow_forward" size={18} />
+                    Daftar <Icon name="arrow_forward" size={18} />
                   </Link>
                 </>
               )}

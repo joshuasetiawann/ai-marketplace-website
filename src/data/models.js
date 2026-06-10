@@ -3,21 +3,21 @@
 // abstract SVG thumbnails (no external image dependencies, fully on-brand).
 
 export const CATEGORIES = [
-  { id: 'all', label: 'All Models', icon: 'apps' },
-  { id: 'vision', label: 'Vision', icon: 'visibility' },
-  { id: 'language', label: 'Language', icon: 'forum' },
+  { id: 'all', label: 'Semua Model', icon: 'apps' },
+  { id: 'vision', label: 'Visual', icon: 'visibility' },
+  { id: 'language', label: 'Bahasa', icon: 'forum' },
   { id: 'audio', label: 'Audio', icon: 'graphic_eq' },
-  { id: 'video', label: 'Generative Video', icon: 'movie' },
-  { id: 'code', label: 'Code', icon: 'code' },
-  { id: 'data', label: 'Data & Analytics', icon: 'monitoring' },
+  { id: 'video', label: 'Video Generatif', icon: 'movie' },
+  { id: 'code', label: 'Kode', icon: 'code' },
+  { id: 'data', label: 'Data & Analitik', icon: 'monitoring' },
 ]
 
 export const USE_CASES = [
-  { id: 'business', label: 'Business', icon: 'domain' },
-  { id: 'creative', label: 'Creative', icon: 'palette' },
+  { id: 'business', label: 'Bisnis', icon: 'domain' },
+  { id: 'creative', label: 'Kreatif', icon: 'palette' },
   { id: 'developer', label: 'Developer', icon: 'code' },
-  { id: 'study', label: 'Study', icon: 'school' },
-  { id: 'lifestyle', label: 'Lifestyle', icon: 'auto_awesome' },
+  { id: 'study', label: 'Belajar', icon: 'school' },
+  { id: 'lifestyle', label: 'Gaya Hidup', icon: 'auto_awesome' },
 ]
 
 export const TIERS = ['Free', 'Pro', 'Enterprise']

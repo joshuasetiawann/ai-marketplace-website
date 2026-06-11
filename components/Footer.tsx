@@ -26,8 +26,8 @@ const COLUMNS = [
     links: [
       { label: "Tentang Kami", href: "/about" },
       { label: "Misi Kami", href: "/about" },
-      { label: "Pusat Bantuan", href: "/help" },
-      { label: "Kontak", href: "/help" },
+      { label: "Admin Console", href: "/admin" },
+      { label: "Kontak", href: "/contact" },
     ],
   },
 ];
@@ -41,7 +41,7 @@ export default function Footer() {
             <Logo className="mb-4" />
             <p className="mb-5 max-w-xs text-body-sm text-on-surface-variant">
               Marketplace digital premium untuk model AI kurasi berperforma tinggi.
-              Kecerdasan mewah nan presisi, dirancang untuk para visioner.
+              Precision luxury intelligence untuk para visioner.
             </p>
             <div className="flex items-center gap-2">
               {["public", "forum", "rss_feed", "photo_camera"].map((s) => (
@@ -57,7 +57,7 @@ export default function Footer() {
           </div>
           {COLUMNS.map((col) => (
             <div key={col.title}>
-              <h4 className="mb-4 font-label text-label-sm uppercase tracking-wider text-on-surface">
+              <h4 className="mb-4 font-mono text-[11px] uppercase tracking-[0.14em] text-on-surface-variant">
                 {col.title}
               </h4>
               <ul className="flex flex-col gap-3">
@@ -78,10 +78,10 @@ export default function Footer() {
 
         <div className="flex flex-col items-center justify-between gap-4 border-t pt-8 hairline md:flex-row">
           <p className="order-2 text-[13px] text-on-surface-variant md:order-1">
-            © {new Date().getFullYear()} Nexora AI. Precision Luxury Intelligence.
+            © {new Date().getFullYear()} Nexora AI · Precision Luxury Intelligence
           </p>
           <nav className="order-1 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 md:order-2">
-            {["Kebijakan Privasi", "Ketentuan Layanan", "Keamanan", "Dokumentasi"].map((l) => (
+            {["Privasi", "Ketentuan", "Keamanan", "Dokumentasi"].map((l) => (
               <span key={l} className="text-[13px] text-on-surface-variant">
                 {l}
               </span>

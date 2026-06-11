@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Icon from "./Icon";
 import Logo from "./Logo";
+import Topbar from "./Topbar";
 import { signOut } from "@/lib/actions/auth";
 
 const NAV_LINKS = [
@@ -59,6 +60,18 @@ export default function Navbar({
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
+  useEffect(() => {
+    // ⌘K / Ctrl+K opens the search overlay (matches the v2 search pill hint)
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
     router.push(`/explore${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ""}`);
@@ -83,6 +96,7 @@ export default function Navbar({
           scrolled ? "border-b border-white/10 glass-nav" : "border-b border-transparent bg-transparent"
         }`}
       >
+        <Topbar />
         <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-4 px-5 md:h-[72px] md:px-16">
           <div className="flex items-center gap-8">
             <Logo />
@@ -111,7 +125,19 @@ export default function Navbar({
             <button
               type="button"
               onClick={() => setSearchOpen((s) => !s)}
-              className="rounded-full p-2.5 text-on-surface/70 transition-colors hover:bg-white/5 hover:text-on-surface"
+              className="hidden items-center gap-2 rounded-full py-2 pl-3.5 pr-2 surface-card transition-colors hover:border-primary-container/40 lg:flex"
+              aria-label="Cari model"
+            >
+              <Icon name="search" size={16} className="text-on-surface-variant" />
+              <span className="w-28 text-left text-[13px] text-on-surface-variant">Cari model…</span>
+              <kbd className="rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-on-surface-variant">
+                ⌘K
+              </kbd>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearchOpen((s) => !s)}
+              className="rounded-full p-2.5 text-on-surface/70 transition-colors hover:bg-white/5 hover:text-on-surface lg:hidden"
               aria-label="Cari"
             >
               <Icon name="search" size={22} />

@@ -35,7 +35,7 @@ export default async function MarketplaceLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar user={navUser} cartCount={cartCount} wishlistCount={wishlistCount} />
-      <div className="flex-1 pb-20 pt-16 md:pt-[72px] lg:pb-0">{children}</div>
+      <div className="flex-1 pb-20 pt-16 md:pt-[100px] lg:pb-0">{children}</div>
       <Footer />
       <MobileNav cartCount={cartCount} />
     </div>

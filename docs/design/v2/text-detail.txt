@@ -1,0 +1,85 @@
+SEMUA SISTEM OPERASIONAL · 99,99% UPTIME
+QRIS · VIRTUAL ACCOUNT · E-WALLET
+Bantuan
+Nexora
+AI
+Jelajahi
+Kategori
+Kreator
+Harga
+3
+Masuk
+Daftar
+Beranda
+Jelajahi
+Vision
+Nexus Vision Pro
+Trending
+// Tentang Model
+Deskripsi
+Model difusi gambar resolusi tinggi dengan zero-shot style transfer dan output hingga 8K. Dirancang untuk tim marketing, concept art, dan editorial yang menuntut kualitas visual kelas enterprise dengan konsistensi karakter dan kontrol komposisi tingkat lanjut. Terintegrasi penuh dengan API Nexora Core.
+Kemampuan
+Output 8K
+Resolusi ultra-tinggi siap cetak.
+Zero-shot style
+Transfer gaya tanpa fine-tuning.
+Kontrol komposisi
+Layer & region editing presisi.
+API siap pakai
+Integrasi REST & webhook.
+Ulasan Pengguna
+4,9
+1.280 ulasan
+5★
+88%
+4★
+9%
+3★
+2%
+2★
+1%
+R
+Rangga Wijaya
+Kualitas output benar-benar di level enterprise. Style transfer-nya konsisten dan cepat — jadi andalan tim desain kami untuk konten kampanye.
+S
+Sarah Halim
+Latensi rendah dan hasilnya rapih. Sedikit belajar di awal untuk prompt komposisi, tapi worth it banget untuk workflow produksi.
+Pro
+Vision
+Nexus Vision Pro
+Model gambar generatif kelas enterprise.
+4,9
+(1.280)
+Synthetix Labs
+Langganan
+Tersedia
+Rp 379.200
+/bln
+Beli Sekarang
+Keranjang
+Checkout aman · batal kapan saja
+Laporkan
+Garansi
+uang kembali
+Akses
+instan
+Support
+24/7
+Spesifikasi Model
+Parameters
+12B
+Context Window
+32K
+Latency
+~600ms
+Diperbarui
+24 Okt 2025
+QRIS
+·
+VA
+·
+GOPAY
+·
+OVO
+·
+DANA

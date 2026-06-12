@@ -28,7 +28,8 @@ export function SectionHeading({
     <div className={`flex flex-col gap-4 md:flex-row md:items-end md:justify-between ${className}`}>
       <div>
         {eyebrow && (
-          <p className="mb-2 font-label text-label-sm uppercase tracking-widest text-primary-container">
+          <p className="mb-2 eyebrow-mono">
+            <span className="mr-1 opacity-60">{"//"}</span>
             {eyebrow}
           </p>
         )}

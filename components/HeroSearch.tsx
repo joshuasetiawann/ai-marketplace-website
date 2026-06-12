@@ -21,13 +21,13 @@ export default function HeroSearch() {
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Kamu butuh bantuan apa?"
+        placeholder="Coba 'model gambar 8K' atau 'asisten koding'…"
         aria-label="Cari model"
         className="w-full rounded-full border border-white/10 bg-surface-container-lowest py-4 pl-14 pr-32 text-body-md text-on-surface outline-none transition-colors placeholder:text-outline/70 focus:border-primary-container/50"
       />
       <div className="absolute inset-y-0 right-0 flex items-center pr-2">
         <button type="submit" className="btn-primary px-5 py-2.5">
-          Cari <Icon name="arrow_forward" size={16} />
+          <Icon name="auto_awesome" size={16} fill /> Cari
         </button>
       </div>
     </form>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import Icon from "@/components/Icon";
 import CheckoutClient from "@/components/CheckoutClient";
+import CheckoutSteps from "@/components/CheckoutSteps";
 import { EmptyState } from "@/components/common";
 import { createServerClient } from "@/lib/supabase/server";
 import { getCart } from "@/lib/cart";
@@ -59,11 +60,14 @@ export default async function CheckoutPage({
 
   return (
     <div className="mx-auto max-w-[1440px] px-5 py-8 md:px-16">
-      <div className="mb-2 flex items-center gap-3">
-        <Link href="/cart" className="rounded-full p-2 text-on-surface-variant hover:bg-white/5" aria-label="Kembali">
-          <Icon name="arrow_back" size={22} />
-        </Link>
-        <h1 className="font-display text-headline-md text-on-surface">Checkout</h1>
+      <div className="mb-2 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <Link href="/cart" className="rounded-full p-2 text-on-surface-variant hover:bg-white/5" aria-label="Kembali">
+            <Icon name="arrow_back" size={22} />
+          </Link>
+          <h1 className="font-display text-headline-md text-on-surface">Checkout</h1>
+        </div>
+        <CheckoutSteps current={2} />
       </div>
       <p className="mb-8 flex items-center gap-2 text-body-sm text-on-surface-variant">
         <Icon name="lock" size={15} className="text-primary-container" /> Pembayaran simulasi · order tercatat di database

@@ -10,7 +10,7 @@ const initial: AuthState = {};
 export default function LoginPage() {
   const [state, action, pending] = useActionState(signIn, initial);
   return (
-    <AuthCard title="Masuk" sub="Selamat datang kembali di Nexora AI.">
+    <AuthCard tab="login" title="Selamat datang kembali" sub="Masuk ke akun Nexora AI kamu.">
       <form action={action} className="space-y-4">
         <input name="email" type="email" placeholder="Email" aria-label="Email" autoComplete="email" className={fieldClass} />
         <input
@@ -30,9 +30,12 @@ export default function LoginPage() {
           {pending ? "Memproses…" : "Masuk"}
         </button>
         <div className="flex items-center justify-between text-sm">
-          <Link href="/register" className="text-accent hover:underline">
-            Buat akun
-          </Link>
+          <span className="text-muted">
+            Belum punya akun?{" "}
+            <Link href="/register" className="text-accent hover:underline">
+              Daftar gratis
+            </Link>
+          </span>
           <Link href="/forgot-password" className="text-muted hover:text-accent">
             Lupa password?
           </Link>

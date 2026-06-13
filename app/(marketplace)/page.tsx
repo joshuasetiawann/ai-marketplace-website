@@ -6,7 +6,7 @@ import BrandMarquee from "@/components/BrandMarquee";
 import { SectionHeading, GlowOrb } from "@/components/common";
 import type { Metadata } from "next";
 import { createServerClient } from "@/lib/supabase/server";
-import { CATEGORIES, USE_CASES, PRODUCT_COLUMNS, mapProduct } from "@/lib/catalog";
+import { CATEGORIES, CATEGORY_COUNTS, USE_CASES, PRODUCT_COLUMNS, mapProduct } from "@/lib/catalog";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -19,16 +19,6 @@ const STATS = [
   { value: "4,9", suffix: "★", suffixCls: "text-secondary", label: "Rating Rata-rata" },
   { value: "99,99", suffix: "%", valueCls: "text-primary-container", label: "Uptime SLA" },
 ];
-
-/** Static marketing counts per docs/design/v2 frame "beranda". */
-const CATEGORY_COUNTS: Record<string, string> = {
-  vision: "640",
-  language: "512",
-  audio: "318",
-  video: "274",
-  code: "406",
-  data: "250",
-};
 
 const CREATOR_FEATURES = [
   { icon: "payments", title: "Bagi hasil 80%", desc: "Kamu simpan 80% dari tiap penjualan." },

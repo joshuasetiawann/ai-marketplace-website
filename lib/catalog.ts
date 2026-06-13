@@ -20,6 +20,16 @@ export const USE_CASES = [
 
 export const TIERS = ["Free", "Pro", "Enterprise"] as const;
 
+/** Static marketing counts per category — docs/design/v2 frame "beranda"/"jelajahi". */
+export const CATEGORY_COUNTS: Record<string, string> = {
+  vision: "640",
+  language: "512",
+  audio: "318",
+  video: "274",
+  code: "406",
+  data: "250",
+};
+
 export type Capability = { icon: string; title: string; text: string };
 
 export type Model = {

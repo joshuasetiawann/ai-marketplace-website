@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import Icon from "@/components/Icon";
 import CartClient from "@/components/CartClient";
+import CheckoutSteps from "@/components/CheckoutSteps";
 import { EmptyState } from "@/components/common";
 import { createServerClient } from "@/lib/supabase/server";
 import { getCart } from "@/lib/cart";
@@ -35,13 +36,22 @@ export default async function CartPage() {
         </>
       ) : (
         <>
-          <div className="mb-8 flex items-end justify-between">
+          <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
+              <p className="mb-2 eyebrow-mono">
+                <span className="mr-1 opacity-60">{"//"}</span>Checkout
+              </p>
               <h1 className="font-display text-headline-md text-on-surface md:text-headline-lg">Keranjang</h1>
-              <p className="mt-1 text-body-md text-on-surface-variant">{lines.length} item di keranjang kamu.</p>
+              <p className="mt-1 text-body-md text-on-surface-variant">
+                <span className="font-semibold text-on-surface">{lines.length} item</span> siap di-checkout.
+              </p>
             </div>
-            <Link href="/explore" className="btn-ghost hidden px-5 py-2.5 sm:inline-flex">
-              <Icon name="add" size={18} /> Tambah lagi
+            <CheckoutSteps current={1} />
+          </div>
+          <div className="mb-4 flex items-center justify-between lg:max-w-[61%]">
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-outline">Item ({lines.length})</p>
+            <Link href="/explore" className="inline-flex items-center gap-1 text-body-sm text-primary-container hover:text-primary">
+              <Icon name="add" size={16} /> Tambah lagi
             </Link>
           </div>
           <CartClient lines={lines} subtotal={subtotal} taxes={taxes} total={total} />

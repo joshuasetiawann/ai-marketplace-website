@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Icon from "./Icon";
 import ModelCard from "./ModelCard";
 import { EmptyState } from "./common";
-import { CATEGORIES, TIERS, USE_CASES, type Model } from "@/lib/catalog";
+import { CATEGORIES, CATEGORY_COUNTS, TIERS, USE_CASES, type Model } from "@/lib/catalog";
 
 const SORTS = [
   { id: "trending", label: "Trending" },
@@ -104,7 +104,7 @@ export default function ExploreClient({
         <h3 className="font-display text-title-md text-on-surface">Filter</h3>
         {activeFilterCount > 0 && (
           <button onClick={clearAll} className="font-label text-label-md text-primary-container transition-colors hover:text-primary">
-            Hapus
+            Reset
           </button>
         )}
       </div>
@@ -122,6 +122,11 @@ export default function ExploreClient({
             >
               <Icon name={c.icon} size={18} />
               {c.label}
+              {CATEGORY_COUNTS[c.id] && (
+                <span className={`ml-auto font-mono text-[11px] ${cat === c.id ? "text-primary-container/80" : "text-outline"}`}>
+                  {CATEGORY_COUNTS[c.id]}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -171,6 +176,9 @@ export default function ExploreClient({
   return (
     <div className="mx-auto max-w-[1440px] px-5 py-10 md:px-16">
       <div className="mb-8">
+        <p className="mb-2 eyebrow-mono">
+          <span className="mr-1 opacity-60">{"//"}</span>Katalog
+        </p>
         <h1 className="mb-2 font-display text-headline-md text-on-surface md:text-headline-lg">Jelajahi Model</h1>
         <p className="text-body-md text-on-surface-variant">
           Temukan model AI premium yang dikurasi untuk aplikasi berperforma tinggi.
@@ -183,7 +191,7 @@ export default function ExploreClient({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari nama, tagline, atau deskripsi…"
+            placeholder="Cari nama, kemampuan, atau kategori…"
             aria-label="Cari model"
             className="input-field rounded-full pl-11"
           />
@@ -222,7 +230,32 @@ export default function ExploreClient({
         </aside>
 
         <div className="min-w-0 flex-1">
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {activeFilterCount > 0 && (
+                <>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-outline">Filter:</span>
+                  {cat !== "all" && (
+                    <FilterChip label={CATEGORIES.find((c) => c.id === cat)?.label ?? cat} onClear={() => go({ cat: "all" })} />
+                  )}
+                  {use && (
+                    <FilterChip label={USE_CASES.find((u) => u.id === use)?.label ?? use} onClear={() => go({ use: "" })} />
+                  )}
+                  {tiers.map((t) => (
+                    <FilterChip key={t} label={t === "Free" ? "Gratis" : t} onClear={() => toggleTier(t)} />
+                  ))}
+                  {minRating > 0 && (
+                    <FilterChip label={`${String(minRating).replace(".", ",")}★ ke atas`} onClear={() => go({ rating: "" })} />
+                  )}
+                  <button
+                    onClick={clearAll}
+                    className="ml-1 text-body-sm text-primary-container transition-colors hover:text-primary"
+                  >
+                    Hapus semua
+                  </button>
+                </>
+              )}
+            </div>
             <p className="text-body-sm text-on-surface-variant">
               <span className="font-semibold text-on-surface">{total}</span> model ditemukan
             </p>
@@ -284,8 +317,24 @@ export default function ExploreClient({
 function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-3 font-label text-label-sm uppercase tracking-wider text-outline">{label}</p>
+      <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-outline">{label}</p>
       {children}
     </div>
+  );
+}
+
+function FilterChip({ label, onClear }: { label: string; onClear: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-container/35 bg-primary-container/10 py-1 pl-3 pr-1.5 text-[12px] text-primary">
+      {label}
+      <button
+        type="button"
+        onClick={onClear}
+        aria-label={`Hapus filter ${label}`}
+        className="rounded-full p-0.5 text-primary/70 transition-colors hover:bg-primary-container/20 hover:text-primary"
+      >
+        <Icon name="close" size={13} />
+      </button>
+    </span>
   );
 }

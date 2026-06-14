@@ -19,7 +19,7 @@ export default async function AdminOrdersPage() {
 
   const { data } = await supabase
     .from("orders")
-    .select("id,created_at,status,method,total_usd, profiles(name), order_items(id)")
+    .select("id,created_at,status,method,total_usd, profiles!orders_buyer_id_fkey(name), order_items(id)")
     .in("status", ["paid", "refunded"])
     .order("created_at", { ascending: false })
     .limit(100);

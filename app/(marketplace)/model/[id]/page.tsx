@@ -67,7 +67,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const [reviewsRes, relatedRes, wishRes] = await Promise.all([
     supabase
       .from("reviews")
-      .select("id,rating,body,created_at,profiles(name)")
+      .select("id,rating,body,created_at,profiles!reviews_author_id_fkey(name)")
       .eq("product_id", id)
       .order("created_at", { ascending: false }),
     supabase

@@ -10,7 +10,7 @@ const initial: AuthState = {};
 export default function RegisterPage() {
   const [state, action, pending] = useActionState(registerUser, initial);
   return (
-    <AuthCard title="Buat akun" sub="Gratis. Belanja & jual model AI dalam satu akun.">
+    <AuthCard tab="register" title="Buat akun" sub="Gratis. Belanja & jual model AI dalam satu akun.">
       <form action={action} className="space-y-4">
         <input name="name" placeholder="Nama lengkap" aria-label="Nama lengkap" autoComplete="name" className={fieldClass} />
         <input name="email" type="email" placeholder="Email" aria-label="Email" autoComplete="email" className={fieldClass} />

@@ -13,7 +13,7 @@ export default async function AdminModerationPage() {
 
   const { data } = await supabase
     .from("products")
-    .select("id,name,category,price_usd,art,icon,created_at,profiles(name)")
+    .select("id,name,category,price_usd,art,icon,created_at,profiles!products_owner_id_fkey(name)")
     .eq("status", "under_review")
     .order("created_at", { ascending: true });
 
@@ -51,10 +51,14 @@ export default async function AdminModerationPage() {
                   {p.name}
                 </Link>
                 <p className="text-[12px] text-on-surface-variant">
-                  oleh {p.ownerName} · <span className="capitalize">{p.category}</span> ·{" "}
+                  oleh <span className="text-on-surface">{p.ownerName}</span> ·{" "}
+                  <span className="font-mono text-[11px]">{p.category}</span> ·{" "}
                   {Number(p.price_usd) === 0 ? "Gratis" : `${formatIDR(toIDR(Number(p.price_usd)))}/bln`}
                 </p>
               </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-secondary/35 bg-secondary/10 px-3 py-1 text-[12px] text-secondary">
+                <Icon name="schedule" size={14} /> Dalam Review
+              </span>
               <Link href={`/model/${p.id}`} className="rounded-md p-2 text-on-surface-variant hover:bg-white/5" title="Pratinjau">
                 <Icon name="visibility" size={18} />
               </Link>

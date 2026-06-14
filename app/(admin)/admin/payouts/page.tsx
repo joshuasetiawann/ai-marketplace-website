@@ -16,7 +16,7 @@ export default async function AdminPayoutsPage() {
 
   const { data } = await supabase
     .from("payouts")
-    .select("id,amount_usd,bank,account_masked,status,requested_at,profiles(name)")
+    .select("id,amount_usd,bank,account_masked,status,requested_at,profiles!payouts_seller_id_fkey(name)")
     .order("requested_at", { ascending: false });
 
   const rows = (data ?? []).map((p: Record<string, unknown>) => {

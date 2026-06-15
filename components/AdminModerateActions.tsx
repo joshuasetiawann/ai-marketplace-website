@@ -21,18 +21,18 @@ export default function AdminModerateActions({ id }: { id: string }) {
     <div className="flex items-center gap-2">
       {err && <span role="alert" className="text-[12px] text-error">{err}</span>}
       <button
-        onClick={() => act("approve")}
-        disabled={pending}
-        className="inline-flex items-center gap-1 rounded-lg bg-success/10 px-3 py-1.5 text-body-sm text-success hover:bg-success/20"
-      >
-        <Icon name="check" size={16} /> Setujui
-      </button>
-      <button
         onClick={() => act("reject")}
         disabled={pending}
-        className="inline-flex items-center gap-1 rounded-lg bg-error/10 px-3 py-1.5 text-body-sm text-error hover:bg-error/20"
+        className="inline-flex items-center gap-1 rounded-lg border border-error/40 px-3.5 py-1.5 text-body-sm text-error transition-colors hover:bg-error/10 disabled:opacity-50"
       >
         <Icon name="close" size={16} /> Tolak
+      </button>
+      <button
+        onClick={() => act("approve")}
+        disabled={pending}
+        className="inline-flex items-center gap-1 rounded-lg bg-success px-3.5 py-1.5 text-body-sm font-semibold text-[#06251a] shadow-[0_0_12px_rgba(126,224,168,0.25)] transition-colors hover:brightness-110 disabled:opacity-50"
+      >
+        <Icon name="check" size={16} /> Setujui
       </button>
     </div>
   );

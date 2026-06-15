@@ -30,11 +30,24 @@ export default async function AdminOverviewPage() {
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         {stats.map((s) => {
+          const hot = s.accent && Number(s.value) > 0;
           const card = (
-            <div className={`rounded-xl surface-card p-5 ${s.accent && Number(s.value) > 0 ? "border-secondary/40" : ""}`}>
-              <Icon name={s.icon} size={20} className={s.accent && Number(s.value) > 0 ? "text-secondary" : "text-on-surface-variant"} />
-              <p className="mt-3 font-display text-title-md text-on-surface">{s.value}</p>
-              <p className="text-[12px] text-on-surface-variant">{s.label}</p>
+            <div className={`rounded-xl surface-card p-5 ${hot ? "border-secondary/40" : ""}`}>
+              <div className="flex items-center justify-between">
+                <span
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg border ${
+                    hot
+                      ? "border-secondary/25 bg-secondary/10 text-secondary"
+                      : "border-success/20 bg-success/10 text-success"
+                  }`}
+                >
+                  <Icon name={s.icon} size={18} />
+                </span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">
+                  {s.label}
+                </span>
+              </div>
+              <p className="mt-4 font-display text-headline-md text-on-surface">{s.value}</p>
             </div>
           );
           return s.href ? (

@@ -32,7 +32,9 @@ export default function StarRating({
           );
         })}
       </div>
-      {showValue && <span className="font-label text-label-sm text-on-surface">{value.toFixed(1)}</span>}
+      {showValue && (
+        <span className="font-label text-label-sm text-on-surface">{value.toFixed(1).replace(".", ",")}</span>
+      )}
       {count != null && (
         <span className="font-label text-label-sm text-on-surface-variant">({count.toLocaleString("id-ID")})</span>
       )}

@@ -11,6 +11,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // "use cache" + cacheTag/cacheLife for the public-catalog layer
+  // (lib/catalog-data.ts) without opting the whole app into Cache Components.
+  experimental: { useCache: true },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },

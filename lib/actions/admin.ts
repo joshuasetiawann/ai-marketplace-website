@@ -1,8 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { TAG_PRODUCTS, productTag } from "@/lib/cache-tags";
 import { logError } from "@/lib/log";
 
 export type AdminResult = { error?: string; ok?: boolean };
@@ -26,6 +27,8 @@ export async function moderateProduct(id: string, action: "approve" | "reject"):
   if (error) return { error: error.message };
   revalidatePath("/admin/products");
   revalidatePath("/", "layout");
+  updateTag(TAG_PRODUCTS);
+  updateTag(productTag(id));
   return { ok: true };
 }
 

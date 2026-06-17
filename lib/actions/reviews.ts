@@ -1,7 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { TAG_PRODUCTS, productTag } from "@/lib/cache-tags";
 
 export type ReviewState = { error?: string; ok?: boolean };
 
@@ -41,5 +42,9 @@ export async function postReview(
   if (error) return { error: error.message };
 
   revalidatePath(`/model/${productId}`);
+  // New review changes the list AND the product's live rating/reviews_count
+  // (DB trigger), which drive card badges and trending order.
+  updateTag(productTag(productId));
+  updateTag(TAG_PRODUCTS);
   return { ok: true };
 }

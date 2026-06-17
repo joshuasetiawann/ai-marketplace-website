@@ -2,18 +2,12 @@ import Link from "next/link";
 import Icon from "@/components/Icon";
 import ModelArtwork from "@/components/ModelArtwork";
 import { EmptyState } from "@/components/common";
-import { createServerClient } from "@/lib/supabase/server";
+import { getStores } from "@/lib/catalog-data";
 
 export const metadata = { title: "Kreator — Nexora AI" };
 
 export default async function CreatorsPage() {
-  const supabase = await createServerClient();
-  const { data } = await supabase
-    .from("stores")
-    .select("owner_id, name, handle, tagline, category")
-    .order("name", { ascending: true });
-
-  const stores = data ?? [];
+  const stores = await getStores();
 
   return (
     <div className="mx-auto max-w-[1440px] px-5 py-10 md:px-16">

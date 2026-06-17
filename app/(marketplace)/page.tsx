@@ -6,7 +6,8 @@ import BrandMarquee from "@/components/BrandMarquee";
 import { SectionHeading, GlowOrb } from "@/components/common";
 import type { Metadata } from "next";
 import { createServerClient } from "@/lib/supabase/server";
-import { CATEGORIES, CATEGORY_COUNTS, USE_CASES, PRODUCT_COLUMNS, mapProduct } from "@/lib/catalog";
+import { getPublishedProducts } from "@/lib/catalog-data";
+import { CATEGORIES, CATEGORY_COUNTS, USE_CASES } from "@/lib/catalog";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -32,14 +33,13 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: rows }, wishlistRes] = await Promise.all([
-    supabase.from("products").select(PRODUCT_COLUMNS).eq("status", "published"),
+  const [models, wishlistRes] = await Promise.all([
+    getPublishedProducts(),
     user
       ? supabase.from("wishlist_items").select("product_id").eq("user_id", user.id)
       : Promise.resolve({ data: [] as { product_id: string }[] }),
   ]);
 
-  const models = (rows ?? []).map(mapProduct);
   const wished = new Set((wishlistRes.data ?? []).map((w) => w.product_id));
   const loggedIn = !!user;
 

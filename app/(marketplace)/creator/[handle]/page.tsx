@@ -6,17 +6,7 @@ import ModelCard from "@/components/ModelCard";
 import ModelArtwork from "@/components/ModelArtwork";
 import { EmptyState } from "@/components/common";
 import { createServerClient } from "@/lib/supabase/server";
-import { PRODUCT_COLUMNS, mapProduct } from "@/lib/catalog";
-
-async function getStore(handle: string) {
-  const supabase = await createServerClient();
-  const { data: store } = await supabase
-    .from("stores")
-    .select("owner_id, name, handle, tagline, category")
-    .eq("handle", handle)
-    .maybeSingle();
-  return { supabase, store };
-}
+import { getStoreByHandle, getStoreProducts } from "@/lib/catalog-data";
 
 export async function generateMetadata({
   params,
@@ -24,7 +14,7 @@ export async function generateMetadata({
   params: Promise<{ handle: string }>;
 }): Promise<Metadata> {
   const { handle } = await params;
-  const { store } = await getStore(handle);
+  const store = await getStoreByHandle(handle);
   if (!store) return { title: "Kreator tidak ditemukan — Nexora AI" };
   return {
     title: `${store.name} — Kreator Nexora AI`,
@@ -39,20 +29,15 @@ export default async function CreatorStorefrontPage({
   params: Promise<{ handle: string }>;
 }) {
   const { handle } = await params;
-  const { supabase, store } = await getStore(handle);
+  const supabase = await createServerClient();
+  const store = await getStoreByHandle(handle);
   if (!store) notFound();
 
-  const [{ data: productRows }, { data: { user } }] = await Promise.all([
-    supabase
-      .from("products")
-      .select(PRODUCT_COLUMNS)
-      .eq("owner_id", store.owner_id)
-      .eq("status", "published")
-      .order("created_at", { ascending: false }),
+  const [products, { data: { user } }] = await Promise.all([
+    getStoreProducts(store.owner_id),
     supabase.auth.getUser(),
   ]);
 
-  const products = (productRows ?? []).map(mapProduct);
   const wished = new Set<string>();
   if (user) {
     const { data } = await supabase.from("wishlist_items").select("product_id").eq("user_id", user.id);

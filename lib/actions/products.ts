@@ -1,8 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { TAG_PRODUCTS, productTag } from "@/lib/cache-tags";
 
 export type ProductState = { error?: string };
 
@@ -65,6 +66,11 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
     productId = data.id;
   }
 
+  // Editing a published product pulls it back to draft/under_review — drop it
+  // from the cached catalog right away.
+  updateTag(TAG_PRODUCTS);
+  if (productId) updateTag(productTag(productId));
+
   // Fulfillment lives in product_assets (entitlement-gated). Upsert when set.
   const assetUrl = String(formData.get("asset_url") || "").trim();
   const accessNote = String(formData.get("access_note") || "").trim();
@@ -117,6 +123,8 @@ export async function submitForReview(id: string) {
   const { supabase, user } = await requireSeller();
   await supabase.from("products").update({ status: "under_review" }).eq("id", id).eq("owner_id", user.id);
   revalidatePath("/sell/products");
+  updateTag(TAG_PRODUCTS);
+  updateTag(productTag(id));
 }
 
 /** Pull a listing back to draft. */
@@ -124,6 +132,8 @@ export async function withdrawProduct(id: string) {
   const { supabase, user } = await requireSeller();
   await supabase.from("products").update({ status: "draft" }).eq("id", id).eq("owner_id", user.id);
   revalidatePath("/sell/products");
+  updateTag(TAG_PRODUCTS);
+  updateTag(productTag(id));
 }
 
 /** Delete a listing. */
@@ -131,4 +141,6 @@ export async function deleteProduct(id: string) {
   const { supabase, user } = await requireSeller();
   await supabase.from("products").delete().eq("id", id).eq("owner_id", user.id);
   revalidatePath("/sell/products");
+  updateTag(TAG_PRODUCTS);
+  updateTag(productTag(id));
 }

@@ -1,9 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { TAG_PRODUCTS, TAG_STORES, productTag } from "@/lib/cache-tags";
 import { env } from "@/lib/env";
 
 export type AccountState = { error?: string; ok?: boolean };
@@ -88,6 +89,14 @@ export async function deleteAccount(_prev: AccountState, formData: FormData): Pr
   const { error: reauthErr } = await supabase.auth.signInWithPassword({ email: user.email, password: current });
   if (reauthErr) return { error: "Password salah." };
 
+  // The delete cascades into public catalog surfaces (store row, reviews +
+  // rating-recompute trigger, products.owner_id → NULL) — capture the touched
+  // product ids first so the shared cache can be invalidated afterwards.
+  const [{ data: reviewed }, { data: owned }] = await Promise.all([
+    supabase.from("reviews").select("product_id").eq("author_id", user.id),
+    supabase.from("products").select("id").eq("owner_id", user.id),
+  ]);
+
   const admin = createAdminClient();
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) {
@@ -97,6 +106,14 @@ export async function deleteAccount(_prev: AccountState, formData: FormData): Pr
       error: "Akun tidak bisa dihapus karena punya riwayat penjualan/payout. Hubungi dukungan untuk penutupan toko.",
     };
   }
+
+  updateTag(TAG_PRODUCTS);
+  updateTag(TAG_STORES);
+  const touched = new Set([
+    ...(reviewed ?? []).map((r) => r.product_id),
+    ...(owned ?? []).map((p) => p.id),
+  ]);
+  touched.forEach((id) => updateTag(productTag(id)));
 
   await supabase.auth.signOut();
   redirect("/");

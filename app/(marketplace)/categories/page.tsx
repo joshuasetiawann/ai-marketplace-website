@@ -1,15 +1,12 @@
 import Link from "next/link";
 import Icon from "@/components/Icon";
-import { createServerClient } from "@/lib/supabase/server";
+import { getCategoryCounts } from "@/lib/catalog-data";
 import { CATEGORIES } from "@/lib/catalog";
 
 export const metadata = { title: "Kategori — Nexora AI" };
 
 export default async function CategoriesPage() {
-  const supabase = await createServerClient();
-  const { data } = await supabase.from("products").select("category").eq("status", "published");
-  const counts = new Map<string, number>();
-  for (const r of data ?? []) counts.set(r.category, (counts.get(r.category) ?? 0) + 1);
+  const counts = await getCategoryCounts();
 
   return (
     <div className="mx-auto max-w-[1440px] px-5 py-10 md:px-16">
@@ -27,7 +24,7 @@ export default async function CategoriesPage() {
             </span>
             <div>
               <p className="font-display text-body-lg font-semibold text-on-surface">{c.label}</p>
-              <p className="text-[12px] text-on-surface-variant">{counts.get(c.id) ?? 0} model</p>
+              <p className="text-[12px] text-on-surface-variant">{counts[c.id] ?? 0} model</p>
             </div>
           </Link>
         ))}

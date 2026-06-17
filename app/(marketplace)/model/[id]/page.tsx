@@ -6,8 +6,13 @@ import ModelCard from "@/components/ModelCard";
 import ProductDetailClient from "@/components/ProductDetailClient";
 import { SectionHeading } from "@/components/common";
 import { createServerClient } from "@/lib/supabase/server";
-import { PRODUCT_COLUMNS, mapProduct } from "@/lib/catalog";
-import type { ReviewItem } from "@/lib/actions/reviews";
+import { mapProduct } from "@/lib/catalog";
+import {
+  getCatalogProduct,
+  getProductReviews,
+  getRelatedProducts,
+  getSellerStore,
+} from "@/lib/catalog-data";
 
 export async function generateMetadata({
   params,
@@ -15,12 +20,13 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const supabase = await createServerClient();
-  const { data } = await supabase
-    .from("products")
-    .select("name, tagline, description")
-    .eq("id", id)
-    .maybeSingle();
+  let data = await getCatalogProduct(id);
+  if (!data) {
+    // owner/admin draft preview — mirror the page body's uncached fallback
+    const supabase = await createServerClient();
+    const { data: row } = await supabase.from("products").select("*").eq("id", id).maybeSingle();
+    if (row) data = mapProduct(row);
+  }
   if (!data) return { title: "Model tidak ditemukan — Nexora AI" };
   const title = `${data.name} — Nexora AI`;
   const description = data.tagline || data.description || "Model AI premium di Nexora.";
@@ -40,15 +46,17 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: row } = await supabase.from("products").select("*").eq("id", id).maybeSingle();
-  if (!row) notFound();
-
-  const model = mapProduct(row);
+  // Cached lookup sees published only (anon RLS); owners/admins can still
+  // preview drafts via their own session — uncached fallback.
+  let model = await getCatalogProduct(id);
+  if (!model && user) {
+    const { data: row } = await supabase.from("products").select("*").eq("id", id).maybeSingle();
+    if (row) model = mapProduct(row);
+  }
+  if (!model) notFound();
 
   // seller attribution (house catalog has owner_id = null)
-  const seller = model.ownerId
-    ? (await supabase.from("stores").select("name, handle").eq("owner_id", model.ownerId).maybeSingle()).data
-    : null;
+  const seller = model.ownerId ? await getSellerStore(model.ownerId) : null;
 
   // "owned" = the signed-in buyer has a paid order line for this product
   let owned = false;
@@ -64,36 +72,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     owned = !!paidItem;
   }
 
-  const [reviewsRes, relatedRes, wishRes] = await Promise.all([
-    supabase
-      .from("reviews")
-      .select("id,rating,body,created_at,profiles!reviews_author_id_fkey(name)")
-      .eq("product_id", id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("products")
-      .select(PRODUCT_COLUMNS)
-      .eq("status", "published")
-      .eq("category", model.category)
-      .neq("id", id)
-      .limit(4),
+  const [reviews, related, wishRes] = await Promise.all([
+    getProductReviews(id),
+    getRelatedProducts(model.category, id),
     user
       ? supabase.from("wishlist_items").select("product_id").eq("user_id", user.id)
       : Promise.resolve({ data: [] as { product_id: string }[] }),
   ]);
 
-  const reviews: ReviewItem[] = ((reviewsRes.data ?? []) as Array<Record<string, unknown>>).map((r) => {
-    const prof = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
-    return {
-      id: String(r.id),
-      rating: Number(r.rating),
-      body: (r.body as string) ?? "",
-      created_at: String(r.created_at),
-      authorName: (prof as { name?: string } | null)?.name || "Pengguna",
-    };
-  });
-
-  const related = (relatedRes.data ?? []).map(mapProduct);
   const wished = new Set((wishRes.data ?? []).map((w) => w.product_id));
   const wishlisted = wished.has(model.id);
 

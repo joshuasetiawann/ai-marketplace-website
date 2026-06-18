@@ -97,7 +97,7 @@ export function mapProduct(row: ProductRow): Model {
     icon: row.icon ?? "apps",
     art: row.art ?? ["#0b3a44", "#00e5ff"],
     description: row.description ?? "",
-    badge: rating >= 4.85 ? "trending" : undefined,
+    badge: rating >= 4.9 ? "verified" : "trending",
     createdAt: row.created_at,
     gallery: row.gallery ?? 3,
     specs: (row.specs as Record<string, string>) ?? {},

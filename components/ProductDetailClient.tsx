@@ -97,6 +97,7 @@ export default function ProductDetailClient({
             seed={`${model.id}-${activeImg}`}
             colors={model.art}
             icon={model.icon}
+            category={model.category}
             className="h-full w-full animate-fade-in-fast"
           />
           {model.badge && (
@@ -117,7 +118,12 @@ export default function ProductDetailClient({
                   : "border-white/10 hover:border-white/30"
               }`}
             >
-              <ModelArtwork seed={`${model.id}-${i}`} colors={model.art} className="h-full w-full" />
+              <ModelArtwork
+                seed={`${model.id}-${i}`}
+                colors={model.art}
+                category={model.category}
+                className="h-full w-full"
+              />
             </button>
           ))}
         </div>
@@ -226,7 +232,7 @@ export default function ProductDetailClient({
         <h1 className="mb-3 font-display text-headline-md text-on-surface md:text-headline-lg">{model.name}</h1>
         <p className="mb-4 text-body-lg text-on-surface-variant">{model.tagline}</p>
         <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
-          <StarRating value={model.rating} count={model.reviews} showValue />
+          <StarRating value={model.rating} count={model.reviews} single size={15} />
           {seller && (
             <>
               <span className="hidden h-4 w-px bg-white/10 sm:block" />

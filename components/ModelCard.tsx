@@ -61,9 +61,10 @@ export default function ModelCard({
             seed={model.id}
             colors={model.art}
             icon={model.icon}
+            category={model.category}
             className="h-full w-full transition-transform duration-700 group-hover:scale-105"
           />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-surface-container-lowest/70" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-surface-container-lowest/35" />
         </Link>
         {model.badge && (
           <div className="pointer-events-none absolute left-3 top-3">
@@ -104,7 +105,7 @@ export default function ModelCard({
               {model.name}
             </h3>
           </Link>
-          <StarRating value={model.rating} size={14} showValue />
+          <StarRating value={model.rating} size={14} single className="shrink-0" />
         </div>
 
         <p className="line-clamp-2 flex-1 text-body-sm text-on-surface-variant">{model.tagline}</p>

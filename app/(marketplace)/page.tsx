@@ -64,7 +64,7 @@ export default async function HomePage() {
             <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-on-surface-variant">
               Marketplace AI Generasi Baru
             </span>
-            <span className="rounded-full bg-primary-container/15 px-2 py-0.5 font-mono text-[10px] tracking-[0.08em] text-primary-container">
+            <span className="rounded-full bg-primary-container/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-primary-container">
               v2.0
             </span>
           </div>
@@ -79,7 +79,7 @@ export default async function HomePage() {
           </p>
           <HeroSearch />
           <div className="mt-3 flex flex-wrap justify-center gap-2.5">
-            {USE_CASES.map((u) => (
+            {[...USE_CASES].sort((a, b) => (a.id === "creative" ? -1 : b.id === "creative" ? 1 : 0)).map((u) => (
               <Link key={u.id} href={`/explore?use=${u.id}`} className={`chip ${u.id === "creative" ? "chip-active" : ""}`}>
                 <Icon name={u.icon} size={16} />
                 {u.label}
@@ -172,6 +172,8 @@ export default async function HomePage() {
       <section className="relative mx-auto max-w-[1440px] px-5 py-12 md:px-16">
         <GlowOrb className="left-1/2 top-1/2 h-[80%] w-[80%] -translate-x-1/2 -translate-y-1/2" />
         <div className="relative grid min-h-[420px] overflow-hidden rounded-2xl glass-panel md:grid-cols-2">
+          <span aria-hidden className="absolute left-4 top-4 h-6 w-6 border-l border-t border-primary-container/60" />
+          <span aria-hidden className="absolute bottom-4 right-4 h-6 w-6 border-b border-r border-primary-container/60" />
           <div className="flex flex-col justify-center p-8 md:p-14">
             <div className="mb-5 flex items-center gap-2">
               <span className="eyebrow-mono">

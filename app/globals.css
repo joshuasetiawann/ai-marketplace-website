@@ -68,10 +68,10 @@
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   /* Typography scale */
-  --text-display-lg: 72px;
-  --text-display-lg--line-height: 80px;
-  --text-display-lg--letter-spacing: -0.04em;
-  --text-display-lg--font-weight: 600;
+  --text-display-lg: 76px;
+  --text-display-lg--line-height: 78px;
+  --text-display-lg--letter-spacing: -0.045em;
+  --text-display-lg--font-weight: 700;
   --text-display-md: 56px;
   --text-display-md--line-height: 64px;
   --text-display-md--letter-spacing: -0.03em;

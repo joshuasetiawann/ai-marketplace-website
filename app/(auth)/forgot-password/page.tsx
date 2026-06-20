@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { requestPasswordReset, type AuthState } from "@/lib/actions/auth";
-import { AuthCard, fieldClass } from "@/components/auth/AuthCard";
+import { AuthCard, AuthField, authSubmitClass } from "@/components/auth/AuthCard";
 
 const initial: AuthState = {};
 
@@ -24,14 +24,10 @@ export default function ForgotPasswordPage() {
           </Link>
         </div>
       ) : (
-        <form action={action} className="space-y-4">
-          <input name="email" type="email" placeholder="Email" aria-label="Email" autoComplete="email" className={fieldClass} />
+        <form action={action} className="space-y-5">
+          <AuthField label="Email" icon="mail" name="email" type="email" placeholder="kamu@email.com" autoComplete="email" />
           {state.error && <p role="alert" className="text-sm text-red-400">{state.error}</p>}
-          <button
-            type="submit"
-            disabled={pending}
-            className="w-full rounded-lg bg-accent py-3 font-semibold text-base transition hover:brightness-110 disabled:opacity-60"
-          >
+          <button type="submit" disabled={pending} className={authSubmitClass}>
             {pending ? "Mengirim…" : "Kirim tautan reset"}
           </button>
           <p className="text-center text-sm text-muted">

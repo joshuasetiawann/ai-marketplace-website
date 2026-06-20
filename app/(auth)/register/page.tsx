@@ -3,7 +3,8 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { registerUser, type AuthState } from "@/lib/actions/auth";
-import { AuthCard, fieldClass } from "@/components/auth/AuthCard";
+import { AuthCard, AuthField, PasswordField, authSubmitClass } from "@/components/auth/AuthCard";
+import Icon from "@/components/Icon";
 
 const initial: AuthState = {};
 
@@ -11,24 +12,14 @@ export default function RegisterPage() {
   const [state, action, pending] = useActionState(registerUser, initial);
   return (
     <AuthCard tab="register" title="Buat akun" sub="Gratis. Belanja & jual model AI dalam satu akun.">
-      <form action={action} className="space-y-4">
-        <input name="name" placeholder="Nama lengkap" aria-label="Nama lengkap" autoComplete="name" className={fieldClass} />
-        <input name="email" type="email" placeholder="Email" aria-label="Email" autoComplete="email" className={fieldClass} />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password (min. 8 karakter)"
-          aria-label="Password"
-          autoComplete="new-password"
-          className={fieldClass}
-        />
+      <form action={action} className="space-y-5">
+        <AuthField label="Nama Lengkap" icon="person" name="name" placeholder="Nama kamu" autoComplete="name" />
+        <AuthField label="Email" icon="mail" name="email" type="email" placeholder="kamu@email.com" autoComplete="email" />
+        <PasswordField name="password" placeholder="Min. 8 karakter" autoComplete="new-password" />
         {state.error && <p role="alert" className="text-sm text-red-400">{state.error}</p>}
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full rounded-lg bg-accent py-3 font-semibold text-base transition hover:brightness-110 disabled:opacity-60"
-        >
+        <button type="submit" disabled={pending} className={authSubmitClass}>
           {pending ? "Memproses…" : "Daftar"}
+          {!pending && <Icon name="arrow_forward" size={17} />}
         </button>
         <p className="text-center text-sm text-muted">
           Sudah punya akun?{" "}

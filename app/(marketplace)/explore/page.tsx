@@ -1,6 +1,7 @@
 import ExploreClient from "@/components/ExploreClient";
 import { createServerClient } from "@/lib/supabase/server";
 import { getExploreCatalog, searchExploreCatalog, type ExploreParams } from "@/lib/catalog-data";
+import { PRICE_MAX_IDR, PRICE_STEP_IDR } from "@/lib/pricing";
 
 export const metadata = { title: "Jelajahi Model — Nexora AI" };
 
@@ -10,9 +11,17 @@ type SP = {
   use?: string;
   tier?: string;
   rating?: string;
+  max?: string;
   sort?: string;
   page?: string;
 };
+
+/** Quantize the max-price param to the slider's step grid; 0 / out-of-range = off. */
+function parseMaxIdr(raw: string | undefined) {
+  const n = Number(raw) || 0;
+  if (n <= 0 || n >= PRICE_MAX_IDR) return 0;
+  return Math.max(PRICE_STEP_IDR, Math.round(n / PRICE_STEP_IDR) * PRICE_STEP_IDR);
+}
 
 export default async function ExplorePage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
@@ -28,6 +37,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
     // sorted so "Pro,Free" and "Free,Pro" share one cache entry
     tiers: (sp.tier ?? "").split(",").map((t) => t.trim()).filter(Boolean).sort(),
     minRating: Number(sp.rating) || 0,
+    maxIdr: parseMaxIdr(sp.max),
     sort: sp.sort ?? "trending",
     page: Math.max(1, Number(sp.page) || 1),
   };
@@ -53,6 +63,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
         use: params.use,
         tiers: params.tiers,
         minRating: params.minRating,
+        maxIdr: params.maxIdr,
         sort: params.sort,
         page: params.page,
       }}

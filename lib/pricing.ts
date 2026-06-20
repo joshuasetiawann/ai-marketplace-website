@@ -1,6 +1,11 @@
 // USD demo prices → believable Rupiah for display. Ported from the Vite app.
 export const USD_TO_IDR = 15800;
 
+// Jelajahi price-range slider bounds (IDR). Values are quantized to the step
+// grid server-side so the explore cache key space stays bounded.
+export const PRICE_MAX_IDR = 2_000_000;
+export const PRICE_STEP_IDR = 50_000;
+
 export const toIDR = (usd: number) => Math.round(usd * USD_TO_IDR);
 
 export const formatIDR = (n: number) =>

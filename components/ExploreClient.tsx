@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import Icon from "./Icon";
 import ModelCard from "./ModelCard";
+import ModelArtwork from "./ModelArtwork";
+import StarRating from "./StarRating";
+import { TierBadge } from "./Badge";
 import { EmptyState } from "./common";
 import { CATEGORIES, CATEGORY_COUNTS, TIERS, USE_CASES, type Model } from "@/lib/catalog";
+import { PRICE_MAX_IDR, PRICE_STEP_IDR, toIDR, formatIDRShort } from "@/lib/pricing";
 
 const SORTS = [
   { id: "trending", label: "Trending" },
@@ -21,6 +26,7 @@ type Params = {
   use: string;
   tiers: string[];
   minRating: number;
+  maxIdr: number;
   sort: string;
   page: number;
 };
@@ -42,10 +48,13 @@ export default function ExploreClient({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { q, cat, use, tiers, minRating, sort } = params;
+  const { q, cat, use, tiers, minRating, maxIdr, sort } = params;
 
   const [search, setSearch] = useState(q);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [view, setView] = useState<"grid" | "list">("grid");
+  // slider position while dragging; committed to the URL debounced
+  const [priceIdr, setPriceIdr] = useState(maxIdr || PRICE_MAX_IDR);
   const wished = useMemo(() => new Set(wishlistedIds), [wishlistedIds]);
 
   // build a URL from the current params + a patch; any patch except {page}
@@ -58,6 +67,7 @@ export default function ExploreClient({
       use,
       tier: tiers.join(","),
       rating: minRating ? String(minRating) : "",
+      max: maxIdr ? String(maxIdr) : "",
       sort,
     };
     Object.entries(patch).forEach(([k, v]) => {
@@ -69,6 +79,7 @@ export default function ExploreClient({
     if (merged.use) p.set("use", merged.use);
     if (merged.tier) p.set("tier", merged.tier);
     if (merged.rating) p.set("rating", merged.rating);
+    if (merged.max) p.set("max", merged.max);
     if (merged.sort && merged.sort !== "trending") p.set("sort", merged.sort);
     const pg = Number(patch.page) || 0;
     if (pg > 1) p.set("page", String(pg));
@@ -86,17 +97,35 @@ export default function ExploreClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
+  // resync slider when the URL param changes from outside (chip ✕, Hapus semua) —
+  // React's derive-state-from-props pattern (adjust during render, no effect)
+  const [prevMaxIdr, setPrevMaxIdr] = useState(maxIdr);
+  if (prevMaxIdr !== maxIdr) {
+    setPrevMaxIdr(maxIdr);
+    setPriceIdr(maxIdr || PRICE_MAX_IDR);
+  }
+
+  // debounced price slider → URL (PRICE_MAX_IDR = slider parked right = off)
+  useEffect(() => {
+    const committed = priceIdr >= PRICE_MAX_IDR ? 0 : priceIdr;
+    if (committed === maxIdr) return;
+    const t = setTimeout(() => go({ max: committed || undefined }), 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [priceIdr]);
+
   const toggleTier = (t: string) => {
     const next = tiers.includes(t) ? tiers.filter((x) => x !== t) : [...tiers, t];
     go({ tier: next.join(",") });
   };
   const clearAll = () => {
     setSearch("");
+    setPriceIdr(PRICE_MAX_IDR);
     router.push(pathname);
   };
 
   const activeFilterCount =
-    (cat !== "all" ? 1 : 0) + (use ? 1 : 0) + tiers.length + (minRating ? 1 : 0);
+    (cat !== "all" ? 1 : 0) + (use ? 1 : 0) + tiers.length + (minRating ? 1 : 0) + (maxIdr ? 1 : 0);
 
   const FiltersPanel = (
     <div className="flex flex-col gap-7">
@@ -131,6 +160,24 @@ export default function ExploreClient({
           ))}
         </div>
       </FilterGroup>
+      <FilterGroup label="Rentang Harga">
+        <input
+          type="range"
+          min={PRICE_STEP_IDR}
+          max={PRICE_MAX_IDR}
+          step={PRICE_STEP_IDR}
+          value={priceIdr}
+          onChange={(e) => setPriceIdr(Number(e.target.value))}
+          aria-label="Harga maksimum"
+          className="w-full cursor-pointer accent-primary-container"
+        />
+        <div className="mt-2 flex items-center justify-between font-mono text-[11px] text-on-surface-variant">
+          <span>Rp 0</span>
+          <span className={priceIdr < PRICE_MAX_IDR ? "text-primary-container" : ""}>
+            {priceIdr >= PRICE_MAX_IDR ? "Rp 2jt+" : `≤ ${formatIDRShort(priceIdr)}`}
+          </span>
+        </div>
+      </FilterGroup>
       <FilterGroup label="Kegunaan">
         <div className="flex flex-wrap gap-2">
           {USE_CASES.map((u) => (
@@ -145,7 +192,7 @@ export default function ExploreClient({
           ))}
         </div>
       </FilterGroup>
-      <FilterGroup label="Paket Harga">
+      <FilterGroup label="Paket">
         <div className="flex flex-wrap gap-2">
           {TIERS.map((t) => (
             <button key={t} onClick={() => toggleTier(t)} className={`chip ${tiers.includes(t) ? "chip-active" : ""}`}>
@@ -221,6 +268,26 @@ export default function ExploreClient({
             </select>
             <Icon name="expand_more" size={18} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-outline" />
           </div>
+          <div className="hidden overflow-hidden rounded-full border border-white/10 sm:flex" role="group" aria-label="Mode tampilan">
+            <button
+              type="button"
+              onClick={() => setView("grid")}
+              aria-pressed={view === "grid"}
+              aria-label="Tampilan grid"
+              className={`px-3.5 transition-colors ${view === "grid" ? "bg-primary-container/15 text-primary-container" : "text-on-surface-variant hover:text-on-surface"}`}
+            >
+              <Icon name="grid_view" size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("list")}
+              aria-pressed={view === "list"}
+              aria-label="Tampilan daftar"
+              className={`border-l border-white/10 px-3.5 transition-colors ${view === "list" ? "bg-primary-container/15 text-primary-container" : "text-on-surface-variant hover:text-on-surface"}`}
+            >
+              <Icon name="view_list" size={18} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -247,6 +314,9 @@ export default function ExploreClient({
                   {minRating > 0 && (
                     <FilterChip label={`${String(minRating).replace(".", ",")}★ ke atas`} onClear={() => go({ rating: "" })} />
                   )}
+                  {maxIdr > 0 && (
+                    <FilterChip label={`≤ ${formatIDRShort(maxIdr)}`} onClear={() => go({ max: undefined })} />
+                  )}
                   <button
                     onClick={clearAll}
                     className="ml-1 text-body-sm text-primary-container transition-colors hover:text-primary"
@@ -262,11 +332,19 @@ export default function ExploreClient({
           </div>
           {models.length ? (
             <>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                {models.map((m) => (
-                  <ModelCard key={m.id} model={m} wishlisted={wished.has(m.id)} loggedIn={loggedIn} />
-                ))}
-              </div>
+              {view === "grid" ? (
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                  {models.map((m) => (
+                    <ModelCard key={m.id} model={m} wishlisted={wished.has(m.id)} loggedIn={loggedIn} />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {models.map((m) => (
+                    <ModelRow key={m.id} model={m} />
+                  ))}
+                </div>
+              )}
               {hasMore && (
                 <div className="mt-10 flex justify-center">
                   <button
@@ -320,6 +398,46 @@ function FilterGroup({ label, children }: { label: string; children: React.React
       <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-outline">{label}</p>
       {children}
     </div>
+  );
+}
+
+function ModelRow({ model }: { model: Model }) {
+  return (
+    <Link
+      href={`/model/${model.id}`}
+      className="group flex items-center gap-5 rounded-xl glass-panel p-4 transition-all electric-glow-hover hover:border-primary-container/30"
+    >
+      <ModelArtwork
+        seed={model.id}
+        colors={model.art}
+        icon={model.icon}
+        category={model.category}
+        className="h-24 w-40 shrink-0 rounded-lg max-sm:h-20 max-sm:w-28"
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-3">
+          <h3 className="truncate font-display text-body-lg font-semibold text-on-surface transition-colors group-hover:text-primary-container">
+            {model.name}
+          </h3>
+          <StarRating value={model.rating} size={13} single className="shrink-0" />
+        </div>
+        <p className="mt-1 line-clamp-1 text-body-sm text-on-surface-variant">{model.tagline}</p>
+        <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-outline">{model.category}</p>
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-2">
+        <span className="font-semibold text-on-surface">
+          {model.price === 0 ? (
+            <span className="text-primary-container">Gratis</span>
+          ) : (
+            <>
+              {formatIDRShort(toIDR(model.price))}
+              <span className="font-mono text-[11px] font-normal text-on-surface-variant">/bln</span>
+            </>
+          )}
+        </span>
+        <TierBadge tier={model.tier} />
+      </div>
+    </Link>
   );
 }
 

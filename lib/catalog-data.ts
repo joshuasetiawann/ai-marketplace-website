@@ -9,6 +9,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { TAG_PRODUCTS, TAG_STORES, productTag } from "@/lib/cache-tags";
 import { PRODUCT_COLUMNS, mapProduct, type Model } from "@/lib/catalog";
+import { USD_TO_IDR } from "@/lib/pricing";
 import type { ReviewItem } from "@/lib/actions/reviews";
 
 const CATALOG_LIFE = { stale: 60, revalidate: 300, expire: 3600 } as const;
@@ -126,6 +127,8 @@ export type ExploreParams = {
   /** Keep sorted so equivalent filter sets share one cache entry. */
   tiers: string[];
   minRating: number;
+  /** Max price in IDR, quantized to PRICE_STEP_IDR by the page (0 = off) so the cache key space stays bounded. */
+  maxIdr: number;
   sort: string;
   page: number;
 };
@@ -143,6 +146,7 @@ async function runExploreQuery(p: ExploreParams): Promise<ExploreResult> {
   if (p.use) query = query.contains("use_cases", [p.use]);
   if (p.tiers.length) query = query.in("tier", p.tiers);
   if (p.minRating) query = query.gte("rating", p.minRating);
+  if (p.maxIdr) query = query.lte("price_usd", p.maxIdr / USD_TO_IDR);
   if (p.q) {
     // search name/tagline/description; sanitize to keep the PostgREST or() grammar intact
     const safe = p.q.replace(/[,()*%]/g, " ").trim();

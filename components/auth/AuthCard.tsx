@@ -1,3 +1,6 @@
+"use client";
+
+import { useId, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/Icon";
 
@@ -6,6 +9,75 @@ export const fieldClass =
   "w-full rounded-lg border border-line bg-base px-4 py-3 text-sm text-ink " +
   "placeholder:text-muted outline-none transition focus:border-accent/60 " +
   "focus:ring-2 focus:ring-accent/20";
+
+/** v2 primary submit — cyan glow + arrow (docs/design/v2 frame "auth"). */
+export const authSubmitClass =
+  "flex w-full items-center justify-center gap-2 rounded-lg bg-accent py-3 font-semibold " +
+  "text-base text-[#00363d] shadow-[0_0_18px_rgba(0,229,255,0.35)] transition " +
+  "hover:brightness-110 active:scale-[0.99] disabled:opacity-60 disabled:shadow-none";
+
+/** Labeled input with mono eyebrow label + leading icon; `right` slots next to the label. */
+export function AuthField({
+  label,
+  icon,
+  right,
+  ...inputProps
+}: {
+  label: string;
+  icon: string;
+  right?: React.ReactNode;
+} & React.InputHTMLAttributes<HTMLInputElement>) {
+  const id = useId();
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <label htmlFor={id} className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+          {label}
+        </label>
+        {right}
+      </div>
+      <div className="relative">
+        <Icon name={icon} size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-outline" />
+        <input id={id} {...inputProps} className={`${fieldClass} pl-10`} />
+      </div>
+    </div>
+  );
+}
+
+/** AuthField for passwords with a show/hide toggle. */
+export function PasswordField({
+  label = "Password",
+  right,
+  ...inputProps
+}: {
+  label?: string;
+  right?: React.ReactNode;
+} & React.InputHTMLAttributes<HTMLInputElement>) {
+  const id = useId();
+  const [show, setShow] = useState(false);
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <label htmlFor={id} className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+          {label}
+        </label>
+        {right}
+      </div>
+      <div className="relative">
+        <Icon name="lock" size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-outline" />
+        <input id={id} {...inputProps} type={show ? "text" : "password"} className={`${fieldClass} pl-10 pr-11`} />
+        <button
+          type="button"
+          onClick={() => setShow((s) => !s)}
+          aria-label={show ? "Sembunyikan password" : "Tampilkan password"}
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-outline transition-colors hover:text-ink"
+        >
+          <Icon name={show ? "visibility_off" : "visibility"} size={17} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const FEATURES = [
   { icon: "payments", title: "Bagi hasil 80% untuk kreator", desc: "Cair otomatis ke rekeningmu." },

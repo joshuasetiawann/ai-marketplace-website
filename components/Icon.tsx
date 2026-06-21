@@ -91,6 +91,7 @@ const MAP: Record<string, LucideIcon> = {
   manage_accounts: UserCog,
   menu: Menu,
   menu_book: BookOpen,
+  layers: Layers,
   mic: Mic,
   monitoring: Activity,
   movie: Clapperboard,

@@ -9,6 +9,7 @@ export type CartLine = {
   price: number;
   art: string[];
   icon: string;
+  category: string;
   qty: number;
 };
 
@@ -26,14 +27,14 @@ export async function getCart(
 ): Promise<CartSummary> {
   const { data } = await supabase
     .from("cart_items")
-    .select("qty, products(id,name,tagline,price_usd,art,icon)")
+    .select("qty, products(id,name,tagline,price_usd,art,icon,category)")
     .eq("user_id", userId)
     .order("added_at", { ascending: true });
 
   const lines: CartLine[] = (data ?? [])
     .map((row: Record<string, unknown>) => {
       const p = (Array.isArray(row.products) ? row.products[0] : row.products) as
-        | { id: string; name: string; tagline: string | null; price_usd: number | string; art: string[] | null; icon: string | null }
+        | { id: string; name: string; tagline: string | null; price_usd: number | string; art: string[] | null; icon: string | null; category: string | null }
         | null;
       if (!p) return null;
       return {
@@ -43,6 +44,7 @@ export async function getCart(
         price: Number(p.price_usd),
         art: p.art ?? ["#0b3a44", "#00e5ff"],
         icon: p.icon ?? "apps",
+        category: p.category ?? "",
         qty: Number(row.qty) || 1,
       };
     })

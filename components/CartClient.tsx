@@ -68,7 +68,7 @@ export default function CartClient({
         {lines.map((m) => (
           <div key={m.id} className="flex items-center gap-4 rounded-xl surface-card p-4 animate-fade-in">
             <Link href={`/model/${m.id}`} aria-label={m.name} className="h-20 w-24 shrink-0 overflow-hidden rounded-lg">
-              <ModelArtwork seed={m.id} colors={m.art} icon={m.icon} className="h-full w-full" />
+              <ModelArtwork seed={m.id} colors={m.art} icon={m.icon} category={m.category} className="h-full w-full" />
             </Link>
             <div className="min-w-0 flex-1">
               <Link
@@ -98,6 +98,18 @@ export default function CartClient({
             </div>
           </div>
         ))}
+
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl surface-card px-5 py-4">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-outline">Metode Pembayaran</span>
+          {["QRIS", "Virtual Account", "E-Wallet", "Kartu"].map((m) => (
+            <span
+              key={m}
+              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 font-mono text-[11px] tracking-[0.06em] text-on-surface-variant"
+            >
+              {m}
+            </span>
+          ))}
+        </div>
       </div>
 
       <div className="rounded-xl surface-card p-6 lg:sticky lg:top-24">

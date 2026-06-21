@@ -140,7 +140,7 @@ export default function CheckoutClient({
           {lines.map((m) => (
             <div key={m.id} className="flex items-center gap-3">
               <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg">
-                <ModelArtwork seed={m.id} colors={m.art} icon={m.icon} className="h-full w-full" />
+                <ModelArtwork seed={m.id} colors={m.art} icon={m.icon} category={m.category} className="h-full w-full" />
               </div>
               <span className="flex-1 truncate text-body-sm text-on-surface">
                 {m.name} <span className="text-on-surface-variant">×{m.qty}</span>

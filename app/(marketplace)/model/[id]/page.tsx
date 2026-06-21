@@ -55,8 +55,20 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   }
   if (!model) notFound();
 
-  // seller attribution (house catalog has owner_id = null)
-  const seller = model.ownerId ? await getSellerStore(model.ownerId) : null;
+  // seller attribution — store for marketplace sellers; house products carry a
+  // creator slug (e.g. "synthetix-labs") shown as an unlinked verified chip
+  const store = model.ownerId ? await getSellerStore(model.ownerId) : null;
+  const seller =
+    store ??
+    (model.creatorId
+      ? {
+          name: model.creatorId
+            .split("-")
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" "),
+          handle: null,
+        }
+      : null);
 
   // "owned" = the signed-in buyer has a paid order line for this product
   let owned = false;

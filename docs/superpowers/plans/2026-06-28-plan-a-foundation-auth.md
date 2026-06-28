@@ -6,7 +6,9 @@
 
 **Architecture:** Single Next.js App Router app (TypeScript) menggantikan SPA Vite. Supabase menyediakan Postgres + Auth + RLS. Sesi disimpan di cookie httpOnly via `@supabase/ssr`; `middleware.ts` me-refresh sesi & menjaga route. App Vite lama dipindah ke `legacy-vite/` sebagai referensi port (dihapus di Plan D).
 
-**Tech Stack:** Next.js 15 (App Router), TypeScript, Tailwind CSS v3, `@supabase/ssr` + `@supabase/supabase-js`, Supabase CLI (Docker) untuk dev lokal, Vitest (unit), Playwright (E2E). Package manager: **npm**.
+**Tech Stack:** Next.js 16 (App Router) + React 19, TypeScript, **Tailwind CSS v4** (token via `@theme` di `globals.css`, bukan `tailwind.config.js`), font via **`next/font`** (bukan `@fontsource`), `@supabase/ssr` + `@supabase/supabase-js`, Supabase CLI (Docker) untuk dev lokal, Vitest (unit), Playwright (E2E). Package manager: **npm**.
+
+> **Deviasi saat eksekusi (Commit 1):** `create-next-app@latest` menghasilkan **Next 16.2.9 + React 19.2 + Tailwind v4** (bukan Next 15 / Tailwind v3 yang diasumsikan saat menulis plan). Adaptasi: token desain didefinisikan di `app/globals.css` via `@theme` (menghasilkan utilitas `bg-base`/`text-accent`/`border-line`), dan font Inter/Geist dimuat lewat `next/font/google`. Tidak ada `tailwind.config.ts`. Semua utilitas yang dipakai task UI berikutnya (`bg-base`, `text-accent`, `border-line`, `font-geist`, dst.) tetap valid.
 
 ## Global Constraints
 
@@ -14,7 +16,7 @@
 - Bahasa UI **Bahasa Indonesia**, harga ditampilkan **Rupiah** (data harga disimpan USD `price_usd`).
 - Model role **dua**: `user` (default) dan `admin`. Tidak ada role lain.
 - Ekonomi tetap: `PLATFORM_FEE = 0.20`, `SELLER_SHARE = 0.80`, `MIN_PAYOUT_USD = 50`.
-- Design system "Precision Luxury": base graphite `#131313`/`#0e0e0e`, accent electric-blue `#00e5ff`, gold `#e9c349`. Font Inter + Geist (self-hosted `@fontsource`). Ikon `lucide-react`.
+- Design system "Precision Luxury": base graphite `#131313`/`#0e0e0e`, accent electric-blue `#00e5ff`, gold `#e9c349`. Font Inter + Geist (via `next/font/google`). Ikon `lucide-react`.
 - **Satu fitur = satu commit, push ke `origin` tiap commit.** Branch kerja: `feat/next-supabase-migration`.
 - Password TIDAK PERNAH plaintext — ditangani Supabase Auth.
 - `SUPABASE_SERVICE_ROLE_KEY` hanya dipakai di server, tidak pernah ke client.

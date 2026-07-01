@@ -28,7 +28,7 @@ export async function registerUser(
     password,
     options: {
       data: { name },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/login`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/dashboard`,
     },
   });
   if (error) return { error: error.message };
@@ -52,6 +52,13 @@ export async function signIn(
       return { error: "Email belum diverifikasi. Cek kotak masuk kamu." };
     return { error: "Email atau password salah." };
   }
+
+  // Step up to AAL2 when the account has a verified 2FA factor — a password
+  // alone must not grant a fully-privileged session.
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+    redirect("/login/2fa");
+  }
   redirect("/dashboard");
 }
 
@@ -72,7 +79,7 @@ export async function requestPasswordReset(
 
   const supabase = await createServerClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/reset-password`,
   });
   if (error) return { error: error.message };
   return { ok: true };

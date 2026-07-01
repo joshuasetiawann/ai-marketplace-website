@@ -53,5 +53,22 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // 2FA enforcement: a logged-in user who has a verified factor but has not
+  // stepped up to AAL2 must complete the challenge before reaching any
+  // protected route (defense-in-depth beyond the login redirect).
+  if (user && needsAuth && !path.startsWith("/login")) {
+    try {
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aal?.nextLevel === "aal2" && aal.currentLevel === "aal1") {
+        const url = request.nextUrl.clone();
+        url.pathname = "/login/2fa";
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
+    } catch {
+      // transient MFA lookup failure — don't block navigation
+    }
+  }
+
   return response;
 }

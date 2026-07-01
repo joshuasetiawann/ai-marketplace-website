@@ -8,6 +8,7 @@ const PROTECTED_PREFIXES = [
   "/checkout",
   "/wishlist",
   "/orders",
+  "/library",
   "/settings",
   "/sell",
   "/admin",

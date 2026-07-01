@@ -30,6 +30,10 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
   const intent = String(formData.get("intent") || "draft");
   const status = intent === "submit" ? "under_review" : "draft";
 
+  const gallery = Math.min(6, Math.max(1, Math.trunc(Number(formData.get("gallery"))) || 3));
+  const capabilities = parseCapabilities(formData.get("capabilities"));
+  const specs = parseSpecs(formData.get("specs"));
+
   const record = {
     owner_id: user.id,
     name,
@@ -45,19 +49,67 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean),
+    gallery,
+    capabilities,
+    specs,
     status,
   };
 
+  let productId = id;
   if (id) {
     const { error } = await supabase.from("products").update(record).eq("id", id).eq("owner_id", user.id);
     if (error) return { error: error.message };
   } else {
-    const { error } = await supabase.from("products").insert(record);
+    const { data, error } = await supabase.from("products").insert(record).select("id").single();
+    if (error) return { error: error.message };
+    productId = data.id;
+  }
+
+  // Fulfillment lives in product_assets (entitlement-gated). Upsert when set.
+  const assetUrl = String(formData.get("asset_url") || "").trim();
+  const accessNote = String(formData.get("access_note") || "").trim();
+  if (productId && (assetUrl || accessNote)) {
+    const { error } = await supabase.from("product_assets").upsert(
+      { product_id: productId, asset_url: assetUrl || null, access_note: accessNote || null },
+      { onConflict: "product_id" },
+    );
     if (error) return { error: error.message };
   }
 
   revalidatePath("/sell/products");
   redirect("/sell/products");
+}
+
+type Capability = { icon: string; title: string; text: string };
+
+function parseCapabilities(raw: FormDataEntryValue | null): Capability[] {
+  try {
+    const arr = JSON.parse(String(raw || "[]"));
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .filter((c) => c && typeof c.title === "string" && c.title.trim())
+      .map((c) => ({
+        icon: String(c.icon || "bolt"),
+        title: String(c.title).trim(),
+        text: String(c.text || "").trim(),
+      }));
+  } catch {
+    return [];
+  }
+}
+
+function parseSpecs(raw: FormDataEntryValue | null): Record<string, string> {
+  try {
+    const obj = JSON.parse(String(raw || "{}"));
+    if (!obj || typeof obj !== "object" || Array.isArray(obj)) return {};
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (k.trim() && v != null && String(v).trim()) out[k.trim()] = String(v).trim();
+    }
+    return out;
+  } catch {
+    return {};
+  }
 }
 
 /** Submit a draft for moderation. */

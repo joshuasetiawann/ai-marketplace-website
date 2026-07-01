@@ -15,11 +15,17 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
   const { data: p } = await supabase
     .from("products")
-    .select("id,name,tagline,category,tier,price_usd,description,icon,art,use_cases,use_case_tags")
+    .select("id,name,tagline,category,tier,price_usd,description,icon,art,use_cases,use_case_tags,gallery,capabilities,specs")
     .eq("id", id)
     .eq("owner_id", user!.id)
     .maybeSingle();
   if (!p) notFound();
+
+  const { data: asset } = await supabase
+    .from("product_assets")
+    .select("asset_url, access_note")
+    .eq("product_id", id)
+    .maybeSingle();
 
   return (
     <div className="flex flex-col gap-6">
@@ -40,6 +46,11 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           art: p.art ?? ["#0b3a44", "#00e5ff"],
           useCases: p.use_cases ?? [],
           useCaseTags: p.use_case_tags ?? [],
+          gallery: p.gallery ?? 3,
+          capabilities: (p.capabilities as { icon: string; title: string; text: string }[]) ?? [],
+          specs: (p.specs as Record<string, string>) ?? {},
+          assetUrl: asset?.asset_url ?? "",
+          accessNote: asset?.access_note ?? "",
         }}
       />
     </div>

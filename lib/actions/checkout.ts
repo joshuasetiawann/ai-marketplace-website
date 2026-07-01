@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { allow } from "@/lib/ratelimit";
+import { logError } from "@/lib/log";
 
 export type CheckoutState = { error?: string };
 
@@ -18,6 +20,8 @@ export async function placeOrder(
   const promo = String(formData.get("promo") || "").trim();
   const agree = formData.get("agree") === "on";
   if (!agree) return { error: "Setujui syarat & ketentuan dulu." };
+  if (!(await allow("checkout", 15, 60_000)))
+    return { error: "Terlalu banyak percobaan. Coba lagi sebentar." };
 
   const supabase = await createServerClient();
   const {
@@ -31,7 +35,10 @@ export async function placeOrder(
     p_method: method,
     p_promo: promo || null,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    logError("checkout RPC failed", error, { userId: user.id });
+    return { error: error.message };
+  }
 
   revalidatePath("/", "layout");
   redirect(`/orders/${orderId}`);

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { logError } from "@/lib/log";
 
 export type AdminResult = { error?: string; ok?: boolean };
 
@@ -41,7 +42,10 @@ export async function setUserRole(id: string, role: "user" | "admin"): Promise<A
 export async function refundOrder(id: string): Promise<AdminResult> {
   const { supabase } = await requireAdmin();
   const { error } = await supabase.rpc("refund_order", { p_order: id });
-  if (error) return { error: error.message };
+  if (error) {
+    logError("refund_order RPC failed", error, { orderId: id });
+    return { error: error.message };
+  }
   revalidatePath("/admin/orders");
   revalidatePath("/orders");
   return { ok: true };

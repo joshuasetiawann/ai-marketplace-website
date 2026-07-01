@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
+import { allow } from "@/lib/ratelimit";
 
 export type AuthState = { error?: string; ok?: boolean };
 
@@ -22,6 +23,8 @@ export async function registerUser(
   if (!name || !email) return { error: "Nama dan email wajib diisi." };
   if (password.length < 8)
     return { error: "Password minimal 8 karakter." };
+  if (!(await allow("auth:register", 5, 60_000)))
+    return { error: "Terlalu banyak pendaftaran. Coba lagi sebentar." };
 
   const supabase = await createServerClient();
   const { error } = await supabase.auth.signUp({
@@ -45,6 +48,8 @@ export async function signIn(
   const email = String(formData.get("email") || "").trim();
   const password = String(formData.get("password") || "");
   if (!email || !password) return { error: "Email dan password wajib diisi." };
+  if (!(await allow("auth:signin", 10, 60_000)))
+    return { error: "Terlalu banyak percobaan masuk. Coba lagi sebentar." };
 
   const supabase = await createServerClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -77,6 +82,8 @@ export async function requestPasswordReset(
 ): Promise<AuthState> {
   const email = String(formData.get("email") || "").trim();
   if (!email) return { error: "Email wajib diisi." };
+  if (!(await allow("auth:reset", 4, 60_000)))
+    return { error: "Terlalu banyak permintaan. Coba lagi nanti." };
 
   const supabase = await createServerClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {

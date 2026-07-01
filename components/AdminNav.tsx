@@ -10,6 +10,7 @@ const ITEMS = [
   { href: "/admin/orders", icon: "receipt_long", label: "Pesanan" },
   { href: "/admin/users", icon: "group", label: "Pengguna" },
   { href: "/admin/payouts", icon: "account_balance", label: "Payout" },
+  { href: "/admin/messages", icon: "forum", label: "Pesan" },
 ];
 
 export default function AdminNav() {

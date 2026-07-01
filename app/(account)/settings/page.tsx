@@ -1,6 +1,8 @@
 import Icon from "@/components/Icon";
 import ProfileNameForm from "@/components/ProfileNameForm";
 import ChangePasswordForm from "@/components/ChangePasswordForm";
+import ChangeEmailForm from "@/components/ChangeEmailForm";
+import DeleteAccountForm from "@/components/DeleteAccountForm";
 import TwoFactorSettings from "@/components/TwoFactorSettings";
 import { createServerClient } from "@/lib/supabase/server";
 import { signOutEverywhere } from "@/lib/actions/account";
@@ -33,10 +35,8 @@ export default async function SettingsPage() {
         <ProfileNameForm initialName={profile?.name ?? ""} />
       </Section>
 
-      <Section title="Akun" icon="mail">
-        <p className="text-body-sm text-on-surface-variant">
-          Email: <span className="text-on-surface">{user!.email}</span>
-        </p>
+      <Section title="Email" icon="mail">
+        <ChangeEmailForm current={user!.email ?? ""} />
       </Section>
 
       <Section title="Password" icon="lock">
@@ -56,6 +56,10 @@ export default async function SettingsPage() {
             </button>
           </form>
         </div>
+      </Section>
+
+      <Section title="Hapus akun" icon="warning">
+        <DeleteAccountForm />
       </Section>
     </div>
   );

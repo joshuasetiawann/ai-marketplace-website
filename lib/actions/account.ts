@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type AccountState = { error?: string; ok?: boolean };
 
@@ -50,6 +51,54 @@ export async function changePassword(_prev: AccountState, formData: FormData): P
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: error.message };
   return { ok: true };
+}
+
+/** Change the account email. Supabase double-confirms (old + new address). */
+export async function changeEmail(_prev: AccountState, formData: FormData): Promise<AccountState> {
+  const email = String(formData.get("email") || "").trim();
+  if (!email) return { error: "Email wajib diisi." };
+
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  if (email === user.email) return { error: "Email sama dengan yang sekarang." };
+
+  const { error } = await supabase.auth.updateUser(
+    { email },
+    { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/settings` },
+  );
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+/** Permanently delete the account after re-authentication. */
+export async function deleteAccount(_prev: AccountState, formData: FormData): Promise<AccountState> {
+  const current = String(formData.get("current") || "");
+  if (!current) return { error: "Masukkan password untuk konfirmasi." };
+
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) redirect("/login");
+
+  const { error: reauthErr } = await supabase.auth.signInWithPassword({ email: user.email, password: current });
+  if (reauthErr) return { error: "Password salah." };
+
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.deleteUser(user.id);
+  if (error) {
+    // financial FKs (sales/payouts) are ON DELETE RESTRICT — a seller with a
+    // revenue history can't be hard-deleted.
+    return {
+      error: "Akun tidak bisa dihapus karena punya riwayat penjualan/payout. Hubungi dukungan untuk penutupan toko.",
+    };
+  }
+
+  await supabase.auth.signOut();
+  redirect("/");
 }
 
 /** Sign out of every device (global scope). */

@@ -1,8 +1,6 @@
 import { createBrowserClient as createSSRBrowserClient } from "@supabase/ssr";
+import { env } from "@/lib/env";
 
 /** Supabase client for Client Components (browser). */
 export const createBrowserClient = () =>
-  createSSRBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  createSSRBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);

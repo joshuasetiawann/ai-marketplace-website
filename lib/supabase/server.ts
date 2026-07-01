@@ -1,5 +1,6 @@
 import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { env } from "@/lib/env";
 
 /**
  * Supabase client for Server Components, Server Actions and Route Handlers.
@@ -8,8 +9,8 @@ import { cookies } from "next/headers";
 export async function createServerClient() {
   const cookieStore = await cookies();
   return createSSRClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.SUPABASE_URL,
+    env.SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll: () => cookieStore.getAll(),

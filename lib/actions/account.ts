@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { env } from "@/lib/env";
 
 export type AccountState = { error?: string; ok?: boolean };
 
@@ -67,7 +68,7 @@ export async function changeEmail(_prev: AccountState, formData: FormData): Prom
 
   const { error } = await supabase.auth.updateUser(
     { email },
-    { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/settings` },
+    { emailRedirectTo: `${env.SITE_URL}/auth/callback?next=/settings` },
   );
   if (error) return { error: error.message };
   return { ok: true };

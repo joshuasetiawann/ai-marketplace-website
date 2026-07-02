@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "./Icon";
 import { moderateProduct } from "@/lib/actions/admin";
@@ -8,14 +8,18 @@ import { moderateProduct } from "@/lib/actions/admin";
 export default function AdminModerateActions({ id }: { id: string }) {
   const router = useRouter();
   const [pending, start] = useTransition();
+  const [err, setErr] = useState("");
   const act = (action: "approve" | "reject") =>
     start(async () => {
-      await moderateProduct(id, action);
-      router.refresh();
+      setErr("");
+      const res = await moderateProduct(id, action);
+      if (res?.error) setErr(res.error);
+      else router.refresh();
     });
 
   return (
     <div className="flex items-center gap-2">
+      {err && <span role="alert" className="text-[12px] text-error">{err}</span>}
       <button
         onClick={() => act("approve")}
         disabled={pending}

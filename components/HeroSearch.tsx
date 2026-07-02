@@ -22,6 +22,7 @@ export default function HeroSearch() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Kamu butuh bantuan apa?"
+        aria-label="Cari model"
         className="w-full rounded-full border border-white/10 bg-surface-container-lowest py-4 pl-14 pr-32 text-body-md text-on-surface outline-none transition-colors placeholder:text-outline/70 focus:border-primary-container/50"
       />
       <div className="absolute inset-y-0 right-0 flex items-center pr-2">

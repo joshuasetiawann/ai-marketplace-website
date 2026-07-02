@@ -39,6 +39,7 @@ export default function ProductDetailClient({
   const [tab, setTab] = useState<"overview" | "capabilities" | "reviews">("overview");
   const [saved, setSaved] = useState(wishlisted);
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
 
   const guard = () => {
     if (!loggedIn) {
@@ -51,23 +52,36 @@ export default function ProductDetailClient({
   const onAddToCart = async () => {
     if (!guard()) return;
     setBusy(true);
+    setErr("");
     const res = await addToCart(model.id);
     setBusy(false);
     if (res?.needsAuth) router.push("/login");
+    else if (res?.error) setErr(res.error);
   };
 
   const onBuyNow = async () => {
     if (!guard()) return;
     setBusy(true);
-    await addToCart(model.id);
+    setErr("");
+    const res = await addToCart(model.id);
+    setBusy(false);
+    if (res?.needsAuth) return router.push("/login");
+    if (res?.error) return setErr(res.error);
     router.push("/cart");
   };
 
   const onWishlist = async () => {
     if (!guard()) return;
+    setErr("");
     setSaved((s) => !s);
     const res = await toggleWishlist(model.id);
-    if (res?.needsAuth) router.push("/login");
+    if (res?.needsAuth) {
+      setSaved((s) => !s); // revert
+      router.push("/login");
+    } else if (res?.error) {
+      setSaved((s) => !s); // revert on failure
+      setErr(res.error);
+    }
   };
 
   const breakdown = [5, 4, 3, 2, 1].map((star) => {
@@ -105,6 +119,7 @@ export default function ProductDetailClient({
               <button
                 key={i}
                 onClick={() => setActiveImg(i)}
+                aria-label={`Pratinjau ${i + 1}`}
                 className={`relative aspect-video overflow-hidden rounded-lg border transition-all ${
                   activeImg === i
                     ? "border-primary-container ring-2 ring-primary-container/30"
@@ -187,6 +202,11 @@ export default function ProductDetailClient({
                 </button>
               </div>
             </div>
+            {err && (
+              <p role="alert" className="mt-3 text-body-sm text-error">
+                {err}
+              </p>
+            )}
             <div className="mt-4 flex items-center gap-2 text-[12px] text-on-surface-variant">
               <Icon name="lock" size={14} className="text-primary-container" /> Checkout aman · batal kapan saja
             </div>

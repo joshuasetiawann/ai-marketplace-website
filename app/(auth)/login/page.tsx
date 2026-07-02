@@ -12,15 +12,16 @@ export default function LoginPage() {
   return (
     <AuthCard title="Masuk" sub="Selamat datang kembali di Nexora AI.">
       <form action={action} className="space-y-4">
-        <input name="email" type="email" placeholder="Email" autoComplete="email" className={fieldClass} />
+        <input name="email" type="email" placeholder="Email" aria-label="Email" autoComplete="email" className={fieldClass} />
         <input
           name="password"
           type="password"
           placeholder="Password"
+          aria-label="Password"
           autoComplete="current-password"
           className={fieldClass}
         />
-        {state.error && <p className="text-sm text-red-400">{state.error}</p>}
+        {state.error && <p role="alert" className="text-sm text-red-400">{state.error}</p>}
         <button
           type="submit"
           disabled={pending}

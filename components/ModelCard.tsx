@@ -36,7 +36,10 @@ export default function ModelCard({
     setSaved((s) => !s);
     startTransition(async () => {
       const res = await toggleWishlist(model.id);
-      if (res?.needsAuth) router.push("/login");
+      if (res?.needsAuth || res?.error) {
+        setSaved((s) => !s); // revert optimistic toggle on failure
+        if (res?.needsAuth) router.push("/login");
+      }
     });
   };
 
@@ -52,7 +55,7 @@ export default function ModelCard({
     <div
       className={`group flex flex-col overflow-hidden rounded-xl glass-panel electric-glow-hover transition-all hover:border-primary-container/30 ${className}`}
     >
-      <Link href={`/model/${model.id}`} className="relative block h-44 overflow-hidden">
+      <Link href={`/model/${model.id}`} aria-label={model.name} className="relative block h-44 overflow-hidden">
         <ModelArtwork
           seed={model.id}
           colors={model.art}

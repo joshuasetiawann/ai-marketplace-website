@@ -74,6 +74,11 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
   // Fulfillment lives in product_assets (entitlement-gated). Upsert when set.
   const assetUrl = String(formData.get("asset_url") || "").trim();
   const accessNote = String(formData.get("access_note") || "").trim();
+  // This value is rendered as the href of the buyer's download button, so a
+  // `javascript:`/`data:` URL would execute in their session. type="url" on the
+  // input is a browser courtesy — a direct Server Action call skips it.
+  if (assetUrl && !isHttpUrl(assetUrl))
+    return { error: "Tautan unduhan harus diawali http:// atau https://." };
   if (productId && (assetUrl || accessNote)) {
     const { error } = await supabase.from("product_assets").upsert(
       { product_id: productId, asset_url: assetUrl || null, access_note: accessNote || null },
@@ -84,6 +89,16 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
 
   revalidatePath("/sell/products");
   redirect("/sell/products");
+}
+
+/** Only web URLs may be stored — see the call site in saveProduct(). */
+function isHttpUrl(value: string): boolean {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 type Capability = { icon: string; title: string; text: string };

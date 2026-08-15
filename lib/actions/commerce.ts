@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { clampQty } from "@/lib/cart";
 
 export type CommerceResult = { error?: string; ok?: boolean; needsAuth?: boolean };
 
@@ -26,7 +27,7 @@ export async function addToCart(productId: string): Promise<CommerceResult> {
     .maybeSingle();
 
   const { error } = await supabase.from("cart_items").upsert(
-    { user_id: user.id, product_id: productId, qty: (existing?.qty ?? 0) + 1 },
+    { user_id: user.id, product_id: productId, qty: clampQty((existing?.qty ?? 0) + 1) },
     { onConflict: "user_id,product_id" },
   );
   if (error) return { error: error.message };
@@ -35,11 +36,12 @@ export async function addToCart(productId: string): Promise<CommerceResult> {
   return { ok: true };
 }
 
-/** Set the quantity of a cart line (qty <= 0 removes it). */
-export async function updateCartQty(productId: string, qty: number): Promise<CommerceResult> {
+/** Set the quantity of a cart line (qty <= 0 removes it, above MAX_QTY clamps). */
+export async function updateCartQty(productId: string, rawQty: number): Promise<CommerceResult> {
   const { supabase, user } = await requireUser();
   if (!user) return { needsAuth: true };
 
+  const qty = clampQty(rawQty);
   if (qty <= 0) {
     const { error } = await supabase
       .from("cart_items")
@@ -81,7 +83,7 @@ export async function addManyToCart(productIds: string[]): Promise<CommerceResul
   const rows = productIds.map((pid) => ({
     user_id: user.id,
     product_id: pid,
-    qty: (qtyByid.get(pid) ?? 0) + 1,
+    qty: clampQty((qtyByid.get(pid) ?? 0) + 1),
   }));
   const { error } = await supabase.from("cart_items").upsert(rows, { onConflict: "user_id,product_id" });
   if (error) return { error: error.message };

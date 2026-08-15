@@ -90,11 +90,15 @@ export default function PayoutClient({
         <form action={payAction} className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <label className="block flex-1">
             <span className="mb-2 block text-body-sm font-medium text-on-surface">Jumlah (USD)</span>
+            {/* step must admit cents: `available` is a rounded-to-2dp balance, so
+                step="1" made the browser reject the field's own default value and
+                block submit for every seller whose balance was not a whole USD. */}
             <input
               name="amount"
               type="number"
-              min={0}
-              step="1"
+              min={MIN_PAYOUT_USD}
+              max={available}
+              step="0.01"
               value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
               className="input-field"

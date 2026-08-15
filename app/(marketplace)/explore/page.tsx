@@ -39,7 +39,11 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
     minRating: Number(sp.rating) || 0,
     maxIdr: parseMaxIdr(sp.max),
     sort: sp.sort ?? "trending",
-    page: Math.max(1, Number(sp.page) || 1),
+    // The query uses a cumulative range, so page N asks Postgres for
+    // N × EXPLORE_PAGE_SIZE rows in a single statement. Unclamped, ?page=100000
+    // turns this public URL into a 1.2M-row scan — and mints a cache entry per
+    // value on the way. 50 pages = 600 models, well past any real browse depth.
+    page: Math.min(50, Math.max(1, Number(sp.page) || 1)),
   };
 
   // Filter combos are cached; free-text search queries live (unbounded keys).

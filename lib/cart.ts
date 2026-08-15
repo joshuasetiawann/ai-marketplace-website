@@ -2,6 +2,19 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const TAX_RATE = 0.11; // PPN 11%
 
+/**
+ * Server Actions take whatever the caller sends — the +/- buttons in the UI are
+ * not a constraint. Without a cap, `qty` can be pushed high enough that
+ * price × qty overflows orders.total_usd (numeric(10,2)) and checkout fails with
+ * a Postgres error no buyer can act on. Mirrored by the cart_items_qty_max CHECK
+ * constraint so no writer can route around it.
+ */
+export const MAX_QTY = 99;
+
+/** Coerce any caller-supplied quantity into 0..MAX_QTY (0 means "remove"). */
+export const clampQty = (n: number) =>
+  Math.min(MAX_QTY, Math.max(0, Math.trunc(Number(n) || 0)));
+
 export type CartLine = {
   id: string;
   name: string;

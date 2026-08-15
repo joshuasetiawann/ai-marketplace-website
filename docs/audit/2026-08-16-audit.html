@@ -1,0 +1,1258 @@
+<title>Audit Nexora AI</title>
+
+<style>
+  /* ── Tokens: dark-first (Precision Luxury, app/globals.css) ───────────── */
+  :root {
+    --bg: #0a0b0d;
+    --bg-2: #08090b;
+    --surface: #121317;
+    --surface-2: #16181d;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-2: rgba(255, 255, 255, 0.14);
+    --grid: rgba(255, 255, 255, 0.028);
+    --ink: #eef1f2;
+    --ink-2: #9aa6a9;
+    --ink-3: #6d7679;
+    --accent: #00daf3;
+    --accent-ink: #001f24;
+    --accent-soft: rgba(0, 218, 243, 0.12);
+    --hi: #ff8a7a;
+    --hi-soft: rgba(255, 138, 122, 0.13);
+    --md: #e9c349;
+    --md-soft: rgba(233, 195, 73, 0.13);
+    --lo: #7ee0a8;
+    --lo-soft: rgba(126, 224, 168, 0.12);
+    --ok: #7ee0a8;
+
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f3f6f7;
+      --bg-2: #e9eef0;
+      --surface: #ffffff;
+      --surface-2: #f8fafb;
+      --line: rgba(10, 22, 26, 0.11);
+      --line-2: rgba(10, 22, 26, 0.2);
+      --grid: rgba(10, 22, 26, 0.035);
+      --ink: #0c1417;
+      --ink-2: #4c5a5e;
+      --ink-3: #78868a;
+      --accent: #00707f;
+      --accent-ink: #ffffff;
+      --accent-soft: rgba(0, 112, 127, 0.1);
+      --hi: #b23225;
+      --hi-soft: rgba(178, 50, 37, 0.09);
+      --md: #7e6206;
+      --md-soft: rgba(126, 98, 6, 0.1);
+      --lo: #17714a;
+      --lo-soft: rgba(23, 113, 74, 0.09);
+      --ok: #17714a;
+    }
+  }
+
+  :root[data-theme="light"] {
+    --bg: #f3f6f7;
+    --bg-2: #e9eef0;
+    --surface: #ffffff;
+    --surface-2: #f8fafb;
+    --line: rgba(10, 22, 26, 0.11);
+    --line-2: rgba(10, 22, 26, 0.2);
+    --grid: rgba(10, 22, 26, 0.035);
+    --ink: #0c1417;
+    --ink-2: #4c5a5e;
+    --ink-3: #78868a;
+    --accent: #00707f;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(0, 112, 127, 0.1);
+    --hi: #b23225;
+    --hi-soft: rgba(178, 50, 37, 0.09);
+    --md: #7e6206;
+    --md-soft: rgba(126, 98, 6, 0.1);
+    --lo: #17714a;
+    --lo-soft: rgba(23, 113, 74, 0.09);
+    --ok: #17714a;
+  }
+
+  /* ── Base ─────────────────────────────────────────────────────────────── */
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 20px 96px;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  code, .mono { font-family: var(--mono); font-variant-ligatures: none; }
+
+  code {
+    font-size: 0.855em;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 0.1em 0.4em;
+    color: var(--ink-2);
+    word-break: break-word;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  /* ── Header ───────────────────────────────────────────────────────────── */
+  .head {
+    position: relative;
+    margin: 0 -20px 56px;
+    padding: 64px 20px 40px;
+    border-bottom: 1px solid var(--line);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .head-inner { max-width: 940px; margin: 0 auto; position: relative; }
+  .bracket {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--accent);
+    opacity: 0.55;
+  }
+  .bracket.tl { top: -14px; left: -6px; border-right: 0; border-bottom: 0; }
+  .bracket.br { bottom: -14px; right: -6px; border-left: 0; border-top: 0; }
+
+  .head h1 {
+    font-size: clamp(30px, 5.4vw, 46px);
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+    font-weight: 650;
+    margin: 14px 0 0;
+    text-wrap: balance;
+  }
+  .head .lede {
+    margin: 16px 0 0;
+    max-width: 62ch;
+    color: var(--ink-2);
+    font-size: 17px;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    margin-top: 26px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.05em;
+    color: var(--ink-3);
+  }
+  .meta b { color: var(--ink-2); font-weight: 500; }
+
+  /* ── Tiles ────────────────────────────────────────────────────────────── */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .tile::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 2px;
+    background: var(--rail, var(--line-2));
+  }
+  .tile .n {
+    display: block;
+    font-family: var(--mono);
+    font-size: 30px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--tone, var(--ink));
+    margin-bottom: 8px;
+  }
+  .tile .k { font-size: 12.5px; color: var(--ink-2); }
+  .t-hi { --rail: var(--hi); --tone: var(--hi); }
+  .t-md { --rail: var(--md); --tone: var(--md); }
+  .t-lo { --rail: var(--lo); --tone: var(--lo); }
+  .t-all { --rail: var(--accent); --tone: var(--ink); }
+
+  /* ── Panels ───────────────────────────────────────────────────────────── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 22px 24px;
+  }
+  .panel h3 {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .cols2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  @media (min-width: 720px) { .cols2 { grid-template-columns: 1fr 1fr; } }
+
+  .checks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
+  .checks li { padding-left: 22px; position: relative; font-size: 14.5px; color: var(--ink-2); }
+  .checks li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0.62em;
+    width: 9px;
+    height: 5px;
+    border-left: 1.6px solid var(--ok);
+    border-bottom: 1.6px solid var(--ok);
+    transform: rotate(-45deg);
+  }
+  .checks li b { color: var(--ink); font-weight: 550; }
+
+  /* ── Section headers ──────────────────────────────────────────────────── */
+  section { margin-top: 56px; scroll-margin-top: 24px; }
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-2);
+    margin-bottom: 4px;
+  }
+  .sec-head h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 620;
+    letter-spacing: -0.02em;
+  }
+  .sec-head .count {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .sec-note { margin: 14px 0 22px; color: var(--ink-2); font-size: 14.5px; max-width: 68ch; }
+
+  /* ── Findings ─────────────────────────────────────────────────────────── */
+  .find {
+    border-bottom: 1px solid var(--line);
+    padding: 22px 0 22px 18px;
+    position: relative;
+  }
+  .find::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 22px;
+    bottom: 22px;
+    width: 2px;
+    background: var(--rail);
+    border-radius: 2px;
+  }
+  .f-hi { --rail: var(--hi); --chip-bg: var(--hi-soft); --chip-ink: var(--hi); }
+  .f-md { --rail: var(--md); --chip-bg: var(--md-soft); --chip-ink: var(--md); }
+  .f-lo { --rail: var(--lo); --chip-bg: var(--lo-soft); --chip-ink: var(--lo); }
+
+  .f-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 7px;
+  }
+  .f-id {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+    color: var(--ink-3);
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    background: var(--chip-bg);
+    color: var(--chip-ink);
+    border: 1px solid color-mix(in srgb, var(--chip-ink) 32%, transparent);
+  }
+  .find h4 {
+    margin: 0 0 8px;
+    font-size: 16.5px;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    line-height: 1.35;
+    text-wrap: balance;
+  }
+  .find p { margin: 0 0 10px; color: var(--ink-2); font-size: 14.5px; max-width: 74ch; }
+  .find p:last-child { margin-bottom: 0; }
+  .fix {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 3px 3px 0;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: var(--ink-2);
+    max-width: 74ch;
+  }
+  .fix b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  .loc {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-3);
+    margin-bottom: 9px;
+    word-break: break-word;
+  }
+
+  /* ── Plan table ───────────────────────────────────────────────────────── */
+  .scroller { overflow-x: auto; border: 1px solid var(--line); border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 14px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 500;
+    background: var(--surface-2);
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.ids { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); line-height: 1.7; }
+  td.wave { font-family: var(--mono); font-size: 11.5px; color: var(--ink); white-space: nowrap; }
+
+  .foot {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="head">
+  <div class="head-inner">
+    <span class="bracket tl"></span>
+    <span class="bracket br"></span>
+    <p class="eyebrow">Laporan Audit &middot; Nexora AI Marketplace</p>
+    <h1>Audit keamanan, bug, UI/UX &amp; responsivitas</h1>
+    <p class="lede">
+      Pemeriksaan menyeluruh atas seluruh kode aplikasi: 14 migrasi Postgres berikut RLS-nya,
+      12 modul Server Action, alur pembayaran, dan 41 halaman/komponen antarmuka.
+      37 temuan, diurutkan dari yang paling mendesak.
+    </p>
+    <div class="meta">
+      <span>16 AGUSTUS 2026</span>
+      <span>BRANCH <b>main</b></span>
+      <span>HEAD <b>2912e59</b></span>
+      <span>NEXT <b>16.2.9</b> &middot; REACT <b>19.2.4</b> &middot; SUPABASE</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="tiles">
+    <div class="tile t-hi"><span class="n">5</span><span class="k">Prioritas tinggi</span></div>
+    <div class="tile t-md"><span class="n">14</span><span class="k">Prioritas sedang</span></div>
+    <div class="tile t-lo"><span class="n">18</span><span class="k">Prioritas rendah</span></div>
+    <div class="tile t-all"><span class="n">37</span><span class="k">Total temuan</span></div>
+  </div>
+
+  <div class="cols2">
+    <div class="panel">
+      <h3>Yang sudah benar &mdash; jangan diutak-atik</h3>
+      <ul class="checks">
+        <li><b>RLS sebagai lapis utama.</b> Setiap tabel punya kebijakan eksplisit; <code>anon</code>/<code>authenticated</code> hanya dapat DML lewat grant, baris disaring Postgres.</li>
+        <li><b>Jalur uang lewat RPC <code>security definer</code>.</b> <code>INSERT/UPDATE/DELETE</code> pada <code>orders</code>, <code>order_items</code>, <code>sales</code> sudah dicabut dari klien.</li>
+        <li><b>Advisory lock</b> di <code>checkout()</code> dan <code>request_payout()</code> menutup balapan saldo dan double-submit.</li>
+        <li><b>Mesin status payout</b> menolak transisi keluar dari <code>paid</code>/<code>rejected</code> &mdash; di trigger DB <em>dan</em> di action admin.</li>
+        <li><b>Ulasan wajib pembelian terverifikasi</b>, satu per pengguna, tanpa ulasan produk sendiri.</li>
+        <li><b>Aset unduhan digerbangi entitlement</b> lewat RLS di <code>product_assets</code>, bukan lewat UI.</li>
+        <li><b>Tanda tangan webhook Midtrans</b> (SHA-512) diverifikasi sebelum order disetel.</li>
+        <li><b>Re-autentikasi</b> sudah ada di ganti password &amp; hapus akun dari halaman Pengaturan.</li>
+        <li><code>tsc --noEmit</code> <b>bersih</b>, <code>eslint</code> <b>bersih</b>, 10 unit test lulus.</li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <h3>Cakupan &amp; batas pemeriksaan</h3>
+      <p style="margin:0 0 12px;color:var(--ink-2);font-size:14.5px;">
+        Audit ini membaca kode, bukan menjalankan pentest terhadap instans hidup.
+      </p>
+      <ul class="checks">
+        <li><b>Diperiksa:</b> 14 migrasi SQL (skema, RLS, grant, trigger, RPC), 12 modul Server Action, adapter pembayaran (simulated/Midtrans/Xendit), middleware sesi, seluruh route <code>app/</code> dan komponen <code>components/</code>, konfigurasi Next/ESLint/Vitest/Playwright.</li>
+        <li><b>Tidak diverifikasi runtime:</b> <code>tests/db-security.test.ts</code> gagal karena Supabase lokal tidak menyala (Docker mati) &mdash; 6 test RLS ter-skip. Temuan basis data di bawah berasal dari pembacaan migrasi.</li>
+        <li><b>Tidak dijalankan:</b> uji lintas peramban, Lighthouse, dan audit kontras warna otomatis.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── KEAMANAN ───────────────────────────────────────────────────────── -->
+  <section id="keamanan">
+    <div class="sec-head">
+      <h2>Keamanan</h2>
+      <span class="count">10 temuan &middot; 2 tinggi &middot; 4 sedang &middot; 4 rendah</span>
+    </div>
+    <p class="sec-note">
+      Fondasinya kuat &mdash; celah yang tersisa hampir semuanya di lapisan <em>Server Action</em>,
+      bukan di basis data. Server Action adalah endpoint POST publik: siapa pun yang punya sesi valid
+      bisa memanggilnya langsung, tanpa melewati halaman yang seharusnya jadi penjaganya.
+    </p>
+
+    <div class="find f-hi">
+      <div class="f-top"><span class="f-id">SEC-01</span><span class="chip">Tinggi</span></div>
+      <h4>Password bisa diganti tanpa tahu password lama</h4>
+      <span class="loc">lib/actions/auth.ts:147 &middot; app/(auth)/reset-password/page.tsx</span>
+      <p>
+        <code>updatePassword()</code> hanya memeriksa panjang minimal 8 karakter lalu memanggil
+        <code>auth.updateUser({ password })</code>. Ia dirancang untuk alur "lupa password", tapi sebagai
+        Server Action ia bisa dipanggil <em>sesi login biasa mana pun</em> &mdash; ID action-nya terekspos di
+        bundel halaman <code>/reset-password</code> yang publik.
+      </p>
+      <p>
+        Akibatnya proteksi di <code>changePassword()</code> (<code>lib/actions/account.ts:33</code>), yang
+        sudah benar meminta password saat ini, bisa dilewati sepenuhnya. Laptop yang ditinggal terbuka atau
+        cookie sesi yang dicuri cukup untuk mengambil alih akun permanen.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Wajibkan sesinya berasal dari tautan recovery. <code>supabase.auth.mfa.getAuthenticatorAssuranceLevel()</code>
+        sudah mengembalikan <code>currentAuthenticationMethods</code>; tolak permintaan bila tidak ada entri
+        bermetode <code>recovery</code>. Tanpa dependensi baru, sekitar empat baris.
+      </div>
+    </div>
+
+    <div class="find f-hi">
+      <div class="f-top"><span class="f-id">SEC-02</span><span class="chip">Tinggi</span></div>
+      <h4>2FA bisa dimatikan tanpa verifikasi apa pun</h4>
+      <span class="loc">components/TwoFactorSettings.tsx:66&ndash;70</span>
+      <p>
+        Tombol "Nonaktifkan" langsung memanggil <code>mfa.unenroll({ factorId })</code> &mdash; tanpa dialog
+        konfirmasi, tanpa password, tanpa kode TOTP. Mengaktifkan 2FA butuh kode dari authenticator;
+        mematikannya butuh satu klik.
+      </p>
+      <p>
+        Ini membalik seluruh nilai 2FA: penyerang yang sudah memegang sesi tinggal mematikannya, lalu
+        (digabung dengan SEC-01) mengganti password dan mengunci pemilik asli keluar.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Pindahkan unenroll ke Server Action yang meminta password saat ini lewat
+        <code>signInWithPassword</code> &mdash; pola yang sudah dipakai <code>deleteAccount()</code>.
+        Tambahkan konfirmasi eksplisit di UI.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">SEC-03</span><span class="chip">Sedang</span></div>
+      <h4>2FA hanya menjaga navigasi, bukan aksi</h4>
+      <span class="loc">lib/supabase/middleware.ts:60&ndash;75</span>
+      <p>
+        Penegakan AAL2 hanya berjalan untuk permintaan yang path-nya cocok <code>PROTECTED_PREFIXES</code>.
+        Server Action adalah POST ke path apa pun &mdash; termasuk <code>/</code> dan <code>/explore</code> yang tidak
+        terproteksi. Sesi AAL1 (baru lewat password, belum lewat TOTP) tetap bisa menjalankan
+        <code>updateProfileName</code>, <code>savePayoutAccount</code>, <code>requestPayout</code>,
+        <code>saveProduct</code>, dan <code>placeOrder</code>.
+      </p>
+      <p>
+        Halaman-halamannya terkunci; datanya tidak. Untuk akun yang mengaktifkan 2FA, penyerang berbekal
+        password saja masih bisa mengubah rekening pencairan dan menarik dana.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Satu helper <code>requireAal2()</code> yang membandingkan <code>currentLevel</code> dengan
+        <code>nextLevel</code>, dipasang di action bernilai tinggi: payout, pengaturan akun, hapus akun,
+        checkout.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">SEC-04</span><span class="chip">Sedang</span></div>
+      <h4><code>asset_url</code> dari penjual tidak divalidasi, lalu dirender sebagai tautan</h4>
+      <span class="loc">lib/actions/products.ts:75 &rarr; app/(account)/library/[id]/page.tsx:79</span>
+      <p>
+        Nilai <code>asset_url</code> disimpan apa adanya &mdash; <code>String(formData.get("asset_url")).trim()</code>,
+        tanpa cek skema &mdash; lalu dipasang sebagai <code>href</code> pada tombol "Unduh / Buka aset" yang dilihat
+        pembeli. Atribut <code>type="url"</code> di form hanyalah validasi peramban; permintaan langsung
+        ke Server Action melewatinya.
+      </p>
+      <p>
+        Penjual bisa menanamkan URL berskema <code>javascript:</code> atau <code>data:</code> yang tereksekusi di
+        peramban pembeli, dalam konteks sesi login mereka.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Parse dengan <code>new URL()</code> saat menyimpan dan tolak apa pun selain <code>http:</code>/<code>https:</code>.
+        Satu blok <code>try/catch</code> di <code>saveProduct</code>.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">SEC-05</span><span class="chip">Sedang</span></div>
+      <h4>Kolom <code>role</code> dan <code>two_factor</code> terbaca anonim</h4>
+      <span class="loc">supabase/migrations/20260628152625_rls_policies.sql:23</span>
+      <p>
+        Kebijakan <code>profiles_read_all ... using (true)</code> dipasangkan dengan grant SELECT ke seluruh
+        kolom. PostgREST membiarkan klien memilih kolom mana pun, jadi
+        <code>GET /rest/v1/profiles?select=id,name,role&amp;role=eq.admin</code> mengembalikan daftar lengkap
+        administrator kepada siapa saja &mdash; tanpa perlu login.
+      </p>
+      <p>
+        Migrasi <code>prod_hardening</code> sudah menerapkan pola yang benar untuk <code>stores</code>
+        (mencabut SELECT lalu memberi grant per-kolom agar rekening payout tidak terbaca publik).
+        Pola yang sama belum diterapkan ke <code>profiles</code>.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        <code>revoke select on profiles from anon;</code> lalu
+        <code>grant select (id, name, art) on profiles to anon;</code>. Konsol admin membacanya sebagai
+        <code>authenticated</code> dan tidak terpengaruh.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">SEC-06</span><span class="chip">Sedang</span></div>
+      <h4>Rekening pencairan langsung berstatus "terverifikasi"</h4>
+      <span class="loc">lib/actions/payouts.ts:30</span>
+      <p>
+        <code>savePayoutAccount</code> menerima deret angka apa pun sepanjang &ge;6 digit lalu menulis
+        <code>payout_status: "verified"</code> seketika. Tidak ada penarikan uji, tidak ada pencocokan nama,
+        tidak ada peninjauan admin &mdash; sementara <code>request_payout()</code> memakai persis status itu
+        sebagai satu-satunya syarat kelayakan pencairan.
+      </p>
+      <p>
+        UI menampilkan lencana hijau "Terverifikasi" atas klaim yang tidak pernah diverifikasi.
+        Ini menyesatkan penjual sekaligus membuka jalan pencairan ke rekening yang salah ketik.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Tulis <code>pending</code>, dan sediakan aksi persetujuan di konsol admin
+        (<code>/admin/payouts</code> sudah punya kerangkanya). Jika verifikasi memang belum masuk lingkup,
+        ganti label jadi "Tersimpan" agar UI tidak berbohong.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">SEC-07</span><span class="chip">Rendah</span></div>
+      <h4>Tidak ada Content-Security-Policy</h4>
+      <span class="loc">next.config.ts</span>
+      <p>
+        Lima header keamanan sudah terpasang &mdash; <code>X-Frame-Options</code>, <code>nosniff</code>,
+        <code>Referrer-Policy</code>, <code>Permissions-Policy</code>, HSTS &mdash; tapi CSP tidak ada.
+        CSP adalah lapisan yang mengubah skrip suntikan semacam SEC-04 dari "tereksekusi" menjadi "diblokir".
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Mulai dari yang longgar tapi berguna: <code>frame-ancestors 'none'</code>,
+        <code>base-uri 'self'</code>, <code>form-action 'self'</code>, <code>object-src 'none'</code>.
+        Ketiganya tidak memerlukan nonce dan tidak akan merusak apa pun di aplikasi ini.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">SEC-08</span><span class="chip">Rendah</span></div>
+      <h4>Pesan galat Postgres mentah sampai ke layar pengguna</h4>
+      <span class="loc">lib/actions/{commerce,products,seller,payouts,admin,reviews}.ts &mdash; 12+ lokasi</span>
+      <p>
+        Pola <code>return { error: error.message }</code> meneruskan teks galat PostgREST/Postgres apa adanya:
+        berbahasa Inggris di antarmuka berbahasa Indonesia, dan kadang menyebut nama constraint atau kolom.
+        Sebagian pesan RPC memang sudah ditulis rapi dalam Bahasa Indonesia; sisanya tidak.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Satu pemeta seperti <code>authMessage()</code> yang sudah ada di <code>lib/actions/auth.ts</code>:
+        kenali kode galat yang bisa dipicu pengguna, sisanya jatuh ke satu kalimat generik. Detail aslinya
+        tetap masuk <code>logError()</code>.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">SEC-09</span><span class="chip">Rendah</span></div>
+      <h4>Webhook pembayaran tanpa pembatas laju; token Xendit dibanding tidak konstan-waktu</h4>
+      <span class="loc">app/api/payments/webhook/route.ts &middot; lib/payment-gateway/xendit.ts:38</span>
+      <p>
+        <code>POST /api/payments/webhook</code> memanggil <code>createAdminClient()</code> (bypass RLS) dan
+        tidak dibatasi laju &mdash; satu-satunya endpoint tanpa gerbang di aplikasi. Verifikasi tanda tangan
+        memang menolak payload palsu, tapi tidak menolak volume.
+      </p>
+      <p>
+        Adapter Xendit membandingkan token callback dengan <code>!==</code> biasa; secara teori bocor lewat
+        kanal samping waktu. Adapter Midtrans tidak kena karena membandingkan hash SHA-512.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Pasang <code>allow("webhook", 120, 60_000)</code> dan ganti perbandingan token dengan
+        <code>crypto.timingSafeEqual</code> pada buffer sepanjang sama.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">SEC-10</span><span class="chip">Rendah</span></div>
+      <h4>Validasi redirect tidak konsisten antara dua alur login</h4>
+      <span class="loc">app/auth/callback/route.ts:15 vs lib/actions/auth.ts:82</span>
+      <p>
+        <code>safeNext()</code> pada form login menolak <code>//</code> secara eksplisit;
+        callback autentikasi hanya memeriksa <code>next.startsWith("/")</code>. Karena tujuan akhirnya
+        digabung dengan <code>origin</code>, saat ini belum bisa dieksploitasi &mdash; tapi dua aturan berbeda
+        untuk satu masalah yang sama adalah bug yang menunggu giliran.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Ekspor <code>safeNext()</code> dan pakai di kedua tempat. Satu sumber kebenaran.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── BUG FUNGSIONAL ─────────────────────────────────────────────────── -->
+  <section id="bug">
+    <div class="sec-head">
+      <h2>Bug fungsional</h2>
+      <span class="count">11 temuan &middot; 2 tinggi &middot; 4 sedang &middot; 5 rendah</span>
+    </div>
+    <p class="sec-note">
+      Dua di antaranya baru muncul saat gateway pembayaran sungguhan diaktifkan
+      (<code>PAYMENT_PROVIDER=midtrans|xendit</code>) &mdash; jadi tidak terlihat di mode simulasi sekarang,
+      tapi akan langsung menggigit pada hari peluncuran.
+    </p>
+
+    <div class="find f-hi">
+      <div class="f-top"><span class="f-id">BUG-01</span><span class="chip">Tinggi</span></div>
+      <h4>Parameter <code>?page=</code> tidak dibatasi &mdash; satu URL bisa meminta jutaan baris</h4>
+      <span class="loc">app/(marketplace)/explore/page.tsx:42 &middot; lib/catalog-data.ts (runExploreQuery)</span>
+      <p>
+        <code>page</code> hanya dijaga batas bawah: <code>Math.max(1, Number(sp.page) || 1)</code>.
+        Kueri memakai rentang kumulatif <code>.range(0, page * 12 - 1)</code>, jadi
+        <code>/explore?page=100000</code> meminta 1,2 juta baris dari Postgres dalam satu permintaan.
+      </p>
+      <p>
+        Karena hasilnya juga dilewatkan <code>"use cache"</code> yang berkunci pada parameter,
+        setiap nilai <code>page</code> ngawur juga mencetak entri cache baru. Halaman publik, tanpa login,
+        tanpa pembatas laju.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Batasi atas: <code>Math.min(50, Math.max(1, Number(sp.page) || 1))</code>. Satu baris.
+      </div>
+    </div>
+
+    <div class="find f-hi">
+      <div class="f-top"><span class="f-id">BUG-02</span><span class="chip">Tinggi</span></div>
+      <h4>Keranjang dikosongkan sebelum pembayaran benar-benar terjadi</h4>
+      <span class="loc">supabase/migrations/20260702120000_payment_gateway.sql &mdash; create_pending_order()</span>
+      <p>
+        <code>create_pending_order()</code> mengeksekusi <code>delete from cart_items</code> lalu mengembalikan
+        order berstatus <code>pending</code>. Pembeli baru <em>setelah itu</em> dialihkan ke halaman pembayaran
+        provider.
+      </p>
+      <p>
+        Pembeli yang membatalkan, kehabisan waktu, atau sekadar menutup tab kehilangan seluruh isi
+        keranjang dan meninggalkan order <code>pending</code> yang tidak pernah tersapu. Tidak ada jalan
+        pulih di UI &mdash; barangnya harus dicari dan dimasukkan ulang satu per satu.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Pindahkan penghapusan keranjang ke <code>finalize_order()</code>, yang sudah dipanggil webhook dan
+        sudah idempoten. Alur simulasi tidak terpengaruh &mdash; <code>checkout()</code> tetap mengosongkan
+        keranjang di transaksi yang sama.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">BUG-03</span><span class="chip">Sedang</span></div>
+      <h4>Pilihan bank dan e-wallet tidak pernah terkirim</h4>
+      <span class="loc">components/CheckoutClient.tsx</span>
+      <p>
+        State <code>bank</code> dan <code>ewallet</code> menggerakkan tampilan tombol terpilih, tapi tidak
+        punya <code>&lt;input type="hidden"&gt;</code> pendamping. Hanya <code>method</code> (<code>qris</code>/<code>va</code>/<code>ewallet</code>)
+        yang ikut terkirim.
+      </p>
+      <p>
+        Memilih BCA atau BNI menghasilkan order yang identik. Di mode simulasi tidak kelihatan; dengan
+        gateway sungguhan, pembeli mendapat instruksi bank yang tidak mereka pilih.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Kirim satu channel gabungan &mdash; <code>va-bca</code>, <code>ewallet-gopay</code> &mdash; lalu teruskan ke
+        <code>PaymentInit.method</code>.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">BUG-04</span><span class="chip">Sedang</span></div>
+      <h4>Kuantitas keranjang tanpa batas atas</h4>
+      <span class="loc">lib/actions/commerce.ts:39</span>
+      <p>
+        <code>updateCartQty(productId, qty)</code> menulis <code>qty</code> apa adanya. Constraint DB hanya
+        menuntut <code>qty &gt; 0</code>. Tombol +/- di UI memang menaikkan satu-satu, tapi Server Action bisa
+        dipanggil langsung dengan nilai berapa pun.
+      </p>
+      <p>
+        <code>qty</code> ekstrem membuat total melampaui <code>numeric(10,2)</code>, dan <code>checkout()</code>
+        gagal dengan galat overflow yang tidak bisa dipahami pembeli.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        <code>qty = Math.min(99, Math.trunc(qty))</code> di action, dan tambahkan
+        <code>check (qty &lt;= 99)</code> di tabel agar penjagaannya ada di satu tempat yang tak bisa dilewati.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">BUG-05</span><span class="chip">Sedang</span></div>
+      <h4>Kolom jumlah pencairan menolak nilainya sendiri</h4>
+      <span class="loc">components/PayoutClient.tsx:24, 94&ndash;98</span>
+      <p>
+        Input diisi awal dengan <code>available</code> &mdash; nilai desimal, misalnya <code>123.45</code> &mdash;
+        sementara atributnya <code>type="number" step="1"</code>. Peramban menganggap nilai itu tidak valid
+        dan memblokir submit dengan gelembung "Please enter a valid value".
+      </p>
+      <p>
+        Penjual dengan saldo pecahan &mdash; artinya hampir semua penjual &mdash; tidak bisa mencairkan dana sama
+        sekali sampai mereka menebak sendiri bahwa angkanya harus dibulatkan.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        <code>step="0.01"</code>, plus <code>max={available}</code> agar batas saldo terlihat sebelum
+        permintaan dikirim.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">BUG-06</span><span class="chip">Sedang</span></div>
+      <h4>Formulir ulasan ditawarkan kepada orang yang pasti ditolak</h4>
+      <span class="loc">components/ProductDetailClient.tsx (ReviewForm)</span>
+      <p>
+        Formulir tampil untuk setiap pengunjung yang login. Trigger <code>guard_review</code> baru menolak di
+        basis data, setelah pengguna memilih bintang dan mengetik ulasan lengkap.
+      </p>
+      <p>
+        Halaman ini sudah menerima prop <code>owned</code> dan memakainya untuk tombol beli &mdash; informasinya
+        ada, hanya belum dipakai di tempat ini.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Teruskan <code>owned</code> ke <code>ReviewForm</code>; bila <code>false</code>, tampilkan
+        "Beli model ini untuk menulis ulasan" alih-alih formulir.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">BUG-07</span><span class="chip">Rendah</span></div>
+      <h4>Verifikasi 2FA mengabaikan tujuan awal</h4>
+      <span class="loc">app/(auth)/login/2fa/page.tsx</span>
+      <p>
+        Setelah kode terverifikasi, halaman selalu <code>router.replace("/dashboard")</code>. Pengguna 2FA
+        yang mengklik tautan ke <code>/model/&lt;id&gt;</code> tidak pernah sampai ke sana &mdash; padahal
+        <code>?next=</code> sudah dibawa sepanjang alur login biasa.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Baca <code>?next=</code> lewat <code>useSearchParams()</code> dan lewatkan melalui
+        <code>safeNext()</code> yang sama seperti SEC-10.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">BUG-08</span><span class="chip">Rendah</span></div>
+      <h4><code>/reset-password</code> buntu tanpa sesi, dan tanpa konfirmasi password</h4>
+      <span class="loc">app/(auth)/reset-password/page.tsx</span>
+      <p>
+        Membuka URL-nya langsung menampilkan formulir yang tampak berfungsi tapi selalu gagal, karena tidak
+        ada sesi recovery. Tidak ada pesan yang menjelaskan bahwa tautannya sudah kedaluwarsa atau harus
+        diminta ulang.
+      </p>
+      <p>
+        Tidak ada field "ulangi password" &mdash; pada layar di mana salah ketik berarti terkunci dari akun
+        sendiri.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Periksa sesi di server dan tampilkan tautan "Minta tautan baru" bila kosong; tambahkan konfirmasi
+        password yang divalidasi di klien.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">BUG-09</span><span class="chip">Rendah</span></div>
+      <h4>Rincian rating kehilangan baris 1 bintang</h4>
+      <span class="loc">components/ProductDetailClient.tsx (breakdown)</span>
+      <p>
+        Rincian hanya memetakan <code>[5, 4, 3, 2]</code>. Ulasan bintang satu &mdash; justru yang paling dicari
+        calon pembeli &mdash; tidak pernah muncul, dan persentasenya tidak pernah berjumlah 100%.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Jadikan <code>[5, 4, 3, 2, 1]</code> dan tambahkan satu nilai pada tabel sebaran cadangan.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">BUG-10</span><span class="chip">Rendah</span></div>
+      <h4>Kolom <code>profiles.two_factor</code> mati</h4>
+      <span class="loc">supabase/migrations/20260628152559_init_schema.sql &middot; ..._prod_hardening.sql</span>
+      <p>
+        Kolomnya ada, trigger melindunginya dari penulisan pengguna &mdash; tapi tidak ada satu pun kode yang
+        pernah mengisinya. Status 2FA sebenarnya hidup di <code>auth.mfa_factors</code>.
+      </p>
+      <p>
+        Kolom yang selamanya <code>false</code> adalah jebakan: fitur berikutnya yang membacanya akan
+        mengambil kesimpulan yang salah.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Hapus kolomnya, atau sinkronkan dari <code>auth.mfa_factors</code> lewat trigger. Menghapus lebih
+        murah.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">BUG-11</span><span class="chip">Rendah</span></div>
+      <h4>Label grafik pendapatan memakai kunci React yang bisa bentrok</h4>
+      <span class="loc">components/EarningsChart.tsx</span>
+      <p>
+        <code>key={l}</code> memakai teks label sebagai kunci. Dua pekan dengan label sama &mdash;
+        misalnya format bulan yang berulang &mdash; menghasilkan kunci duplikat dan render yang salah.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        <code>key={`${i}-${l}`}</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── UI/UX ──────────────────────────────────────────────────────────── -->
+  <section id="uiux">
+    <div class="sec-head">
+      <h2>UI/UX &amp; responsivitas</h2>
+      <span class="count">12 temuan &middot; 1 tinggi &middot; 5 sedang &middot; 6 rendah</span>
+    </div>
+    <p class="sec-note">
+      Sisi publik (Beranda, Jelajahi, Detail, Keranjang) sudah rapi dan benar-benar responsif.
+      Masalahnya terkonsentrasi di area setelah login &mdash; Dashboard, Seller Studio, Konsol Admin &mdash;
+      yang tampak tertinggal saat sistem desain v2 diterapkan.
+    </p>
+
+    <div class="find f-hi">
+      <div class="f-top"><span class="f-id">UX-01</span><span class="chip">Tinggi</span></div>
+      <h4>Seluruh area akun kehilangan navigasi aplikasi</h4>
+      <span class="loc">app/(account)/layout.tsx &middot; app/(admin)/admin/layout.tsx</span>
+      <p>
+        Layout akun merender header minimal berisi logo dan tombol Keluar &mdash; tanpa
+        <code>&lt;Navbar&gt;</code>, tanpa <code>&lt;MobileNav&gt;</code>, tanpa <code>&lt;Footer&gt;</code>.
+        Begitu masuk <code>/dashboard</code>, <code>/orders</code>, <code>/library</code>,
+        <code>/settings</code>, atau <code>/sell</code>, pengguna kehilangan pencarian, keranjang,
+        wishlist, dan seluruh menu.
+      </p>
+      <p>
+        Di ponsel efeknya paling parah: bilah navigasi bawah punya tab "Dashboard", dan mengetuknya
+        membuat bilah itu sendiri lenyap. Satu-satunya jalan kembali ke marketplace adalah logo di
+        pojok kiri atas.
+      </p>
+      <p>
+        Layout ini juga masih memakai token era pertama (<code>border-line</code>, <code>text-accent</code>,
+        <code>text-muted</code>) sementara halaman di dalamnya sudah memakai token v2
+        (<code>surface-card</code>, <code>text-on-surface</code>) &mdash; dua bahasa visual dalam satu layar.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Pakai ulang shell yang sudah ada: <code>&lt;Navbar&gt;</code> + <code>&lt;MobileNav&gt;</code> +
+        <code>&lt;Footer&gt;</code>, persis seperti <code>app/(marketplace)/layout.tsx</code>, lalu bungkus
+        isinya dengan container yang sama. Perbaikan terbesar dengan diff terkecil di laporan ini.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">UX-02</span><span class="chip">Sedang</span></div>
+      <h4>Angka Rupiah dirender pada 56px tanpa penyesuaian layar kecil</h4>
+      <span class="loc">app/(account)/sell/(studio)/earnings/page.tsx:32</span>
+      <p>
+        Saldo tersedia memakai <code>text-display-md</code> &mdash; 56px, tetap di semua ukuran layar.
+        Nilai seperti "Rp 12.345.678" membutuhkan sekitar 420px; di iPhone SE (375px) angkanya terpotong
+        atau memaksa kartunya melebar.
+      </p>
+      <p>
+        Halaman publik sudah menangani ini dengan benar (judul Beranda memakai tangga
+        <code>text-[40px] sm:text-[56px] md:text-display-lg</code>). Halaman penjual belum ikut.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        <code>text-headline-md md:text-display-md</code>, atau
+        <code>clamp(32px, 7vw, 56px)</code> untuk angka mata uang secara umum.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">UX-03</span><span class="chip">Sedang</span></div>
+      <h4>Baris kartu tidak membungkus di layar sempit</h4>
+      <span class="loc">app/(account)/sell/(studio)/products/page.tsx &middot; app/(admin)/admin/users/page.tsx</span>
+      <p>
+        Baris produk penjual memakai <code>flex items-center gap-4</code> tanpa <code>flex-wrap</code>,
+        berisi thumbnail 64px + nama + lencana status + menu aksi. Di 360px, elemen-elemen itu saling
+        menghimpit sampai lencana dan tombol aksi terpotong.
+      </p>
+      <p>
+        Daftar admin sudah memakai <code>flex-wrap</code> dan terbukti berperilaku benar &mdash; polanya sudah
+        ada di repo, tinggal disamakan.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Tambahkan <code>flex-wrap</code> dan <code>min-w-0</code> pada baris produk penjual,
+        atau susun ulang jadi dua baris di bawah <code>sm</code>.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">UX-04</span><span class="chip">Sedang</span></div>
+      <h4>Tabel penjualan di ponsel kehilangan judul kolomnya</h4>
+      <span class="loc">app/(account)/sell/(studio)/sales/page.tsx</span>
+      <p>
+        Baris judul disembunyikan di bawah <code>sm</code> (<code>hidden ... sm:grid</code>), tapi baris
+        datanya tetap tampil sebagai grid dua kolom. Hasilnya lima nilai tanpa label: nama produk, pembeli,
+        "&times;1", dan dua jumlah Rupiah yang berbeda.
+      </p>
+      <p>
+        Tidak ada cara membedakan pendapatan kotor dan bersih &mdash; dan itu justru satu-satunya angka
+        yang benar-benar ingin dilihat penjual.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Di bawah <code>sm</code>, ubah tiap baris jadi kartu berlabel ("Kotor Rp&nbsp;&hellip;",
+        "Bersih Rp&nbsp;&hellip;"). Pola label sejajar-nilai sudah dipakai halaman Earnings.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">UX-05</span><span class="chip">Sedang</span></div>
+      <h4>36 input tanpa <code>required</code>, dan galat tidak terhubung ke field-nya</h4>
+      <span class="loc">seluruh formulir &mdash; auth, produk, payout, kontak, ulasan</span>
+      <p>
+        Tidak satu pun input di aplikasi memakai <code>required</code>. Setiap submit kosong menempuh
+        perjalanan pulang-pergi ke server hanya untuk kembali membawa "Email wajib diisi." &mdash; validasi
+        yang bisa diselesaikan peramban secara instan dan luring.
+      </p>
+      <p>
+        Pesan galat dirender sebagai paragraf lepas, tanpa <code>aria-describedby</code> maupun
+        <code>aria-invalid</code>. Pembaca layar mengumumkan galat tanpa menyebut field mana yang salah,
+        dan fokus tidak berpindah ke sana.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Tambahkan <code>required</code> (validasi server tetap wajib dipertahankan), lalu hubungkan galat
+        lewat <code>aria-describedby</code> + <code>aria-invalid</code> di <code>AuthField</code> dan
+        <code>PasswordField</code> &mdash; dua komponen, semua layar auth ikut terbenahi.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">UX-06</span><span class="chip">Rendah</span></div>
+      <h4>Judul halaman statis dipatok 48px</h4>
+      <span class="loc">/help, /pricing, /about, /sell/start</span>
+      <p>
+        Keempatnya memakai <code>text-headline-lg</code> tanpa varian responsif, sementara halaman
+        marketplace lain memakai <code>text-headline-md md:text-headline-lg</code>. 48px pada layar 360px
+        membuat judul pecah jadi tiga baris rapat.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Samakan dengan pola <code>text-headline-md md:text-headline-lg</code> yang sudah dipakai halaman lain.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">UX-07</span><span class="chip">Rendah</span></div>
+      <h4>Offset elemen sticky lebih pendek dari tinggi navbar</h4>
+      <span class="loc">components/ExploreClient.tsx (top-24) &middot; components/ProductDetailClient.tsx (top-28)</span>
+      <p>
+        Navbar desktop setinggi 100px (topbar 28px + baris utama 72px), tapi panel filter memakai
+        <code>top-24</code> (96px) dan panel pembelian <code>top-28</code> (112px). Yang pertama terselip
+        sedikit di balik navbar; yang kedua menyisakan celah yang tidak konsisten dengannya.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Satu variabel CSS <code>--nav-h</code> di <code>globals.css</code>, dipakai oleh navbar dan
+        semua <code>top-*</code> sticky.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">UX-08</span><span class="chip">Rendah</span></div>
+      <h4>Tautan legal di footer bukan tautan, dan checkout menuntut persetujuan atas dokumen yang tak bisa dibuka</h4>
+      <span class="loc">components/Footer.tsx &middot; components/CheckoutClient.tsx</span>
+      <p>
+        "Privasi", "Ketentuan", "Keamanan", "Dokumentasi" dirender sebagai <code>&lt;span&gt;</code> mati.
+        Di checkout, pembeli diminta mencentang persetujuan atas "Syarat &amp; Ketentuan" yang diberi warna
+        aksen seolah tautan, tapi tidak bisa diklik.
+      </p>
+      <p>
+        Meminta persetujuan atas dokumen yang tidak bisa dibaca bukan sekadar masalah UX &mdash; itu masalah
+        untuk marketplace yang memproses pembayaran nyata.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Buat halaman <code>/legal/privasi</code> dan <code>/legal/ketentuan</code> (boleh ringkas),
+        lalu tautkan dari kedua tempat.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">UX-09</span><span class="chip">Rendah</span></div>
+      <h4>Muat ulang penuh dari formulir ulasan</h4>
+      <span class="loc">components/ProductDetailClient.tsx (ReviewForm)</span>
+      <p>
+        Ajakan masuk memakai <code>&lt;a href="/login"&gt;</code>, bukan <code>&lt;Link&gt;</code>.
+        Halaman produk dimuat ulang seluruhnya, dan posisi gulir hilang &mdash; padahal pengguna sedang
+        berada jauh di bawah, di bagian ulasan.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Ganti ke <code>&lt;Link&gt;</code> dengan tujuan <code>/login?next=/model/&lt;id&gt;</code>, sama seperti
+        yang sudah dilakukan tombol beli di halaman yang sama.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">UX-10</span><span class="chip">Rendah</span></div>
+      <h4><code>prefers-reduced-motion</code> tidak dihormati</h4>
+      <span class="loc">app/globals.css</span>
+      <p>
+        Delapan animasi terdefinisi &mdash; termasuk <code>marquee</code> 32 detik tanpa henti dan
+        <code>float</code> yang berulang selamanya &mdash; tanpa satu pun blok
+        <code>@media (prefers-reduced-motion: reduce)</code>. Gerakan tak terputus adalah pemicu nyata
+        bagi pengguna dengan gangguan vestibular.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Satu blok media di akhir <code>globals.css</code> yang mematikan <code>animation</code> dan
+        <code>transition</code>, plus <code>scroll-behavior: auto</code>.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">UX-11</span><span class="chip">Rendah</span></div>
+      <h4>Tidak ada gaya <code>:focus-visible</code> untuk tombol dan chip</h4>
+      <span class="loc">app/globals.css</span>
+      <p>
+        <code>.input-field:focus</code> mendapat cincin aksen yang jelas, tapi <code>.btn-*</code>,
+        <code>.chip</code>, dan tautan navigasi tidak punya gaya fokus sama sekali &mdash; hanya outline bawaan
+        peramban, yang nyaris tak terlihat di atas latar #0a0b0d.
+      </p>
+      <p>
+        Navigasi keyboard secara efektif tidak terlihat di seluruh aplikasi.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Satu aturan global: <code>:focus-visible { outline: 2px solid var(--color-primary-container);
+        outline-offset: 2px; }</code>.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">UX-12</span><span class="chip">Rendah</span></div>
+      <h4>"Admin Console" dipromosikan di footer publik</h4>
+      <span class="loc">components/Footer.tsx</span>
+      <p>
+        <code>/admin</code> tercantum di kolom "Perusahaan", bersama Tentang Kami dan Kontak, terlihat oleh
+        semua pengunjung. Aksesnya memang dijaga dengan benar (redirect ganda: middleware + layout server),
+        jadi ini bukan lubang keamanan &mdash; tapi mengiklankan pintu staf ke publik hanya mengundang usaha.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Hapus dari footer; tampilkan di menu akun hanya bila <code>role === "admin"</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PERFORMA ───────────────────────────────────────────────────────── -->
+  <section id="performa">
+    <div class="sec-head">
+      <h2>Performa</h2>
+      <span class="count">4 temuan &middot; 1 sedang &middot; 3 rendah</span>
+    </div>
+    <p class="sec-note">
+      Lapisan katalog publik sudah di-cache dengan baik lewat <code>"use cache"</code> dan invalidasi
+      berbasis tag. Biayanya justru menumpuk di jalur autentikasi, yang dipanggil berulang tanpa
+      deduplikasi.
+    </p>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">PERF-01</span><span class="chip">Sedang</span></div>
+      <h4><code>getUser()</code> dipanggil 3&ndash;5 kali per pemuatan halaman</h4>
+      <span class="loc">proxy.ts &rarr; lib/supabase/middleware.ts &middot; setiap layout &middot; setiap page</span>
+      <p>
+        <code>auth.getUser()</code> melakukan panggilan jaringan ke server auth Supabase &mdash; itu
+        justru gunanya, karena ia memvalidasi JWT alih-alih memercayai cookie. Tapi ia dipanggil di
+        middleware (untuk <em>setiap</em> permintaan yang bukan aset statis), lagi di layout marketplace,
+        dan lagi di komponen halaman.
+      </p>
+      <p>
+        Membuka <code>/model/&lt;id&gt;</code> saat login memicu tiga panggilan berurutan sebelum satu byte
+        pun terkirim, plus tiga kueri tambahan untuk profil, hitungan keranjang, dan wishlist.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Bungkus pembacaan user per-permintaan dengan <code>React.cache()</code> agar layout dan page berbagi
+        satu hasil. Panggilan di middleware tetap dipertahankan &mdash; itu yang menyegarkan cookie sesi.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">PERF-02</span><span class="chip">Rendah</span></div>
+      <h4>Beranda mengambil seluruh katalog untuk menampilkan delapan kartu</h4>
+      <span class="loc">app/(marketplace)/page.tsx &middot; lib/catalog-data.ts (getPublishedProducts)</span>
+      <p>
+        Seluruh produk terbit ditarik, lalu diurutkan di JavaScript dan dipotong jadi 4 trending + 4
+        terbaru. Hasilnya di-cache, jadi biayanya tidak per-pengunjung &mdash; tapi payload-nya tumbuh linier
+        seiring katalog.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Dua kueri <code>.order(...).limit(4)</code> menggantikan satu tarikan penuh. Tidak mendesak sampai
+        katalog menembus beberapa ratus produk.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">PERF-03</span><span class="chip">Rendah</span></div>
+      <h4>Hitungan keranjang menarik semua baris hanya untuk menjumlahkannya</h4>
+      <span class="loc">app/(marketplace)/layout.tsx</span>
+      <p>
+        <code>select("qty", { count: "exact", head: false })</code> mengambil setiap baris keranjang di
+        setiap pemuatan halaman, hanya untuk merender satu angka di ikon keranjang.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Sebuah RPC <code>cart_count()</code>, atau terima jumlah baris (bukan jumlah kuantitas) dengan
+        <code>head: true</code> yang jauh lebih murah.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">PERF-04</span><span class="chip">Rendah</span></div>
+      <h4>Ruang kunci cache dikendalikan URL</h4>
+      <span class="loc">lib/catalog-data.ts (getCatalogProduct, getExploreCatalog)</span>
+      <p>
+        Kedua fungsi ini berkunci pada parameter yang berasal dari URL. Setiap <code>/model/&lt;uuid-acak&gt;</code>
+        dan setiap kombinasi filter ngawur mencetak entri cache baru. Batasnya adalah LRU 50 MB &mdash; jadi
+        banjir permintaan mengusir entri yang benar-benar panas.
+      </p>
+      <p>
+        Komentar di kode sudah menyadari hal ini untuk Jelajahi; jalur detail produk belum.
+      </p>
+      <div class="fix">
+        <b>Perbaikan</b>
+        Validasi bentuk UUID sebelum memanggil <code>getCatalogProduct</code>, dan pertimbangkan
+        pembatas laju tepi (Vercel WAF) untuk kedua rute. Terkait langsung dengan BUG-01.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── RENCANA ────────────────────────────────────────────────────────── -->
+  <section id="rencana">
+    <div class="sec-head">
+      <h2>Rencana perbaikan</h2>
+      <span class="count">4 gelombang</span>
+    </div>
+    <p class="sec-note">
+      Diurutkan berdasarkan dampak per baris kode yang diubah. Gelombang 1 dan 2 sepenuhnya berupa
+      perbaikan kecil dan terlokalisasi; gelombang 3 adalah pekerjaan UI yang paling besar hasilnya.
+    </p>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr>
+            <th>Gelombang</th>
+            <th>Fokus</th>
+            <th>Temuan</th>
+            <th>Perkiraan</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="wave">01</td>
+            <td><b>Tutup jalur pengambilalihan akun.</b> Wajibkan sesi recovery untuk ganti password, dan re-autentikasi untuk mematikan 2FA.</td>
+            <td class="ids">SEC-01<br />SEC-02</td>
+            <td>Kecil &mdash; 2 berkas</td>
+          </tr>
+          <tr>
+            <td class="wave">02</td>
+            <td><b>Batasi masukan yang tak terbatas.</b> Clamp <code>page</code> dan <code>qty</code>, validasi <code>asset_url</code>, perbaiki <code>step</code> pencairan, pindahkan pengosongan keranjang ke penyelesaian order.</td>
+            <td class="ids">BUG-01, BUG-02<br />BUG-04, BUG-05<br />SEC-04</td>
+            <td>Kecil &mdash; 4 berkas + 1 migrasi</td>
+          </tr>
+          <tr>
+            <td class="wave">03</td>
+            <td><b>Rapikan area setelah login.</b> Kembalikan shell navigasi ke layout akun dan admin, perbaiki tangga tipografi mobile, benahi baris kartu dan tabel penjualan, tambahkan gaya fokus dan <code>prefers-reduced-motion</code>.</td>
+            <td class="ids">UX-01 &hellip; UX-07<br />UX-10, UX-11</td>
+            <td>Sedang &mdash; 8 berkas</td>
+          </tr>
+          <tr>
+            <td class="wave">04</td>
+            <td><b>Pengerasan &amp; pemolesan.</b> Header CSP, grant per-kolom pada <code>profiles</code>, pemetaan galat, halaman legal, <code>React.cache()</code> untuk pembacaan user, verifikasi rekening payout.</td>
+            <td class="ids">SEC-03, SEC-05 &hellip; SEC-10<br />BUG-03, BUG-06 &hellip; BUG-11<br />UX-08, UX-09, UX-12<br />PERF-01 &hellip; PERF-04</td>
+            <td>Sedang &mdash; tersebar</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span>NEXORA AI &middot; AUDIT 2026-08-16</span>
+    <span>37 TEMUAN &middot; 5 TINGGI &middot; 14 SEDANG &middot; 18 RENDAH</span>
+  </div>
+
+</div>

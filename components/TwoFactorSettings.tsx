@@ -14,6 +14,7 @@ export default function TwoFactorSettings() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   const refresh = async () => {
     const { data } = await supabase.auth.mfa.listFactors();
@@ -63,11 +64,37 @@ export default function TwoFactorSettings() {
     refresh();
   };
 
-  const disable = async () => {
+  /**
+   * Turning 2FA OFF must cost at least as much as turning it ON. Enrolling
+   * requires a code from the authenticator; unenrolling used to be one
+   * unconfirmed click, so an unattended unlocked device could strip the second
+   * factor silently. Re-proving possession of the device is the right challenge
+   * here — a password prompt would re-authenticate the session down to AAL1,
+   * which is exactly the level GoTrue refuses to unenroll a verified factor at.
+   */
+  const confirmDisable = async () => {
     if (!factorId) return;
+    setError("");
     setBusy(true);
-    await supabase.auth.mfa.unenroll({ factorId });
+    const { data: ch, error: chErr } = await supabase.auth.mfa.challenge({ factorId });
+    if (chErr) {
+      setBusy(false);
+      return setError(chErr.message);
+    }
+    const { error: vErr } = await supabase.auth.mfa.verify({
+      factorId,
+      challengeId: ch.id,
+      code: code.trim(),
+    });
+    if (vErr) {
+      setBusy(false);
+      return setError("Kode salah atau kedaluwarsa. Coba lagi.");
+    }
+    const { error: uErr } = await supabase.auth.mfa.unenroll({ factorId });
     setBusy(false);
+    if (uErr) return setError("Gagal menonaktifkan 2FA. Coba lagi.");
+    setCode("");
+    setConfirming(false);
     setStatus("none");
   };
 
@@ -75,13 +102,63 @@ export default function TwoFactorSettings() {
 
   if (status === "enabled")
     return (
-      <div className="flex items-center justify-between">
-        <span className="inline-flex items-center gap-2 text-body-sm text-success">
-          <Icon name="verified_user" size={18} fill /> 2FA aktif
-        </span>
-        <button onClick={disable} disabled={busy} className="btn-soft px-4 py-2 text-body-sm">
-          Nonaktifkan
-        </button>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="inline-flex items-center gap-2 text-body-sm text-success">
+            <Icon name="verified_user" size={18} fill /> 2FA aktif
+          </span>
+          {!confirming && (
+            <button
+              onClick={() => {
+                setError("");
+                setConfirming(true);
+              }}
+              disabled={busy}
+              className="btn-soft px-4 py-2 text-body-sm"
+            >
+              Nonaktifkan
+            </button>
+          )}
+        </div>
+
+        {confirming && (
+          <div className="flex flex-col gap-3 rounded-lg border border-error/25 bg-error/[0.06] p-4">
+            <p className="text-body-sm text-on-surface-variant">
+              Masukkan kode 6 digit dari aplikasi authenticator untuk memastikan ini benar-benar kamu.
+              Setelah dinonaktifkan, akun hanya dilindungi password.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="123456"
+                aria-label="Kode 2FA untuk menonaktifkan"
+                className="input-field w-40"
+              />
+              <button onClick={confirmDisable} disabled={busy} className="btn-soft px-5 py-3 text-error">
+                {busy ? "Memproses…" : "Ya, nonaktifkan"}
+              </button>
+              <button
+                onClick={() => {
+                  setConfirming(false);
+                  setCode("");
+                  setError("");
+                }}
+                disabled={busy}
+                className="btn-soft px-5 py-3"
+              >
+                Batal
+              </button>
+            </div>
+            {error && (
+              <p role="alert" className="text-body-sm text-error">
+                {error}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     );
 

@@ -4,16 +4,16 @@
 
 # Nexora AI — Premium AI Marketplace
 
-**A dual-app marketplace for discovering, buying &amp; selling curated AI models.**
-One account to shop *and* sell · Indonesian payments · a separate internal console — all in a single React + Vite codebase.
+**A marketplace for discovering, buying &amp; selling curated AI models.**
+One account to shop *and* sell · Indonesian payments · a staff-only admin area — Next.js App Router on Supabase Postgres.
 
 <p>
-  <img src="https://img.shields.io/badge/React-18-00e5ff?style=flat-square&logo=react&logoColor=white" />
-  <img src="https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite&logoColor=white" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-3-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white" />
-  <img src="https://img.shields.io/badge/React_Router-6-CA4245?style=flat-square&logo=reactrouter&logoColor=white" />
+  <img src="https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-19-00e5ff?style=flat-square&logo=react&logoColor=white" />
+  <img src="https://img.shields.io/badge/Supabase-Postgres_+_RLS-3ECF8E?style=flat-square&logo=supabase&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" />
   <img src="https://img.shields.io/badge/Bahasa-Indonesia-e9c349?style=flat-square" />
-  <img src="https://img.shields.io/badge/status-live%20demo-7ee0a8?style=flat-square" />
 </p>
 
 <br/>
@@ -26,14 +26,14 @@ One account to shop *and* sell · Indonesian payments · a separate internal con
 
 ## ✨ Overview
 
-Nexora AI is a **fully interactive, stateful** marketplace web app — not static mockups. It is built from a *Precision Luxury* design language (deep-graphite glassmorphism, electric-blue accents, editorial typography) and is fully localized to **Bahasa Indonesia** with **Rupiah** pricing and local payment rails (QRIS / Virtual Account / e-wallet).
+Nexora AI is a **full-stack** marketplace web app — not static mockups. It is built from a *Precision Luxury* design language (deep-graphite glassmorphism, electric-blue accents, editorial typography) and is fully localized to **Bahasa Indonesia** with **Rupiah** pricing and local payment rails (QRIS / Virtual Account / e-wallet).
 
-It ships as **two apps in one codebase**, modelled on how Shopee / Tokopedia actually work:
+It is modelled on how Shopee / Tokopedia actually work:
 
-- 🛒 **Consumer Marketplace** — one account both **shops and sells**. Any user can *Buka Toko* (open a store) to start selling — no separate seller account.
-- 🛡️ **Nexora Console** — a **separate internal app on its own port** for **Admin** (moderation) and **Developer** (API platform), staff-only with 2FA.
+- 🛒 **Marketplace** — one account both **shops and sells**. Any user can *Buka Toko* (open a store) to start selling — no separate seller account.
+- 🛡️ **Admin area** (`/admin`) — moderation, orders, payouts and users, gated by an `admin` role in the database, not by a client-side check.
 
-> Every screen is interactive. State (auth, cart, wishlist, orders, the seller sales ledger) is persisted to `localStorage`, so sessions survive refreshes.
+> State lives in **Postgres**, not the browser: auth sessions are httpOnly cookies, and every read is filtered by row-level security, so a user only ever sees rows they own. Money paths (checkout, refunds, payouts) run as `security definer` RPCs — the client cannot insert an order or a payout directly.
 
 ---
 
@@ -57,7 +57,7 @@ It ships as **two apps in one codebase**, modelled on how Shopee / Tokopedia act
   </tr>
 </table>
 
-### 🛡️ Nexora Console — separate internal app (port 5174)
+### 🛡️ Admin area — `/admin`, staff only
 
 <table>
   <tr>
@@ -68,26 +68,27 @@ It ships as **two apps in one codebase**, modelled on how Shopee / Tokopedia act
 
 ---
 
-## 🏬 Two apps, one codebase
+## 🏬 Architecture
 
 ```mermaid
 flowchart TB
-  subgraph CONSUMER["🛒 Consumer Marketplace — :5173 → dist/"]
+  subgraph APP["Next.js App Router — :3000"]
     direction LR
-    BUY["Buyers"] --- SELL["Sellers<br/>(Buka Toko)"]
+    MKT["🛒 (marketplace)<br/>beranda · jelajahi · detail · cart"]
+    ACC["👤 (account)<br/>dashboard · library · Seller Studio"]
+    ADM["🛡️ (admin)<br/>moderation · orders · payouts"]
   end
-  subgraph CONSOLE["🛡️ Nexora Console — :5174 → dist-console/"]
-    direction LR
-    ADM["Admin"] --- DEV["Developer"]
+  APP --> PROXY["proxy.ts<br/>session refresh + route guard"]
+  PROXY --> SB
+  subgraph SB["Supabase"]
+    DB[("Postgres<br/>RLS policies · guard triggers<br/>checkout / refund / payout RPCs")]
+    AUTH["Auth<br/>email + password · TOTP 2FA"]
   end
-  CONSUMER --> SHARED
-  CONSOLE --> SHARED
-  subgraph SHARED["shared src/ — context · components · pages"]
-    DB[("data/db.js<br/>localStorage backend<br/>users · products · sales · payouts")]
-  end
+  APP --> PAY["lib/payment-gateway<br/>simulated · Midtrans · Xendit"]
+  PAY -. webhook .-> APP
 ```
 
-Both apps share the same `src/` (context, components, pages) and the same `localStorage` "backend". Swap `data/db.js` for a real API and the two apps light up against live data together. The console uses **hash routing**, so it deploys as a standalone static app with no server rewrites.
+Reads go through Server Components; every write is a **Server Action** in `lib/actions/`. The public catalog is cached with `"use cache"` + `cacheTag` (`lib/catalog-data.ts`) and invalidated by tag when a product, review or store changes — so browsing is cheap without ever serving one user's data to another.
 
 ---
 
@@ -100,10 +101,10 @@ Both apps share the same `src/` (context, components, pages) and the same `local
 | **Commerce** | Cart with quantity + promo codes, multi-step checkout, **Indonesian payments** (QRIS / Virtual Account / e-wallet) with live status &amp; expiry, wishlist |
 | **One account, buy + sell** | Single account shops &amp; sells — **Buka Toko** onboarding turns any shopper into a seller (Shopee/Tokopedia-style) |
 | **Selling** | Seller Studio wired to a real **sales ledger → earnings → payouts**: 80/20 split, product CRUD, payout-account onboarding, **2FA-gated withdrawals** |
-| **Console (separate app)** | **Admin** moderation queue / reports / users · **Developer** API keys / versions / analytics — staff-only login with 2FA |
-| **Accounts &amp; security** | Mock auth, email verification, 2FA, active-session/device management, role-based access |
+| **Admin** | Moderation queue, orders, payouts, contact messages, user roles — `/admin`, gated by an `admin` role in Postgres |
+| **Accounts &amp; security** | Supabase Auth (email + password), email verification, TOTP 2FA with AAL2 step-up, row-level security on every table |
 | **Localization** | 100% Bahasa Indonesia · Rupiah pricing everywhere · PPN 11% |
-| **UX** | Responsive (desktop top-nav + mobile bottom-nav), toasts, 404, route-aware scroll, `localStorage` persistence |
+| **UX** | Responsive (desktop top-nav + mobile bottom-nav), loading skeletons, 404 &amp; error boundaries — cart, wishlist and orders persist in Postgres, so they follow the account across devices |
 
 ### 🔁 The selling loop (verified end-to-end)
 
@@ -114,7 +115,7 @@ A buyer **browses → opens a seller's live listing → buys → pays**, and the
 ## 🎨 Design system
 
 - **Color** — Deep graphite base (`#131313` / `#0e0e0e`), Electric Blue accent (`#00e5ff`), Champagne Gold for premium tiers, role accents (seller gold, developer violet, admin green).
-- **Type** — Inter (display/body) + Geist Sans/Mono (labels/metadata), **self-hosted** via `@fontsource` (no CDN).
+- **Type** — Inter (display/body) + Geist Sans/Mono (labels/metadata), self-hosted at build time via `next/font` (no CDN request at runtime).
 - **Icons** — `lucide-react` 2px-stroke SVGs, fully bundled.
 - **Artwork** — Product/creator thumbnails are generated as **self-contained seeded SVGs** (`ModelArtwork`) — no external images, nothing ever 404s.
 - **Depth** — Glassmorphism (backdrop blur + hairline borders) and soft cyan glows instead of heavy shadows.
@@ -125,79 +126,102 @@ A buyer **browses → opens a seller's live listing → buys → pays**, and the
 
 ## ⚡ Getting started
 
+Prerequisites: **Node 20+**, and **Docker** running (the local Supabase stack runs in containers).
+
 ```bash
-npm install                # install dependencies
+npm install                   # install dependencies
+npx playwright install chromium   # only needed for npm run test:e2e
 
-# 🛒 Consumer marketplace (buyers + sellers)
-npm run dev                # dev server       → http://localhost:5173
-npm run build              # build            → dist/
-npm run preview            # preview          → http://localhost:4173
+npx supabase start            # Postgres + Auth + Studio in Docker (first run pulls images)
+cp .env.example .env.local    # then paste the URL + keys that `supabase start` printed
+npm run seed:users            # demo accounts (re-run after every `supabase db reset`)
 
-# 🛡️ Nexora Console — internal Admin + Developer app (separate port)
-npm run dev:console        # dev server       → http://localhost:5174/console.html
-npm run build:console      # build            → dist-console/
-npm run preview:console    # preview          → http://localhost:4174/console.html
-
-npm run build:all          # build both apps
-npm run smoke              # SSR render-check every consumer route (no browser)
+npm run dev                   # dev server → http://localhost:3000
 ```
+
+`supabase start` also prints the local dashboards:
+
+| Service | URL | What it's for |
+| --- | --- | --- |
+| Studio | http://127.0.0.1:54323 | Browse tables, run SQL |
+| **Mailpit** | http://127.0.0.1:54324 | **Every auth email lands here** — local Supabase never sends to a real inbox |
+| API | http://127.0.0.1:54321 | The URL for `NEXT_PUBLIC_SUPABASE_URL` |
+
+```bash
+npm run build                 # production build → .next/
+npm start                     # serve the production build
+npm run clean                 # delete .next / .next-dev if the dev server ever gets confused
+npm test                      # unit + DB-security tests (vitest)
+npm run test:e2e              # end-to-end (Playwright, builds and serves on :3100)
+npm run lint                  # eslint
+```
+
+> Signup confirmation is **off for local dev** (`supabase/config.toml`), so a new account is usable immediately. On a hosted project, keep confirmation **on** — the app handles both: with confirmation on, signup lands on `/verify-email` instead of the dashboard.
 
 ### 👤 Demo accounts
 
-Password for all: **`Demo1234!`**
+Created by `npm run seed:users`. Password for both: **`Demo1234!`**
 
-| Role | Email | App | Notes |
-| --- | --- | --- | --- |
-| 🛒 Buyer | `buyer@nexora.ai` | Marketplace | Seeded library, wishlist &amp; orders |
-| 🏬 Seller | `seller@nexora.ai` | Marketplace | Live listings, sales ledger &amp; payouts · 2FA |
-| 🛡️ Admin | `admin@nexora.ai` | Console | Moderation &amp; oversight · 2FA |
-| 🧑‍💻 Developer | `dev@nexora.ai` | Console | API platform |
+| Role | Email | Notes |
+| --- | --- | --- |
+| 🛒 Buyer / seller | `user@nexora.ai` | A normal account — shops, and can *Buka Toko* to start selling |
+| 🛡️ Admin | `admin@nexora.ai` | Same login, plus the `/admin` area (`role = admin` in `profiles`) |
 
 ---
 
 ## 🗂️ Project structure
 
 ```
-index.html               # Consumer app entry            (:5173 → dist/)
-console.html             # Nexora Console entry           (:5174 → dist-console/)
-vite.config.js           # Consumer build config
-vite.console.config.js   # Console build config
-src/
-├── components/          # Navbar, Footer, ModelCard, QuickViewModal, Icon,
-│                        #   ModelArtwork (SVG), AreaChart, Toaster, RouteGuards…
-├── context/
-│   └── AppContext.jsx   # Global state: auth, cart, wishlist, orders, seller economy
-├── data/
-│   ├── models.js        # Catalog of AI models, categories, creators
-│   ├── db.js            # localStorage "backend": users, sessions, products, sales, payouts
-│   ├── payment.js       # Indonesian payments (QRIS / VA / e-wallet) + Rupiah helpers
-│   └── security.js      # Validation + simulated OTP / 2FA primitives
-├── pages/               # Home, Explore, ProductDetail, Cart, Checkout, Payment,
-│                        #   Seller Studio, Buka Toko, Pricing, Settings, Auth, About, Help…
-├── console/             # 🛡️ Nexora Console app — main · ConsoleApp · Layout · Login
-├── App.jsx              # Consumer routes + layouts
-├── main.jsx             # Consumer entry (fonts + providers)
-└── index.css            # Tailwind layers + glass / glow utilities
+app/
+├── (marketplace)/       # Public: beranda, jelajahi, kategori, kreator, detail,
+│                        #   cart, checkout, wishlist, pricing, help, about
+├── (account)/           # Signed in: dashboard, library, orders, settings,
+│                        #   sell/ → Seller Studio (products, sales, earnings, payouts)
+├── (admin)/admin/       # Staff: moderation, orders, payouts, users, messages
+├── (auth)/              # login (+ 2FA), register, verify-email, reset password
+├── auth/callback/       # Exchanges the email link's code for a session cookie
+├── api/payments/webhook # Payment-provider callback → marks the order paid
+└── layout.tsx           # Fonts, metadata, <html lang="id">
+components/              # Navbar, ModelCard, ModelArtwork (seeded SVG), forms…
+lib/
+├── actions/             # Server Actions — every write (auth, checkout, products,
+│                        #   reviews, payouts, admin) lives here
+├── supabase/            # client · server · middleware · admin (service role) · public
+├── catalog-data.ts      # Cached public-catalog reads ("use cache" + cacheTag)
+├── payment-gateway/     # simulated | midtrans | xendit behind one interface
+└── pricing.ts economics.ts cart.ts ratelimit.ts env.ts
+proxy.ts                 # Session refresh + protected-route guard (Next 16 middleware)
+supabase/
+├── migrations/          # Schema, RLS policies, guard triggers, RPCs
+├── seed.sql             # Curated house catalog
+└── config.toml          # Local stack settings
+tests/                   # vitest (pricing, economics, DB security) + e2e/ (Playwright)
 ```
 
 ---
 
 ## 🌐 Deploy
 
-Both apps are static SPAs. The **consumer app** builds with `npm run build` → `dist/` (SPA deep-link fallback preconfigured via `vercel.json`, `netlify.toml` + `public/_redirects`). The **internal console** builds with `npm run build:console` → `dist-console/` and deploys separately (e.g. an `admin.` subdomain or an access-restricted host) — it uses hash routing, so it needs no server rewrites.
+Deploy to Vercel against a hosted Supabase project:
+
+1. Create the Supabase project and push the schema — `npx supabase link --project-ref <ref>` then `npx supabase db push`.
+2. Set the environment variables from `.env.example` in the Vercel project (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SITE_URL`, plus the payment provider keys). **`SUPABASE_SERVICE_ROLE_KEY` is server-only — never give it a `NEXT_PUBLIC_` prefix.**
+3. In Supabase → Authentication, add `{SITE_URL}/auth/callback` to the redirect allow-list and keep email confirmation **on**.
+4. For real payments, set `PAYMENT_PROVIDER=midtrans|xendit` and point the provider's webhook at `POST {SITE_URL}/api/payments/webhook`.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/joshuasetiawann/ai-marketplace-website)
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/joshuasetiawann/ai-marketplace-website)
 
 ---
 
 ## 🧪 Verification
 
-`npm run smoke` server-renders every consumer route through Vite + React Router and asserts each mounts without errors — a fast, browser-free guard against regressions.
+- `npm test` — pricing/economics units, plus a **DB security suite** that signs in as a real user and asserts RLS actually blocks direct order inserts, cross-user reads and self-promotion to admin. It runs only when `.env.local` points at a live Supabase; without one it skips.
+- `npm run test:e2e` — Playwright against a production build on `:3100`: register, route guards, login, browse, and a full buy → pay flow.
+- `npm run lint` · `npx tsc --noEmit`
 
 ## 🛠 Tech
 
-React 18 · React Router 6 · Vite 5 (dual config) · Tailwind CSS 3 · lucide-react · @fontsource
+Next.js 16 (App Router, Turbopack, Server Actions) · React 19 · TypeScript 5 · Tailwind CSS 4 · Supabase (Postgres + RLS, Auth, `@supabase/ssr`) · lucide-react · vitest · Playwright
 
 ---
 

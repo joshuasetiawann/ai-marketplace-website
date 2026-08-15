@@ -79,6 +79,29 @@ export function PasswordField({
   );
 }
 
+/**
+ * Dev-only pointer to the local mail catcher. Local Supabase never delivers to a
+ * real inbox — every auth mail lands in Mailpit — so without this the screen
+ * says "check your email" about a message that will never arrive.
+ */
+export function DevMailHint() {
+  if (process.env.NODE_ENV !== "development") return null;
+  return (
+    <p className="rounded-lg border border-line bg-base px-3 py-2 text-[12px] text-muted">
+      Dev lokal: email tidak dikirim ke inbox asli.{" "}
+      <a
+        href="http://127.0.0.1:54324"
+        target="_blank"
+        rel="noreferrer"
+        className="text-accent hover:underline"
+      >
+        Buka Mailpit
+      </a>{" "}
+      untuk membaca tautannya.
+    </p>
+  );
+}
+
 const FEATURES = [
   { icon: "payments", title: "Bagi hasil 80% untuk kreator", desc: "Cair otomatis ke rekeningmu." },
   { icon: "verified_user", title: "Pembayaran aman & terenkripsi", desc: "QRIS, Virtual Account & e-wallet." },

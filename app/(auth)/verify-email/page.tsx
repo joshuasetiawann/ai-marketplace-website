@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { MailCheck } from "lucide-react";
-import { AuthCard } from "@/components/auth/AuthCard";
+import { AuthCard, DevMailHint } from "@/components/auth/AuthCard";
 
 export default function VerifyEmailPage() {
   return (
@@ -15,6 +15,7 @@ export default function VerifyEmailPage() {
         <p className="text-sm text-muted">
           Tidak menerima email? Periksa folder spam, atau coba daftar ulang.
         </p>
+        <DevMailHint />
         <Link href="/login" className="text-sm font-medium text-accent hover:underline">
           Lanjut ke halaman masuk
         </Link>

@@ -35,6 +35,9 @@ export default function RootLayout({
   return (
     <html
       lang="id"
+      // globals.css sets `scroll-behavior: smooth`; this tells Next to skip it
+      // when restoring scroll on a route change (and silences its dev warning).
+      data-scroll-behavior="smooth"
       className={`${inter.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-base font-sans text-ink">

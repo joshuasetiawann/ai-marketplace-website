@@ -11,6 +11,15 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Keep dev artifacts out of `.next`. `npm run build` (directly, or via
+  // test:e2e) otherwise overwrites the directory a running `next dev` is
+  // serving from: its chunks vanish mid-session, the HMR client fails to load,
+  // and the browser reload-loops. Separate directories, no collision.
+  distDir: process.env.NODE_ENV === "development" ? ".next-dev" : ".next",
+  // Dev only: without this, opening the printed "Network" URL (or any LAN IP)
+  // makes Next block /_next/webpack-hmr as cross-origin, the HMR client never
+  // connects, and the page reload-loops forever.
+  allowedDevOrigins: ["localhost", "127.0.0.1", "192.168.*.*", "10.*.*.*"],
   // "use cache" + cacheTag/cacheLife for the public-catalog layer
   // (lib/catalog-data.ts) without opting the whole app into Cache Components.
   experimental: { useCache: true },

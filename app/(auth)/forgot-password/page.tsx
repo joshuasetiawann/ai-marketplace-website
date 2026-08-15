@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { requestPasswordReset, type AuthState } from "@/lib/actions/auth";
-import { AuthCard, AuthField, authSubmitClass } from "@/components/auth/AuthCard";
+import { AuthCard, AuthField, DevMailHint, authSubmitClass } from "@/components/auth/AuthCard";
 
 const initial: AuthState = {};
 
@@ -19,6 +19,7 @@ export default function ForgotPasswordPage() {
           <p role="status" className="text-sm text-accent">
             Tautan reset sudah dikirim. Cek email kamu.
           </p>
+          <DevMailHint />
           <Link href="/login" className="text-sm text-muted hover:text-accent">
             Kembali ke halaman masuk
           </Link>

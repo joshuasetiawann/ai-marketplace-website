@@ -4,7 +4,7 @@ import Icon from "@/components/Icon";
 import CheckoutClient from "@/components/CheckoutClient";
 import CheckoutSteps from "@/components/CheckoutSteps";
 import { EmptyState } from "@/components/common";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { getCart } from "@/lib/cart";
 
 export const metadata = { title: "Checkout — Nexora AI" };
@@ -15,9 +15,7 @@ export default async function CheckoutPage({
   searchParams: Promise<{ promo?: string }>;
 }) {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login?next=/checkout");
 
   const [{ lines, subtotal, taxes, total }, { data: profile }] = await Promise.all([

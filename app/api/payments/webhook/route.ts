@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getGateway } from "@/lib/payment-gateway";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { allow } from "@/lib/ratelimit";
 import { logError } from "@/lib/log";
 
 /**
@@ -9,6 +10,13 @@ import { logError } from "@/lib/log";
  * order with the service-role client. Idempotent — providers retry.
  */
 export async function POST(req: Request) {
+  // The only unauthenticated endpoint that reaches the service-role client, so
+  // it gets a ceiling even though signature verification already rejects forged
+  // payloads — verification rejects content, not volume. Generous enough for a
+  // provider's own retry storm.
+  if (!(await allow("payment-webhook", 120, 60_000)))
+    return NextResponse.json({ ok: false }, { status: 429 });
+
   const gateway = getGateway();
   try {
     const outcome = await gateway.handleWebhook(req);

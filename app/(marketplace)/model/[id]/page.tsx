@@ -5,7 +5,7 @@ import Icon from "@/components/Icon";
 import ModelCard from "@/components/ModelCard";
 import ProductDetailClient from "@/components/ProductDetailClient";
 import { SectionHeading } from "@/components/common";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { mapProduct } from "@/lib/catalog";
 import {
   getCatalogProduct,
@@ -20,6 +20,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
+  if (!UUID.test(id)) return { title: "Model tidak ditemukan — Nexora AI" };
   let data = await getCatalogProduct(id);
   if (!data) {
     // owner/admin draft preview — mirror the page body's uncached fallback
@@ -39,12 +40,19 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * getCatalogProduct() is a "use cache" function keyed on this id, so every
+ * distinct string in the URL mints an entry in a bounded LRU. Reject anything
+ * that cannot be a product id before it gets that far — a scan of random paths
+ * would otherwise evict the entries that are actually hot.
+ */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  if (!UUID.test(id)) notFound();
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   // Cached lookup sees published only (anon RLS); owners/admins can still
   // preview drafts via their own session — uncached fallback.

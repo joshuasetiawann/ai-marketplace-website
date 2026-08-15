@@ -2,6 +2,7 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { dbMessage } from "@/lib/db-error";
 import { TAG_PRODUCTS, productTag } from "@/lib/cache-tags";
 
 export type ReviewState = { error?: string; ok?: boolean };
@@ -39,7 +40,7 @@ export async function postReview(
     { product_id: productId, author_id: user.id, rating, body },
     { onConflict: "product_id,author_id" },
   );
-  if (error) return { error: error.message };
+  if (error) return { error: dbMessage(error) };
 
   revalidatePath(`/model/${productId}`);
   // New review changes the list AND the product's live rating/reviews_count

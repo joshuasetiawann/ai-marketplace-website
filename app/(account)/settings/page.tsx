@@ -4,7 +4,7 @@ import ChangePasswordForm from "@/components/ChangePasswordForm";
 import ChangeEmailForm from "@/components/ChangeEmailForm";
 import DeleteAccountForm from "@/components/DeleteAccountForm";
 import TwoFactorSettings from "@/components/TwoFactorSettings";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { signOutEverywhere } from "@/lib/actions/account";
 
 export const metadata = { title: "Pengaturan — Nexora AI" };
@@ -22,9 +22,7 @@ function Section({ title, icon, children }: { title: string; icon: string; child
 
 export default async function SettingsPage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const { data: profile } = await supabase.from("profiles").select("name").eq("id", user!.id).single();
 
   return (

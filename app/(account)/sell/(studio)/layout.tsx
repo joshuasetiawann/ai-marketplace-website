@@ -2,13 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import Icon from "@/components/Icon";
 import SellerNav from "@/components/SellerNav";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 
 export default async function SellerStudioLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login?next=/sell");
 
   const { data: profile } = await supabase.from("profiles").select("is_seller").eq("id", user.id).single();

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
+import { safeNext } from "@/lib/nav";
 
 /**
  * Auth callback: exchanges the `code` from a Supabase email link (signup
@@ -10,9 +11,8 @@ import { createServerClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
-  // only allow same-origin relative redirects
-  const dest = next.startsWith("/") ? next : "/dashboard";
+  // one shared rule for every post-auth redirect (see lib/nav.ts)
+  const dest = safeNext(searchParams.get("next"));
 
   if (code) {
     const supabase = await createServerClient();

@@ -1,6 +1,7 @@
 "use server";
 
 import { createServerClient } from "@/lib/supabase/server";
+import { dbMessage } from "@/lib/db-error";
 
 export type PromoResult = { percent: number; error?: string };
 
@@ -14,7 +15,7 @@ export async function checkPromo(code: string, subtotal: number): Promise<PromoR
     p_code: trimmed,
     p_subtotal: subtotal,
   });
-  if (error) return { percent: 0, error: error.message };
+  if (error) return { percent: 0, error: dbMessage(error) };
 
   const percent = Number(data) || 0;
   if (percent <= 0) return { percent: 0, error: "Kode promo tidak valid untuk pesanan ini." };

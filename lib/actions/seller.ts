@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath, updateTag } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { dbMessage } from "@/lib/db-error";
 import { TAG_STORES } from "@/lib/cache-tags";
 
 export type SellerState = { error?: string };
@@ -31,7 +32,7 @@ export async function openStore(_prev: SellerState, formData: FormData): Promise
     p_category: category,
     p_tagline: tagline,
   });
-  if (error) return { error: error.message };
+  if (error) return { error: dbMessage(error) };
 
   revalidatePath("/", "layout");
   updateTag(TAG_STORES);
@@ -52,7 +53,7 @@ export async function saveStore(_prev: SellerState, formData: FormData): Promise
   if (!user) redirect("/login");
 
   const { error } = await supabase.from("stores").update({ name, tagline, category }).eq("owner_id", user.id);
-  if (error) return { error: error.message };
+  if (error) return { error: dbMessage(error) };
   revalidatePath("/sell");
   updateTag(TAG_STORES);
   return {};

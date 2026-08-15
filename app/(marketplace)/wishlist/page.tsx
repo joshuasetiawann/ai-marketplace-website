@@ -4,16 +4,14 @@ import Icon from "@/components/Icon";
 import ModelCard from "@/components/ModelCard";
 import WishlistAddAll from "@/components/WishlistAddAll";
 import { EmptyState } from "@/components/common";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { mapProduct } from "@/lib/catalog";
 
 export const metadata = { title: "Wishlist — Nexora AI" };
 
 export default async function WishlistPage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login?next=/wishlist");
 
   const { data } = await supabase

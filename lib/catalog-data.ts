@@ -25,19 +25,38 @@ export type StoreSummary = {
   category: string | null;
 };
 
-/** All published products (Beranda derives trending/new arrivals in JS). */
-export async function getPublishedProducts(): Promise<Model[]> {
+/**
+ * The Beranda rails. Two ordered LIMIT queries instead of pulling the entire
+ * published catalog and slicing 4 + 4 out of it in JavaScript — the old shape
+ * grew its payload linearly with the catalog to render eight cards.
+ */
+export async function getHomeRails(count = 4): Promise<{ trending: Model[]; fresh: Model[] }> {
   "use cache";
   cacheLife(CATALOG_LIFE);
   cacheTag(TAG_PRODUCTS);
   const supabase = createPublicClient();
-  const { data, error } = await supabase
-    .from("products")
-    .select(PRODUCT_COLUMNS)
-    .eq("status", "published");
+  const [trendingRes, freshRes] = await Promise.all([
+    supabase
+      .from("products")
+      .select(PRODUCT_COLUMNS)
+      .eq("status", "published")
+      .order("rating", { ascending: false })
+      .order("reviews_count", { ascending: false })
+      .limit(count),
+    supabase
+      .from("products")
+      .select(PRODUCT_COLUMNS)
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(count),
+  ]);
   // Throw instead of caching an empty catalog for the whole revalidate window.
-  if (error) throw new Error(`getPublishedProducts: ${error.message}`);
-  return (data ?? []).map(mapProduct);
+  if (trendingRes.error) throw new Error(`getHomeRails/trending: ${trendingRes.error.message}`);
+  if (freshRes.error) throw new Error(`getHomeRails/fresh: ${freshRes.error.message}`);
+  return {
+    trending: (trendingRes.data ?? []).map(mapProduct),
+    fresh: (freshRes.data ?? []).map(mapProduct),
+  };
 }
 
 /** Published-product count per category (Kategori page). */

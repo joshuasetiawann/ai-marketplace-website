@@ -1,13 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
+import { safeNext } from "@/lib/nav";
 import { AuthCard, fieldClass } from "@/components/auth/AuthCard";
 
 export default function TwoFactorChallengePage() {
+  return (
+    <Suspense fallback={null}>
+      <TwoFactorChallenge />
+    </Suspense>
+  );
+}
+
+function TwoFactorChallenge() {
   const router = useRouter();
   const supabase = createBrowserClient();
+  // the login action forwards where the user was actually headed
+  const next = safeNext(useSearchParams().get("next"));
   const [factorId, setFactorId] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -18,7 +29,7 @@ export default function TwoFactorChallengePage() {
       const { data } = await supabase.auth.mfa.listFactors();
       const totp = data?.totp?.find((f) => f.status === "verified");
       if (totp) setFactorId(totp.id);
-      else router.replace("/dashboard"); // no factor — nothing to step up
+      else router.replace(next); // no factor — nothing to step up
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -40,7 +51,7 @@ export default function TwoFactorChallengePage() {
     });
     setBusy(false);
     if (vErr) return setError("Kode salah atau kedaluwarsa. Coba lagi.");
-    router.replace("/dashboard");
+    router.replace(next);
     router.refresh();
   }
 

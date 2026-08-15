@@ -1,13 +1,11 @@
 import AdminUserActions from "@/components/AdminUserActions";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata = { title: "Pengguna — Console" };
 
 export default async function AdminUsersPage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   const { data: profiles } = await supabase
     .from("profiles")

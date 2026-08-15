@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath, updateTag } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { dbMessage } from "@/lib/db-error";
+import { hasRequiredAal, AAL_REQUIRED } from "@/lib/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { TAG_PRODUCTS, TAG_STORES, productTag } from "@/lib/cache-tags";
 import { env } from "@/lib/env";
@@ -21,7 +23,7 @@ export async function updateProfileName(_prev: AccountState, formData: FormData)
   if (!user) redirect("/login");
 
   const { error } = await supabase.from("profiles").update({ name }).eq("id", user.id);
-  if (error) return { error: error.message };
+  if (error) return { error: dbMessage(error) };
   await supabase.auth.updateUser({ data: { name } });
 
   revalidatePath("/", "layout");
@@ -51,7 +53,7 @@ export async function changePassword(_prev: AccountState, formData: FormData): P
   if (reauthErr) return { error: "Password saat ini salah." };
 
   const { error } = await supabase.auth.updateUser({ password });
-  if (error) return { error: error.message };
+  if (error) return { error: dbMessage(error) };
   return { ok: true };
 }
 
@@ -66,12 +68,15 @@ export async function changeEmail(_prev: AccountState, formData: FormData): Prom
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   if (email === user.email) return { error: "Email sama dengan yang sekarang." };
+  // The address a recovery link goes to is an account-takeover primitive, and
+  // this action asks for no password — so a 2FA account must have stepped up.
+  if (!(await hasRequiredAal(supabase))) return { error: AAL_REQUIRED };
 
   const { error } = await supabase.auth.updateUser(
     { email },
     { emailRedirectTo: `${env.SITE_URL}/auth/callback?next=/settings` },
   );
-  if (error) return { error: error.message };
+  if (error) return { error: dbMessage(error) };
   return { ok: true };
 }
 

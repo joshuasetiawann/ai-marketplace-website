@@ -4,16 +4,14 @@ import Icon from "@/components/Icon";
 import CartClient from "@/components/CartClient";
 import CheckoutSteps from "@/components/CheckoutSteps";
 import { EmptyState } from "@/components/common";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { getCart } from "@/lib/cart";
 
 export const metadata = { title: "Keranjang — Nexora AI" };
 
 export default async function CartPage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login?next=/cart");
 
   const { lines, subtotal, taxes, total } = await getCart(supabase, user.id);

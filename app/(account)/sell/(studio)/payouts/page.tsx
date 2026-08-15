@@ -1,5 +1,5 @@
 import PayoutClient from "@/components/PayoutClient";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSellerEarnings } from "@/lib/seller";
 import { toIDR, formatIDR } from "@/lib/pricing";
@@ -14,9 +14,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 
 export default async function SellerPayoutsPage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const uid = user!.id;
 
   // Payout bank details are not exposed over the public API (see the RLS

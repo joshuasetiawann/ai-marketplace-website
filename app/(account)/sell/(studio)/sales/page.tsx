@@ -1,6 +1,6 @@
 import Icon from "@/components/Icon";
 import { EmptyState } from "@/components/common";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { getSellerEarnings } from "@/lib/seller";
 import { toIDR, formatIDR } from "@/lib/pricing";
 
@@ -26,9 +26,7 @@ function Cell({
 
 export default async function SellerSalesPage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const uid = user!.id;
 
   const [{ data: sales }, earnings] = await Promise.all([

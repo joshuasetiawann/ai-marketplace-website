@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Icon from "@/components/Icon";
 import { EmptyState } from "@/components/common";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { toIDR, formatIDR } from "@/lib/pricing";
 
 export const metadata = { title: "Pesanan — Nexora AI" };
@@ -16,9 +16,7 @@ const STATUS: Record<string, { label: string; cls: string; icon: string }> = {
 
 export default async function OrdersPage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   const { data: orders } = await supabase
     .from("orders")

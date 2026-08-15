@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Icon from "@/components/Icon";
 import ModelArtwork from "@/components/ModelArtwork";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata = { title: "Akses model — Nexora AI" };
 
@@ -20,9 +20,7 @@ export default async function LibraryAccessPage({
 }) {
   const { id } = await params;
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const uid = user!.id;
 
   // verify the buyer actually paid for this product

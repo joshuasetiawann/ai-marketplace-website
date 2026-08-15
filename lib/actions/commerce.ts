@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { dbMessage } from "@/lib/db-error";
 import { clampQty } from "@/lib/cart";
 
 export type CommerceResult = { error?: string; ok?: boolean; needsAuth?: boolean };
@@ -30,7 +31,7 @@ export async function addToCart(productId: string): Promise<CommerceResult> {
     { user_id: user.id, product_id: productId, qty: clampQty((existing?.qty ?? 0) + 1) },
     { onConflict: "user_id,product_id" },
   );
-  if (error) return { error: error.message };
+  if (error) return { error: dbMessage(error) };
 
   revalidatePath("/", "layout");
   return { ok: true };
@@ -48,14 +49,14 @@ export async function updateCartQty(productId: string, rawQty: number): Promise<
       .delete()
       .eq("user_id", user.id)
       .eq("product_id", productId);
-    if (error) return { error: error.message };
+    if (error) return { error: dbMessage(error) };
   } else {
     const { error } = await supabase
       .from("cart_items")
       .update({ qty })
       .eq("user_id", user.id)
       .eq("product_id", productId);
-    if (error) return { error: error.message };
+    if (error) return { error: dbMessage(error) };
   }
   revalidatePath("/", "layout");
   revalidatePath("/cart");
@@ -86,7 +87,7 @@ export async function addManyToCart(productIds: string[]): Promise<CommerceResul
     qty: clampQty((qtyByid.get(pid) ?? 0) + 1),
   }));
   const { error } = await supabase.from("cart_items").upsert(rows, { onConflict: "user_id,product_id" });
-  if (error) return { error: error.message };
+  if (error) return { error: dbMessage(error) };
 
   revalidatePath("/", "layout");
   revalidatePath("/cart");
@@ -111,7 +112,7 @@ export async function toggleWishlist(productId: string): Promise<CommerceResult>
       .delete()
       .eq("user_id", user.id)
       .eq("product_id", productId);
-    if (error) return { error: error.message };
+    if (error) return { error: dbMessage(error) };
     revalidatePath("/", "layout");
     return { ok: true };
   }
@@ -119,7 +120,7 @@ export async function toggleWishlist(productId: string): Promise<CommerceResult>
   const { error } = await supabase
     .from("wishlist_items")
     .insert({ user_id: user.id, product_id: productId });
-  if (error) return { error: error.message };
+  if (error) return { error: dbMessage(error) };
   revalidatePath("/", "layout");
   return { ok: true };
 }

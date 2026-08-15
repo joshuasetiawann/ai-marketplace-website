@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { dbMessage } from "@/lib/db-error";
 import { allow } from "@/lib/ratelimit";
 import { logError } from "@/lib/log";
 import { getGateway, type PaymentStart } from "@/lib/payment-gateway";
@@ -43,7 +44,7 @@ export async function placeOrder(
     });
     if (error) {
       logError("checkout RPC failed", error, { userId: user.id });
-      return { error: error.message };
+      return { error: dbMessage(error) };
     }
     revalidatePath("/", "layout");
     redirect(`/orders/${orderId}`);
@@ -59,7 +60,7 @@ export async function placeOrder(
   });
   if (error || !orderId) {
     logError("create_pending_order failed", error, { userId: user.id });
-    return { error: error?.message ?? "Gagal membuat pesanan." };
+    return { error: dbMessage(error) };
   }
 
   const { data: order } = await supabase.from("orders").select("total_usd").eq("id", orderId).single();

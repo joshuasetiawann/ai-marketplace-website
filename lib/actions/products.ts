@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath, updateTag } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { dbMessage } from "@/lib/db-error";
 import { TAG_PRODUCTS, productTag } from "@/lib/cache-tags";
 
 export type ProductState = { error?: string };
@@ -59,10 +60,10 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
   let productId = id;
   if (id) {
     const { error } = await supabase.from("products").update(record).eq("id", id).eq("owner_id", user.id);
-    if (error) return { error: error.message };
+    if (error) return { error: dbMessage(error) };
   } else {
     const { data, error } = await supabase.from("products").insert(record).select("id").single();
-    if (error) return { error: error.message };
+    if (error) return { error: dbMessage(error) };
     productId = data.id;
   }
 
@@ -84,7 +85,7 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
       { product_id: productId, asset_url: assetUrl || null, access_note: accessNote || null },
       { onConflict: "product_id" },
     );
-    if (error) return { error: error.message };
+    if (error) return { error: dbMessage(error) };
   }
 
   revalidatePath("/sell/products");

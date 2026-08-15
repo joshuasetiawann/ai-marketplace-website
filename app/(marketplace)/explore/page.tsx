@@ -1,5 +1,5 @@
 import ExploreClient from "@/components/ExploreClient";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { getExploreCatalog, searchExploreCatalog, type ExploreParams } from "@/lib/catalog-data";
 import { PRICE_MAX_IDR, PRICE_STEP_IDR } from "@/lib/pricing";
 
@@ -26,9 +26,7 @@ function parseMaxIdr(raw: string | undefined) {
 export default async function ExplorePage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   const params: ExploreParams = {
     q: (sp.q ?? "").trim(),

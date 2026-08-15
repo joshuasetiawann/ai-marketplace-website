@@ -39,8 +39,10 @@ export default function PayoutClient({
               <p className="text-body-md text-on-surface">
                 {bank} <span className="font-mono text-on-surface-variant">{accountMasked}</span>
               </p>
-              <span className="inline-flex items-center gap-1 text-[12px] text-success">
-                <Icon name="verified" size={13} fill /> Terverifikasi
+              {/* "Terverifikasi" claimed a check that never happens — no penny
+                  drop, no name match. Say what is actually true. */}
+              <span className="inline-flex items-center gap-1 text-[12px] text-on-surface-variant">
+                <Icon name="check_circle" size={13} /> Rekening tersimpan
               </span>
             </div>
             <button onClick={() => setEditing(true)} className="btn-soft px-4 py-2 text-body-sm">
@@ -75,7 +77,7 @@ export default function PayoutClient({
             </div>
           </form>
         )}
-        {acctState.ok && <p className="mt-3 text-body-sm text-success">Rekening tersimpan & terverifikasi.</p>}
+        {acctState.ok && <p className="mt-3 text-body-sm text-success">Rekening tersimpan. Pastikan nomornya benar — pencairan dikirim ke rekening ini.</p>}
       </section>
 
       {/* Request payout */}
@@ -108,7 +110,7 @@ export default function PayoutClient({
             <Icon name="send" size={18} /> {payPending ? "Memproses…" : "Cairkan"}
           </button>
         </form>
-        {!verified && <p className="mt-3 text-[12px] text-on-surface-variant">Tambahkan rekening terverifikasi dulu.</p>}
+        {!verified && <p className="mt-3 text-[12px] text-on-surface-variant">Tambahkan rekening pencairan dulu.</p>}
         {payState.error && <p className="mt-3 text-body-sm text-error">{payState.error}</p>}
         {payState.ok && <p className="mt-3 text-body-sm text-success">Permintaan pencairan dikirim & sedang diproses.</p>}
       </section>

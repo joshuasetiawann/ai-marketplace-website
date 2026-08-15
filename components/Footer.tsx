@@ -26,10 +26,21 @@ const COLUMNS = [
     links: [
       { label: "Tentang Kami", href: "/about" },
       { label: "Misi Kami", href: "/about" },
-      { label: "Admin Console", href: "/admin" },
+      // "Admin Console" used to sit here, advertising the staff door to every
+      // visitor. Access was always gated correctly — the link was just an
+      // invitation to try. Admins reach it from the account menu.
+      { label: "Keamanan", href: "/legal/keamanan" },
       { label: "Kontak", href: "/contact" },
     ],
   },
+];
+
+/** Legal documents — real pages now, not dead <span>s. */
+const LEGAL = [
+  { label: "Privasi", href: "/legal/privasi" },
+  { label: "Ketentuan", href: "/legal/ketentuan" },
+  { label: "Keamanan", href: "/legal/keamanan" },
+  { label: "Bantuan", href: "/help" },
 ];
 
 export default function Footer() {
@@ -81,10 +92,14 @@ export default function Footer() {
             © {new Date().getFullYear()} Nexora AI · Precision Luxury Intelligence
           </p>
           <nav className="order-1 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 md:order-2">
-            {["Privasi", "Ketentuan", "Keamanan", "Dokumentasi"].map((l) => (
-              <span key={l} className="text-[13px] text-on-surface-variant">
-                {l}
-              </span>
+            {LEGAL.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="text-[13px] text-on-surface-variant transition-colors hover:text-primary-container"
+              >
+                {l.label}
+              </Link>
             ))}
           </nav>
         </div>

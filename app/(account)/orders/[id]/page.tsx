@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Icon from "@/components/Icon";
 import ModelArtwork from "@/components/ModelArtwork";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { toIDR, formatIDR } from "@/lib/pricing";
 
 type OrderItem = {
@@ -17,9 +17,7 @@ type OrderItem = {
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   const { data: order } = await supabase
     .from("orders")

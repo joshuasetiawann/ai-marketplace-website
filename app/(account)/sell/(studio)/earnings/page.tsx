@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Icon from "@/components/Icon";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { getSellerEarnings } from "@/lib/seller";
 import { MIN_PAYOUT_USD } from "@/lib/economics";
 import { toIDR, formatIDR } from "@/lib/pricing";
@@ -9,9 +9,7 @@ export const metadata = { title: "Earnings — Nexora AI" };
 
 export default async function SellerEarningsPage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const earnings = await getSellerEarnings(supabase, user!.id);
 
   const canPayout = earnings.available >= MIN_PAYOUT_USD;

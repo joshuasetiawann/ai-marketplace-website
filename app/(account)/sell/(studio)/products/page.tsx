@@ -3,7 +3,7 @@ import Icon from "@/components/Icon";
 import ModelArtwork from "@/components/ModelArtwork";
 import SellerProductActions from "@/components/SellerProductActions";
 import { EmptyState } from "@/components/common";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { toIDR, formatIDR } from "@/lib/pricing";
 
 export const metadata = { title: "Produk Saya — Nexora AI" };
@@ -17,9 +17,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 
 export default async function SellerProductsPage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   const { data: products } = await supabase
     .from("products")

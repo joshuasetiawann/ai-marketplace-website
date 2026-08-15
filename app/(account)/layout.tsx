@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
-import { createServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 /**
  * Server-side guard for the authenticated account area (defense-in-depth
@@ -15,10 +15,7 @@ export default async function AccountLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   return (

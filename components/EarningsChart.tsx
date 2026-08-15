@@ -39,8 +39,9 @@ export default function EarningsChart({
         )}
       </svg>
       <div className="mt-2 flex justify-between font-mono text-[10px] uppercase tracking-[0.1em] text-outline">
+        {/* index in the key: two weeks can render the same label text */}
         {labels.map((l, i) => (
-          <span key={l} className={i === labels.length - 1 ? "text-secondary" : ""}>
+          <span key={`${i}-${l}`} className={i === labels.length - 1 ? "text-secondary" : ""}>
             {l}
           </span>
         ))}

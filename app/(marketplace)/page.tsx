@@ -5,8 +5,8 @@ import HeroSearch from "@/components/HeroSearch";
 import BrandMarquee from "@/components/BrandMarquee";
 import { SectionHeading, GlowOrb } from "@/components/common";
 import type { Metadata } from "next";
-import { createServerClient } from "@/lib/supabase/server";
-import { getPublishedProducts } from "@/lib/catalog-data";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
+import { getHomeRails } from "@/lib/catalog-data";
 import { CATEGORIES, CATEGORY_COUNTS, USE_CASES } from "@/lib/catalog";
 
 export const metadata: Metadata = {
@@ -29,12 +29,10 @@ const CREATOR_FEATURES = [
 
 export default async function HomePage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
-  const [models, wishlistRes] = await Promise.all([
-    getPublishedProducts(),
+  const [{ trending, fresh }, wishlistRes] = await Promise.all([
+    getHomeRails(),
     user
       ? supabase.from("wishlist_items").select("product_id").eq("user_id", user.id)
       : Promise.resolve({ data: [] as { product_id: string }[] }),
@@ -43,13 +41,7 @@ export default async function HomePage() {
   const wished = new Set((wishlistRes.data ?? []).map((w) => w.product_id));
   const loggedIn = !!user;
 
-  const byRating = [...models].sort((a, b) => b.rating - a.rating);
-  const trending = byRating.slice(0, 4);
-  const fresh = [...models]
-    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
-    .slice(0, 4);
-
-  const card = (m: (typeof models)[number]) => (
+  const card = (m: (typeof trending)[number]) => (
     <ModelCard key={m.id} model={m} wishlisted={wished.has(m.id)} loggedIn={loggedIn} />
   );
 

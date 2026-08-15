@@ -3,13 +3,11 @@ import Link from "next/link";
 import Icon from "@/components/Icon";
 import AdminNav from "@/components/AdminNav";
 import { signOut } from "@/lib/actions/auth";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login?next=/admin");
 
   const { data: profile } = await supabase.from("profiles").select("role, name").eq("id", user.id).single();

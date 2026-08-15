@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Icon from "@/components/Icon";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 
 const QUICK_LINKS = [
   { href: "/library", icon: "deployed_code", label: "Library", desc: "Model yang kamu miliki" },
@@ -11,9 +11,7 @@ const QUICK_LINKS = [
 
 export default async function DashboardPage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const { data: profile } = await supabase
     .from("profiles")
     .select("name, is_seller, role")

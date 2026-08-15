@@ -1,5 +1,15 @@
 import "server-only";
+import { timingSafeEqual } from "crypto";
 import type { PaymentGateway, PaymentInit, WebhookOutcome } from "./types";
+
+/** Constant-time token compare — `!==` leaks the shared secret byte by byte. */
+function tokenMatches(received: string | null, expected: string | undefined): boolean {
+  if (!received || !expected) return false;
+  const a = Buffer.from(received);
+  const b = Buffer.from(expected);
+  // timingSafeEqual throws on length mismatch, which would itself be a signal.
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 
 // Xendit adapter (Invoice API). To go live: set XENDIT_SECRET_KEY +
 // XENDIT_WEBHOOK_TOKEN, register the webhook URL (POST /api/payments/webhook)
@@ -34,8 +44,8 @@ export const xenditGateway: PaymentGateway = {
 
   async handleWebhook(req: Request): Promise<WebhookOutcome> {
     // Xendit authenticates callbacks with a static token header.
-    const token = req.headers.get("x-callback-token");
-    if (!token || token !== process.env.XENDIT_WEBHOOK_TOKEN) return null;
+    if (!tokenMatches(req.headers.get("x-callback-token"), process.env.XENDIT_WEBHOOK_TOKEN))
+      return null;
     const body = (await req.json()) as { external_id?: string; status?: string };
     if (!body.external_id) return null;
     if (body.status === "PAID" || body.status === "SETTLED") {

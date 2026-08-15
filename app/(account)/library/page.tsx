@@ -2,7 +2,7 @@ import Link from "next/link";
 import Icon from "@/components/Icon";
 import ModelArtwork from "@/components/ModelArtwork";
 import { EmptyState } from "@/components/common";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata = { title: "Library — Nexora AI" };
 
@@ -16,9 +16,7 @@ type OwnedRow = {
 
 export default async function LibraryPage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const uid = user!.id;
 
   const { data } = await supabase

@@ -86,13 +86,15 @@ export default function ProductDetailClient({
   // aggregate rating/count — derive a plausible split so the bars aren't empty.
   const derived =
     model.rating >= 4.8
-      ? [88, 9, 2, 1]
+      ? [88, 9, 2, 1, 0]
       : model.rating >= 4.5
-        ? [74, 18, 6, 2]
+        ? [74, 18, 5, 2, 1]
         : model.rating >= 4
-          ? [58, 26, 11, 5]
-          : [42, 30, 18, 10];
-  const breakdown = [5, 4, 3, 2].map((star, i) => {
+          ? [58, 26, 10, 4, 2]
+          : [42, 30, 15, 8, 5];
+  // 1★ belongs here too — it is the row shoppers look for first, and without it
+  // the percentages never added up to 100.
+  const breakdown = [5, 4, 3, 2, 1].map((star, i) => {
     if (!reviews.length) return { star, pct: model.reviews > 0 ? derived[i] : 0 };
     const n = reviews.filter((r) => r.rating === star).length;
     return { star, pct: Math.round((n / reviews.length) * 100) };
@@ -206,7 +208,7 @@ export default function ProductDetailClient({
             </div>
           </div>
           <div className="flex flex-col gap-4">
-            <ReviewForm productId={model.id} loggedIn={loggedIn} />
+            <ReviewForm productId={model.id} loggedIn={loggedIn} owned={owned} />
             {reviews.length === 0 ? (
               model.reviews === 0 && (
                 <p className="text-body-sm text-on-surface-variant">Belum ada ulasan. Jadilah yang pertama!</p>
@@ -379,7 +381,15 @@ export default function ProductDetailClient({
   );
 }
 
-function ReviewForm({ productId, loggedIn }: { productId: string; loggedIn: boolean }) {
+function ReviewForm({
+  productId,
+  loggedIn,
+  owned,
+}: {
+  productId: string;
+  loggedIn: boolean;
+  owned: boolean;
+}) {
   const router = useRouter();
   const [rating, setRating] = useState(5);
   const [state, action, pending] = useActionState(postReview, {} as ReviewState);
@@ -391,10 +401,23 @@ function ReviewForm({ productId, loggedIn }: { productId: string; loggedIn: bool
   if (!loggedIn) {
     return (
       <div className="rounded-xl surface-card p-6 text-body-sm text-on-surface-variant">
-        <a href="/login" className="text-primary-container hover:underline">
+        <Link href={`/login?next=/model/${productId}`} className="text-primary-container hover:underline">
           Masuk
-        </a>{" "}
+        </Link>{" "}
         untuk menulis ulasan.
+      </div>
+    );
+  }
+
+  // The DB enforces verified-purchase (guard_review), but it only says so after
+  // the user has picked a rating and written the whole review. Say it up front.
+  if (!owned) {
+    return (
+      <div className="flex items-start gap-3 rounded-xl surface-card p-6 text-body-sm text-on-surface-variant">
+        <Icon name="lock" size={18} className="mt-0.5 shrink-0 text-outline" />
+        <p>
+          Ulasan hanya bisa ditulis oleh pembeli model ini. Beli dulu untuk berbagi pengalamanmu.
+        </p>
       </div>
     );
   }

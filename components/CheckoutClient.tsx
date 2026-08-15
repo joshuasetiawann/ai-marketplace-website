@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useActionState } from "react";
+import Link from "next/link";
 import Icon from "./Icon";
 import ModelArtwork from "./ModelArtwork";
 import { placeOrder, type CheckoutState } from "@/lib/actions/checkout";
@@ -33,9 +34,15 @@ export default function CheckoutClient({
   const [agree, setAgree] = useState(false);
   const [state, action, pending] = useActionState(placeOrder, {} as CheckoutState);
 
+  // The bank / e-wallet picker drove nothing but its own highlight: only
+  // `method` was submitted, so choosing BCA and choosing BNI produced identical
+  // orders. Send the resolved channel instead — invisible under the simulated
+  // provider, but a real gateway needs it to issue the right instructions.
+  const channel = method === "va" ? `va-${bank}` : method === "ewallet" ? `ewallet-${ewallet}` : method;
+
   return (
     <form action={action} className="grid items-start gap-8 lg:grid-cols-[1.5fr_1fr]">
-      <input type="hidden" name="method" value={method} />
+      <input type="hidden" name="method" value={channel} />
       <input type="hidden" name="agree" value={agree ? "on" : "off"} />
       <input type="hidden" name="promo" value={promo} />
 
@@ -185,7 +192,16 @@ export default function CheckoutClient({
             {agree && <Icon name="check" size={14} className="text-on-primary-container" />}
           </button>
           <span className="text-[12px] text-on-surface-variant">
-            Saya setuju dengan <span className="text-primary-container">Syarat &amp; Ketentuan</span> dan kebijakan refund Nexora AI.
+            Saya setuju dengan{" "}
+            <Link
+              href="/legal/ketentuan"
+              target="_blank"
+              className="text-primary-container hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Syarat &amp; Ketentuan
+            </Link>{" "}
+            dan kebijakan refund Nexora AI.
           </span>
         </label>
 

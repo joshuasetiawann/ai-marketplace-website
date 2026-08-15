@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath, updateTag } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { dbMessage } from "@/lib/db-error";
 import { TAG_PRODUCTS, productTag } from "@/lib/cache-tags";
 import { logError } from "@/lib/log";
 
@@ -24,7 +25,7 @@ export async function moderateProduct(id: string, action: "approve" | "reject"):
   const { supabase } = await requireAdmin();
   const status = action === "approve" ? "published" : "rejected";
   const { error } = await supabase.from("products").update({ status }).eq("id", id);
-  if (error) return { error: error.message };
+  if (error) return { error: dbMessage(error) };
   revalidatePath("/admin/products");
   revalidatePath("/", "layout");
   updateTag(TAG_PRODUCTS);
@@ -36,7 +37,7 @@ export async function moderateProduct(id: string, action: "approve" | "reject"):
 export async function setUserRole(id: string, role: "user" | "admin"): Promise<AdminResult> {
   const { supabase } = await requireAdmin();
   const { error } = await supabase.from("profiles").update({ role }).eq("id", id);
-  if (error) return { error: error.message };
+  if (error) return { error: dbMessage(error) };
   revalidatePath("/admin/users");
   return { ok: true };
 }
@@ -47,7 +48,7 @@ export async function refundOrder(id: string): Promise<AdminResult> {
   const { error } = await supabase.rpc("refund_order", { p_order: id });
   if (error) {
     logError("refund_order RPC failed", error, { orderId: id });
-    return { error: error.message };
+    return { error: dbMessage(error) };
   }
   revalidatePath("/admin/orders");
   revalidatePath("/orders");
@@ -69,7 +70,7 @@ export async function processPayout(id: string, action: "paid" | "rejected"): Pr
     .eq("id", id)
     .eq("status", "processing")
     .select("id");
-  if (error) return { error: error.message };
+  if (error) return { error: dbMessage(error) };
   if (!data?.length) return { error: "Payout ini sudah diproses." };
   revalidatePath("/admin/payouts");
   return { ok: true };

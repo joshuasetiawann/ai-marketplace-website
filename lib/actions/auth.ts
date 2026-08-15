@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
+import { safeNext } from "@/lib/nav";
 import { allow } from "@/lib/ratelimit";
 
 export type AuthState = { error?: string; ok?: boolean };
@@ -75,16 +76,6 @@ export async function registerUser(
   redirect("/verify-email");
 }
 
-/**
- * Destination after login. The value comes from a form field, so only
- * same-origin relative paths are honoured — `//evil.com` would otherwise turn
- * the login form into an open redirect.
- */
-function safeNext(value: FormDataEntryValue | null): string {
-  const next = String(value || "");
-  return next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
-}
-
 /** Sign in with email + password. On success, go where the user was headed. */
 export async function signIn(
   _prev: AuthState,
@@ -111,11 +102,14 @@ export async function signIn(
 
   // Step up to AAL2 when the account has a verified 2FA factor — a password
   // alone must not grant a fully-privileged session.
+  const next = safeNext(formData.get("next"));
   const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   if (aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
-    redirect("/login/2fa");
+    // carry the destination through the challenge — a 2FA user who clicked a
+    // product link should land on that product, not on the dashboard
+    redirect(`/login/2fa?next=${encodeURIComponent(next)}`);
   }
-  redirect(safeNext(formData.get("next")));
+  redirect(next);
 }
 
 /** Sign out and return to the login screen. */

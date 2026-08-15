@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Icon from "@/components/Icon";
 import EarningsChart from "@/components/EarningsChart";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { getSellerEarnings } from "@/lib/seller";
 import { toIDR, formatIDR } from "@/lib/pricing";
 
@@ -11,9 +11,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export default async function SellerOverviewPage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const uid = user!.id;
 
   const [earnings, { data: sales }] = await Promise.all([

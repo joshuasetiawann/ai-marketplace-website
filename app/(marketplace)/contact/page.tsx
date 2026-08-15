@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Icon from "@/components/Icon";
 import ContactForm from "@/components/ContactForm";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Hubungi Kami — Nexora AI",
@@ -10,9 +10,7 @@ export const metadata: Metadata = {
 
 export default async function ContactPage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   let name = "";
   if (user) {
     const { data } = await supabase.from("profiles").select("name").eq("id", user.id).single();

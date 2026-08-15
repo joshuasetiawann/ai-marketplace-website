@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Icon from "@/components/Icon";
 import { GlowOrb } from "@/components/common";
 import OpenStoreForm from "@/components/OpenStoreForm";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata = { title: "Buka Toko — Nexora AI" };
 
@@ -15,9 +15,7 @@ const BENEFITS = [
 
 export default async function OpenStorePage() {
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login?next=/sell/start");
 
   const { data: profile } = await supabase.from("profiles").select("name, is_seller").eq("id", user.id).single();

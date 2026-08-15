@@ -391,12 +391,13 @@
     <p class="lede">
       Pemeriksaan menyeluruh atas seluruh kode aplikasi: 14 migrasi Postgres berikut RLS-nya,
       12 modul Server Action, alur pembayaran, dan 41 halaman/komponen antarmuka.
-      37 temuan, diurutkan dari yang paling mendesak.
+      37 temuan, diurutkan dari yang paling mendesak &mdash; seluruhnya sudah dikerjakan
+      dalam empat commit di <span class="mono">fix/audit-2026-08-16</span>.
     </p>
     <div class="meta">
       <span>16 AGUSTUS 2026</span>
-      <span>BRANCH <b>main</b></span>
-      <span>HEAD <b>2912e59</b></span>
+      <span>BRANCH <b>fix/audit-2026-08-16</b></span>
+      <span>BASIS <b>2912e59</b></span>
       <span>NEXT <b>16.2.9</b> &middot; REACT <b>19.2.4</b> &middot; SUPABASE</span>
     </div>
   </div>
@@ -405,10 +406,37 @@
 <div class="wrap">
 
   <div class="tiles">
-    <div class="tile t-hi"><span class="n">5</span><span class="k">Prioritas tinggi</span></div>
-    <div class="tile t-md"><span class="n">14</span><span class="k">Prioritas sedang</span></div>
+    <div class="tile t-hi"><span class="n">4</span><span class="k">Prioritas tinggi</span></div>
+    <div class="tile t-md"><span class="n">15</span><span class="k">Prioritas sedang</span></div>
     <div class="tile t-lo"><span class="n">18</span><span class="k">Prioritas rendah</span></div>
-    <div class="tile t-all"><span class="n">37</span><span class="k">Total temuan</span></div>
+    <div class="tile t-all"><span class="n">37<span style="font-size:16px;color:var(--ink-3)">/37</span></span><span class="k">Sudah dikerjakan</span></div>
+  </div>
+
+  <div class="panel" style="border-left:2px solid var(--md); margin-bottom:20px;">
+    <h3>Baca ini sebelum merge</h3>
+    <ul class="checks">
+      <li>
+        <b>Dua migrasi baru belum pernah dijalankan.</b> Docker mati sepanjang sesi ini, jadi
+        <code>cart_integrity</code> dan <code>profiles_exposure</code> ditulis dari pembacaan skema, bukan
+        diuji terhadap Postgres hidup. Jalankan <code>supabase db reset</code> lalu
+        <code>npm test</code> sebelum merge &mdash; suite <code>db-security.test.ts</code> yang ter-skip
+        adalah yang memverifikasi RLS-nya.
+      </li>
+      <li>
+        <b>Yang sudah diverifikasi:</b> <code>tsc --noEmit</code> bersih, <code>eslint</code> bersih,
+        <code>next build</code> sukses (semua 41 rute terkompilasi), 15 unit test lulus &mdash; 5 di antaranya
+        baru, menguji batas kuantitas keranjang.
+      </li>
+      <li>
+        <b>SEC-02 diturunkan dari Tinggi ke Sedang</b> setelah dicek ulang: middleware sudah memaksa AAL2
+        untuk <code>/settings</code>, jadi ini bukan bypass 2FA melainkan hilangnya langkah konfirmasi.
+        Tetap diperbaiki, tapi bobotnya dikoreksi.
+      </li>
+      <li>
+        <b>Tiga temuan ditutup sebagian, dan itu disengaja</b> &mdash; SEC-05, SEC-06, SEC-07. Alasan dan
+        jalur lanjutannya ada di masing-masing entri di bawah.
+      </li>
+    </ul>
   </div>
 
   <div class="cols2">
@@ -444,7 +472,7 @@
   <section id="keamanan">
     <div class="sec-head">
       <h2>Keamanan</h2>
-      <span class="count">10 temuan &middot; 2 tinggi &middot; 4 sedang &middot; 4 rendah</span>
+      <span class="count">10 temuan &middot; 1 tinggi &middot; 5 sedang &middot; 4 rendah</span>
     </div>
     <p class="sec-note">
       Fondasinya kuat &mdash; celah yang tersisa hampir semuanya di lapisan <em>Server Action</em>,
@@ -468,31 +496,39 @@
         cookie sesi yang dicuri cukup untuk mengambil alih akun permanen.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
-        Wajibkan sesinya berasal dari tautan recovery. <code>supabase.auth.mfa.getAuthenticatorAssuranceLevel()</code>
-        sudah mengembalikan <code>currentAuthenticationMethods</code>; tolak permintaan bila tidak ada entri
-        bermetode <code>recovery</code>. Tanpa dependensi baru, sekitar empat baris.
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        Rencana awal saya salah: memeriksa <code>amr === "recovery"</code> akan mematikan seluruh alur reset,
+        karena daftar <code>AMRMethods</code> di <code>@supabase/auth-js</code> tidak memuat
+        <code>"recovery"</code> sama sekali &mdash; tautan recovery menghasilkan entri <code>otp</code>
+        (alur lama: <code>magiclink</code>).
+        <br /><br />
+        Logikanya dibalik jadi daftar-tolak: <b>tolak sesi yang <code>amr</code>-nya memuat
+        <code>"password"</code></b>. Ini menutup ancamannya persis &mdash; sesi hasil login biasa &mdash; dan tetap
+        bertahan seandainya nama metode recovery berubah lagi. Halaman <code>/reset-password</code> kini
+        memakai aturan yang sama sebelum menggambar formulirnya (lihat BUG-08).
       </div>
     </div>
 
-    <div class="find f-hi">
-      <div class="f-top"><span class="f-id">SEC-02</span><span class="chip">Tinggi</span></div>
-      <h4>2FA bisa dimatikan tanpa verifikasi apa pun</h4>
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">SEC-02</span><span class="chip">Sedang</span></div>
+      <h4>2FA bisa dimatikan satu klik, tanpa konfirmasi apa pun</h4>
       <span class="loc">components/TwoFactorSettings.tsx:66&ndash;70</span>
       <p>
-        Tombol "Nonaktifkan" langsung memanggil <code>mfa.unenroll({ factorId })</code> &mdash; tanpa dialog
-        konfirmasi, tanpa password, tanpa kode TOTP. Mengaktifkan 2FA butuh kode dari authenticator;
-        mematikannya butuh satu klik.
+        Tombol "Nonaktifkan" langsung memanggil <code>mfa.unenroll({ factorId })</code> &mdash; tanpa dialog,
+        tanpa kode. Mengaktifkan 2FA menuntut kode dari authenticator; mematikannya tidak menuntut apa pun.
+        Laptop yang ditinggal terbuka cukup untuk melucuti faktor kedua tanpa jejak di layar.
       </p>
       <p>
-        Ini membalik seluruh nilai 2FA: penyerang yang sudah memegang sesi tinggal mematikannya, lalu
-        (digabung dengan SEC-01) mengganti password dan mengunci pemilik asli keluar.
+        <b>Koreksi bobot.</b> Penilaian awal saya menyebut ini "Tinggi" dengan alasan sesi curian bisa
+        melewati 2FA. Itu keliru: middleware sudah memaksa AAL2 untuk <code>/settings</code>, jadi penyerang
+        harus sudah melewati 2FA untuk sampai ke tombol ini. Yang hilang adalah langkah konfirmasi, bukan
+        gerbang autentikasinya &mdash; karena itu diturunkan ke Sedang.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
-        Pindahkan unenroll ke Server Action yang meminta password saat ini lewat
-        <code>signInWithPassword</code> &mdash; pola yang sudah dipakai <code>deleteAccount()</code>.
-        Tambahkan konfirmasi eksplisit di UI.
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        Minta kode TOTP baru sebelum unenroll. <em>Bukan</em> password: <code>signInWithPassword</code>
+        justru menurunkan sesi ke AAL1, dan AAL1 adalah level yang ditolak GoTrue untuk melepas faktor
+        terverifikasi. Sekalian: berhenti melaporkan sukses saat panggilan unenroll-nya sendiri gagal.
       </div>
     </div>
 
@@ -512,7 +548,7 @@
         password saja masih bisa mengubah rekening pencairan dan menarik dana.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Satu helper <code>requireAal2()</code> yang membandingkan <code>currentLevel</code> dengan
         <code>nextLevel</code>, dipasang di action bernilai tinggi: payout, pengaturan akun, hapus akun,
         checkout.
@@ -534,7 +570,7 @@
         peramban pembeli, dalam konteks sesi login mereka.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Parse dengan <code>new URL()</code> saat menyimpan dan tolak apa pun selain <code>http:</code>/<code>https:</code>.
         Satu blok <code>try/catch</code> di <code>saveProduct</code>.
       </div>
@@ -556,10 +592,15 @@
         Pola yang sama belum diterapkan ke <code>profiles</code>.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
-        <code>revoke select on profiles from anon;</code> lalu
-        <code>grant select (id, name, art) on profiles to anon;</code>. Konsol admin membacanya sebagai
-        <code>authenticated</code> dan tidak terpengaruh.
+        <b>Perbaikan &mdash; sebagian, disengaja</b>
+        <code>revoke select on profiles from anon</code> lalu
+        <code>grant select (id, name, art, is_seller, created_at)</code> &mdash; enumerasi anonim tertutup.
+        <br /><br />
+        <b>Sisa yang belum ditutup:</b> <code>authenticated</code> masih memegang akses seluruh kolom,
+        karena konsol admin menampilkan peran setiap pengguna dan hak kolom bersifat per-peran, bukan
+        per-baris. Jadi pengguna yang sudah login tetap bisa membaca peran orang lain. Menutupnya menuntut
+        view terbatas plus penyesuaian kueri konsol admin &mdash; perubahan tersendiri, bukan pergantian
+        <code>grant</code>.
       </div>
     </div>
 
@@ -578,10 +619,15 @@
         Ini menyesatkan penjual sekaligus membuka jalan pencairan ke rekening yang salah ketik.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
-        Tulis <code>pending</code>, dan sediakan aksi persetujuan di konsol admin
-        (<code>/admin/payouts</code> sudah punya kerangkanya). Jika verifikasi memang belum masuk lingkup,
-        ganti label jadi "Tersimpan" agar UI tidak berbohong.
+        <b>Perbaikan &mdash; sebagian, disengaja</b>
+        Yang diambil adalah opsi jujur: UI berhenti mengklaim "Terverifikasi" dan kini berbunyi
+        "Rekening tersimpan", disertai pengingat bahwa dana dikirim ke nomor itu. Alur pencairan tetap
+        berjalan.
+        <br /><br />
+        <b>Sisa yang belum ditutup:</b> verifikasi rekening yang sebenarnya. Menulis <code>pending</code>
+        memerlukan aksi persetujuan di <code>/admin/payouts</code>, dan tanpa itu setiap penjual langsung
+        terkunci dari pencairan &mdash; jadi jalur lanjutannya ditandai <code>ponytail:</code> di
+        <code>lib/actions/payouts.ts</code>, bukan dikerjakan setengah jalan.
       </div>
     </div>
 
@@ -595,10 +641,17 @@
         CSP adalah lapisan yang mengubah skrip suntikan semacam SEC-04 dari "tereksekusi" menjadi "diblokir".
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
-        Mulai dari yang longgar tapi berguna: <code>frame-ancestors 'none'</code>,
-        <code>base-uri 'self'</code>, <code>form-action 'self'</code>, <code>object-src 'none'</code>.
-        Ketiganya tidak memerlukan nonce dan tidak akan merusak apa pun di aplikasi ini.
+        <b>Perbaikan &mdash; sebagian, disengaja</b>
+        Terpasang: <code>frame-ancestors 'none'</code>, <code>base-uri 'self'</code>,
+        <code>form-action 'self'</code>, <code>object-src 'none'</code> &mdash; tanpa nonce, tanpa risiko
+        merusak apa pun di aplikasi ini.
+        <br /><br />
+        <b>Sengaja tidak dipasang:</b> <code>default-src 'self'</code>. Ia menurun ke
+        <code>connect-src</code> dan akan memutus panggilan peramban ke Supabase (enrol/verifikasi 2FA),
+        lalu ke <code>img-src</code> dan memutus QR ber-skema <code>data:</code>. Menambahkannya kembali
+        berarti mendaftar tiap origin dan menyisipkan <code>'unsafe-inline'</code> untuk bootstrap Next
+        sendiri &mdash; pekerjaan yang butuh aplikasi hidup di depan mata, bukan alasan untuk tidak
+        mengirim apa pun.
       </div>
     </div>
 
@@ -612,7 +665,7 @@
         Sebagian pesan RPC memang sudah ditulis rapi dalam Bahasa Indonesia; sisanya tidak.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Satu pemeta seperti <code>authMessage()</code> yang sudah ada di <code>lib/actions/auth.ts</code>:
         kenali kode galat yang bisa dipicu pengguna, sisanya jatuh ke satu kalimat generik. Detail aslinya
         tetap masuk <code>logError()</code>.
@@ -633,7 +686,7 @@
         kanal samping waktu. Adapter Midtrans tidak kena karena membandingkan hash SHA-512.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Pasang <code>allow("webhook", 120, 60_000)</code> dan ganti perbandingan token dengan
         <code>crypto.timingSafeEqual</code> pada buffer sepanjang sama.
       </div>
@@ -650,7 +703,7 @@
         untuk satu masalah yang sama adalah bug yang menunggu giliran.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Ekspor <code>safeNext()</code> dan pakai di kedua tempat. Satu sumber kebenaran.
       </div>
     </div>
@@ -683,7 +736,7 @@
         tanpa pembatas laju.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Batasi atas: <code>Math.min(50, Math.max(1, Number(sp.page) || 1))</code>. Satu baris.
       </div>
     </div>
@@ -703,7 +756,7 @@
         pulih di UI &mdash; barangnya harus dicari dan dimasukkan ulang satu per satu.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Pindahkan penghapusan keranjang ke <code>finalize_order()</code>, yang sudah dipanggil webhook dan
         sudah idempoten. Alur simulasi tidak terpengaruh &mdash; <code>checkout()</code> tetap mengosongkan
         keranjang di transaksi yang sama.
@@ -724,7 +777,7 @@
         gateway sungguhan, pembeli mendapat instruksi bank yang tidak mereka pilih.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Kirim satu channel gabungan &mdash; <code>va-bca</code>, <code>ewallet-gopay</code> &mdash; lalu teruskan ke
         <code>PaymentInit.method</code>.
       </div>
@@ -744,7 +797,7 @@
         gagal dengan galat overflow yang tidak bisa dipahami pembeli.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         <code>qty = Math.min(99, Math.trunc(qty))</code> di action, dan tambahkan
         <code>check (qty &lt;= 99)</code> di tabel agar penjagaannya ada di satu tempat yang tak bisa dilewati.
       </div>
@@ -764,7 +817,7 @@
         sekali sampai mereka menebak sendiri bahwa angkanya harus dibulatkan.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         <code>step="0.01"</code>, plus <code>max={available}</code> agar batas saldo terlihat sebelum
         permintaan dikirim.
       </div>
@@ -783,7 +836,7 @@
         ada, hanya belum dipakai di tempat ini.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Teruskan <code>owned</code> ke <code>ReviewForm</code>; bila <code>false</code>, tampilkan
         "Beli model ini untuk menulis ulasan" alih-alih formulir.
       </div>
@@ -799,7 +852,7 @@
         <code>?next=</code> sudah dibawa sepanjang alur login biasa.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Baca <code>?next=</code> lewat <code>useSearchParams()</code> dan lewatkan melalui
         <code>safeNext()</code> yang sama seperti SEC-10.
       </div>
@@ -819,7 +872,7 @@
         sendiri.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Periksa sesi di server dan tampilkan tautan "Minta tautan baru" bila kosong; tambahkan konfirmasi
         password yang divalidasi di klien.
       </div>
@@ -834,7 +887,7 @@
         calon pembeli &mdash; tidak pernah muncul, dan persentasenya tidak pernah berjumlah 100%.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Jadikan <code>[5, 4, 3, 2, 1]</code> dan tambahkan satu nilai pada tabel sebaran cadangan.
       </div>
     </div>
@@ -852,7 +905,7 @@
         mengambil kesimpulan yang salah.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Hapus kolomnya, atau sinkronkan dari <code>auth.mfa_factors</code> lewat trigger. Menghapus lebih
         murah.
       </div>
@@ -867,7 +920,7 @@
         misalnya format bulan yang berulang &mdash; menghasilkan kunci duplikat dan render yang salah.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         <code>key={`${i}-${l}`}</code>.
       </div>
     </div>
@@ -907,7 +960,7 @@
         (<code>surface-card</code>, <code>text-on-surface</code>) &mdash; dua bahasa visual dalam satu layar.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Pakai ulang shell yang sudah ada: <code>&lt;Navbar&gt;</code> + <code>&lt;MobileNav&gt;</code> +
         <code>&lt;Footer&gt;</code>, persis seperti <code>app/(marketplace)/layout.tsx</code>, lalu bungkus
         isinya dengan container yang sama. Perbaikan terbesar dengan diff terkecil di laporan ini.
@@ -928,7 +981,7 @@
         <code>text-[40px] sm:text-[56px] md:text-display-lg</code>). Halaman penjual belum ikut.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         <code>text-headline-md md:text-display-md</code>, atau
         <code>clamp(32px, 7vw, 56px)</code> untuk angka mata uang secara umum.
       </div>
@@ -948,7 +1001,7 @@
         ada di repo, tinggal disamakan.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Tambahkan <code>flex-wrap</code> dan <code>min-w-0</code> pada baris produk penjual,
         atau susun ulang jadi dua baris di bawah <code>sm</code>.
       </div>
@@ -968,7 +1021,7 @@
         yang benar-benar ingin dilihat penjual.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Di bawah <code>sm</code>, ubah tiap baris jadi kartu berlabel ("Kotor Rp&nbsp;&hellip;",
         "Bersih Rp&nbsp;&hellip;"). Pola label sejajar-nilai sudah dipakai halaman Earnings.
       </div>
@@ -989,7 +1042,7 @@
         dan fokus tidak berpindah ke sana.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Tambahkan <code>required</code> (validasi server tetap wajib dipertahankan), lalu hubungkan galat
         lewat <code>aria-describedby</code> + <code>aria-invalid</code> di <code>AuthField</code> dan
         <code>PasswordField</code> &mdash; dua komponen, semua layar auth ikut terbenahi.
@@ -1006,7 +1059,7 @@
         membuat judul pecah jadi tiga baris rapat.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Samakan dengan pola <code>text-headline-md md:text-headline-lg</code> yang sudah dipakai halaman lain.
       </div>
     </div>
@@ -1021,7 +1074,7 @@
         sedikit di balik navbar; yang kedua menyisakan celah yang tidak konsisten dengannya.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Satu variabel CSS <code>--nav-h</code> di <code>globals.css</code>, dipakai oleh navbar dan
         semua <code>top-*</code> sticky.
       </div>
@@ -1041,7 +1094,7 @@
         untuk marketplace yang memproses pembayaran nyata.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Buat halaman <code>/legal/privasi</code> dan <code>/legal/ketentuan</code> (boleh ringkas),
         lalu tautkan dari kedua tempat.
       </div>
@@ -1057,7 +1110,7 @@
         berada jauh di bawah, di bagian ulasan.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Ganti ke <code>&lt;Link&gt;</code> dengan tujuan <code>/login?next=/model/&lt;id&gt;</code>, sama seperti
         yang sudah dilakukan tombol beli di halaman yang sama.
       </div>
@@ -1074,7 +1127,7 @@
         bagi pengguna dengan gangguan vestibular.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Satu blok media di akhir <code>globals.css</code> yang mematikan <code>animation</code> dan
         <code>transition</code>, plus <code>scroll-behavior: auto</code>.
       </div>
@@ -1093,7 +1146,7 @@
         Navigasi keyboard secara efektif tidak terlihat di seluruh aplikasi.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Satu aturan global: <code>:focus-visible { outline: 2px solid var(--color-primary-container);
         outline-offset: 2px; }</code>.
       </div>
@@ -1109,7 +1162,7 @@
         jadi ini bukan lubang keamanan &mdash; tapi mengiklankan pintu staf ke publik hanya mengundang usaha.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Hapus dari footer; tampilkan di menu akun hanya bila <code>role === "admin"</code>.
       </div>
     </div>
@@ -1142,7 +1195,7 @@
         pun terkirim, plus tiga kueri tambahan untuk profil, hitungan keranjang, dan wishlist.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Bungkus pembacaan user per-permintaan dengan <code>React.cache()</code> agar layout dan page berbagi
         satu hasil. Panggilan di middleware tetap dipertahankan &mdash; itu yang menyegarkan cookie sesi.
       </div>
@@ -1158,7 +1211,7 @@
         seiring katalog.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Dua kueri <code>.order(...).limit(4)</code> menggantikan satu tarikan penuh. Tidak mendesak sampai
         katalog menembus beberapa ratus produk.
       </div>
@@ -1173,7 +1226,7 @@
         setiap pemuatan halaman, hanya untuk merender satu angka di ikon keranjang.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Sebuah RPC <code>cart_count()</code>, atau terima jumlah baris (bukan jumlah kuantitas) dengan
         <code>head: true</code> yang jauh lebih murah.
       </div>
@@ -1192,7 +1245,7 @@
         Komentar di kode sudah menyadari hal ini untuk Jelajahi; jalur detail produk belum.
       </p>
       <div class="fix">
-        <b>Perbaikan</b>
+        <b>Perbaikan &mdash; sudah diterapkan</b>
         Validasi bentuk UUID sebelum memanggil <code>getCatalogProduct</code>, dan pertimbangkan
         pembatas laju tepi (Vercel WAF) untuk kedua rute. Terkait langsung dengan BUG-01.
       </div>
@@ -1202,57 +1255,73 @@
   <!-- ── RENCANA ────────────────────────────────────────────────────────── -->
   <section id="rencana">
     <div class="sec-head">
-      <h2>Rencana perbaikan</h2>
-      <span class="count">4 gelombang</span>
+      <h2>Hasil perbaikan</h2>
+      <span class="count">4 commit &middot; branch fix/audit-2026-08-16</span>
     </div>
     <p class="sec-note">
-      Diurutkan berdasarkan dampak per baris kode yang diubah. Gelombang 1 dan 2 sepenuhnya berupa
-      perbaikan kecil dan terlokalisasi; gelombang 3 adalah pekerjaan UI yang paling besar hasilnya.
+      Dikerjakan berurutan dan di-commit terpisah per gelombang, supaya tiap kelompok bisa ditinjau
+      &mdash; atau dibatalkan &mdash; sendiri-sendiri. Perubahan yang sudah ada di working tree sebelum audit
+      dimulai dipisahkan lebih dulu sebagai commit <span class="mono">baseline</span>.
     </p>
 
     <div class="scroller">
       <table>
         <thead>
           <tr>
-            <th>Gelombang</th>
-            <th>Fokus</th>
+            <th>Commit</th>
+            <th>Isi</th>
             <th>Temuan</th>
-            <th>Perkiraan</th>
+            <th>Jejak</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td class="wave">01</td>
-            <td><b>Tutup jalur pengambilalihan akun.</b> Wajibkan sesi recovery untuk ganti password, dan re-autentikasi untuk mematikan 2FA.</td>
+            <td class="wave">1f3559f</td>
+            <td><b>Baseline.</b> Polish alur auth dan konfigurasi dev yang sudah belum ter-commit sebelum audit mulai &mdash; dipisah agar perbaikan di bawahnya bisa dibaca sendiri.</td>
+            <td class="ids">&mdash;</td>
+            <td class="ids">14 berkas</td>
+          </tr>
+          <tr>
+            <td class="wave">eef26ae</td>
+            <td><b>Tutup jalur pengambilalihan akun.</b> Reset password hanya untuk sesi recovery; menonaktifkan 2FA menuntut kode TOTP baru.</td>
             <td class="ids">SEC-01<br />SEC-02</td>
-            <td>Kecil &mdash; 2 berkas</td>
+            <td class="ids">2 berkas</td>
           </tr>
           <tr>
-            <td class="wave">02</td>
-            <td><b>Batasi masukan yang tak terbatas.</b> Clamp <code>page</code> dan <code>qty</code>, validasi <code>asset_url</code>, perbaiki <code>step</code> pencairan, pindahkan pengosongan keranjang ke penyelesaian order.</td>
+            <td class="wave">66a912d</td>
+            <td><b>Batasi masukan tak terbatas.</b> Clamp <code>page</code> dan <code>qty</code>, validasi <code>asset_url</code>, perbaiki <code>step</code> pencairan, pindahkan pengosongan keranjang ke <code>finalize_order()</code>.</td>
             <td class="ids">BUG-01, BUG-02<br />BUG-04, BUG-05<br />SEC-04</td>
-            <td>Kecil &mdash; 4 berkas + 1 migrasi</td>
+            <td class="ids">7 berkas<br />+1 migrasi, +5 test</td>
           </tr>
           <tr>
-            <td class="wave">03</td>
-            <td><b>Rapikan area setelah login.</b> Kembalikan shell navigasi ke layout akun dan admin, perbaiki tangga tipografi mobile, benahi baris kartu dan tabel penjualan, tambahkan gaya fokus dan <code>prefers-reduced-motion</code>.</td>
+            <td class="wave">9dfbbe9</td>
+            <td><b>Kembalikan chrome aplikasi setelah login.</b> <code>&lt;AppShell&gt;</code> dipakai bersama, tangga tipografi mobile, baris kartu membungkus, tabel penjualan berlabel, <code>required</code>, <code>--nav-h</code>, focus-visible, reduced-motion.</td>
             <td class="ids">UX-01 &hellip; UX-07<br />UX-10, UX-11</td>
-            <td>Sedang &mdash; 8 berkas</td>
+            <td class="ids">26 berkas</td>
           </tr>
           <tr>
-            <td class="wave">04</td>
-            <td><b>Pengerasan &amp; pemolesan.</b> Header CSP, grant per-kolom pada <code>profiles</code>, pemetaan galat, halaman legal, <code>React.cache()</code> untuk pembacaan user, verifikasi rekening payout.</td>
+            <td class="wave">0976bad</td>
+            <td><b>Pengerasan &amp; pemolesan.</b> Step-up AAL2 di jalur uang, grant kolom <code>profiles</code>, CSP, pemetaan galat, halaman legal, dedup <code>getUser()</code>, dua kueri rail beranda, guard UUID.</td>
             <td class="ids">SEC-03, SEC-05 &hellip; SEC-10<br />BUG-03, BUG-06 &hellip; BUG-11<br />UX-08, UX-09, UX-12<br />PERF-01 &hellip; PERF-04</td>
-            <td>Sedang &mdash; tersebar</td>
+            <td class="ids">55 berkas<br />+1 migrasi</td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3>Langkah berikutnya</h3>
+      <ul class="checks">
+        <li><b>Nyalakan Docker, jalankan <code>supabase db reset</code> lalu <code>npm test</code></b> &mdash; itu yang mengaktifkan 6 test RLS yang ter-skip dan memverifikasi dua migrasi baru.</li>
+        <li><b>Klik-uji alur reset password dan 2FA</b>, dua jalur yang paling banyak berubah dan paling tidak bisa diverifikasi tanpa basis data hidup.</li>
+        <li><b>Identitas git di-set lokal-repo</b> (<code>thunityproject</code>) karena mesin ini belum punya &mdash; ubah dengan <code>git config user.name</code> sebelum push kalau perlu.</li>
+      </ul>
     </div>
   </section>
 
   <div class="foot">
     <span>NEXORA AI &middot; AUDIT 2026-08-16</span>
-    <span>37 TEMUAN &middot; 5 TINGGI &middot; 14 SEDANG &middot; 18 RENDAH</span>
+    <span>37 TEMUAN &middot; 37 DIKERJAKAN &middot; 3 DITUTUP SEBAGIAN</span>
   </div>
 
 </div>

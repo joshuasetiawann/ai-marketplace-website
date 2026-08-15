@@ -145,9 +145,39 @@
 }
 
 /* ── base ─────────────────────────────────────────────────────────────────── */
-:root { color-scheme: dark; }
+:root {
+  color-scheme: dark;
+  /* Height of the fixed header, so page padding and every sticky panel agree on
+     one number instead of each guessing (top-24 sat *under* the 100px navbar).
+     Mobile: 64px nav. Desktop: 28px topbar + 72px nav. */
+  --nav-h: 64px;
+}
+@media (min-width: 768px) {
+  :root { --nav-h: 100px; }
+}
 * { -webkit-tap-highlight-color: transparent; }
 html { scroll-behavior: smooth; }
+
+/* Keyboard navigation has to be visible: .input-field had a focus ring but
+   .btn-*, .chip and nav links fell back to the browser default outline, which
+   is all but invisible on #0a0b0d. */
+:focus-visible {
+  outline: 2px solid var(--color-primary-container);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Respect the OS "reduce motion" setting — this app ships an infinite marquee
+   and a floating loop, both sustained triggers for vestibular disorders. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 body {
   overflow-x: hidden;
   background-color: var(--color-surface);

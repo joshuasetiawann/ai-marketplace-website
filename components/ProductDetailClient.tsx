@@ -237,7 +237,7 @@ export default function ProductDetailClient({
       </div>
 
       {/* Summary / purchase */}
-      <div className="lg:sticky lg:top-28 lg:self-start">
+      <div className="lg:sticky lg:top-[calc(var(--nav-h)+1.5rem)] lg:self-start">
         <div className="mb-4 flex items-center gap-2">
           <TierBadge tier={model.tier} />
           <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-outline">{model.category}</span>

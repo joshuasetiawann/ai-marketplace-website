@@ -13,7 +13,7 @@ export default function ChangeEmailForm({ current }: { current: string }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="block flex-1">
           <span className="mb-2 block text-body-sm font-medium text-on-surface">Email baru</span>
-          <input name="email" type="email" autoComplete="email" placeholder="email@baru.com" className="input-field" />
+          <input name="email" type="email" autoComplete="email" placeholder="email@baru.com" className="input-field" required />
         </label>
         <button type="submit" disabled={pending} className="btn-soft px-6 py-3">
           {pending ? "Mengirim…" : "Ubah email"}

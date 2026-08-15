@@ -134,7 +134,7 @@ export default function CheckoutClient({
         </section>
       </div>
 
-      <div className="rounded-xl surface-card p-6 lg:sticky lg:top-24">
+      <div className="rounded-xl surface-card p-6 lg:sticky lg:top-[calc(var(--nav-h)+1.5rem)]">
         <h2 className="mb-4 font-display text-body-lg font-semibold text-on-surface">Ringkasan Pesanan</h2>
         <div className="mb-4 flex max-h-48 flex-col gap-3 overflow-y-auto no-scrollbar">
           {lines.map((m) => (

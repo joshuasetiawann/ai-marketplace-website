@@ -10,11 +10,11 @@ export default function ChangePasswordForm() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="block flex-1">
           <span className="mb-2 block text-body-sm font-medium text-on-surface">Password saat ini</span>
-          <input name="current" type="password" autoComplete="current-password" placeholder="Password sekarang" className="input-field" />
+          <input name="current" type="password" autoComplete="current-password" placeholder="Password sekarang" className="input-field" required />
         </label>
         <label className="block flex-1">
           <span className="mb-2 block text-body-sm font-medium text-on-surface">Password baru</span>
-          <input name="password" type="password" autoComplete="new-password" placeholder="Min. 8 karakter" className="input-field" />
+          <input name="password" type="password" autoComplete="new-password" placeholder="Min. 8 karakter" className="input-field" required minLength={8} />
         </label>
         <button type="submit" disabled={pending} className="btn-soft px-6 py-3">
           {pending ? "Menyimpan…" : "Ubah password"}

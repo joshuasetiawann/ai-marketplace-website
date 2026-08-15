@@ -293,7 +293,7 @@ export default function ExploreClient({
 
       <div className="flex gap-8">
         <aside className="hidden w-64 shrink-0 lg:block">
-          <div className="sticky top-24 rounded-xl surface-card p-5">{FiltersPanel}</div>
+          <div className="sticky top-[calc(var(--nav-h)+1.5rem)] rounded-xl surface-card p-5">{FiltersPanel}</div>
         </aside>
 
         <div className="min-w-0 flex-1">

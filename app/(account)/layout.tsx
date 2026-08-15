@@ -1,11 +1,14 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import AppShell from "@/components/AppShell";
 import { createServerClient } from "@/lib/supabase/server";
-import { signOut } from "@/lib/actions/auth";
 
 /**
  * Server-side guard for the authenticated account area (defense-in-depth
- * alongside middleware). Renders a minimal shell + logout.
+ * alongside middleware), wrapped in the same chrome as the rest of the app.
+ *
+ * This used to render its own minimal header, which dropped search, cart,
+ * wishlist and the whole menu the moment a user opened their dashboard — and on
+ * mobile removed the bottom bar that had just brought them here.
  */
 export default async function AccountLayout({
   children,
@@ -19,18 +22,8 @@ export default async function AccountLayout({
   if (!user) redirect("/login");
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between border-b border-line px-6 py-4">
-        <Link href="/" className="font-geist text-lg font-bold tracking-tight">
-          Nexora <span className="text-accent">AI</span>
-        </Link>
-        <form action={signOut}>
-          <button className="text-sm text-muted transition hover:text-accent">
-            Keluar
-          </button>
-        </form>
-      </header>
-      <main className="flex-1 px-6 py-8">{children}</main>
-    </div>
+    <AppShell>
+      <main className="mx-auto w-full max-w-[1440px] px-5 py-10 md:px-16">{children}</main>
+    </AppShell>
   );
 }

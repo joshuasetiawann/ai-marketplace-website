@@ -20,7 +20,7 @@ export default function HelpPage() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-12 md:px-16">
       <div className="mb-10 text-center">
-        <h1 className="font-display text-headline-lg text-on-surface">Pusat Bantuan</h1>
+        <h1 className="font-display text-headline-md text-on-surface md:text-headline-lg">Pusat Bantuan</h1>
         <p className="mt-3 text-body-lg text-on-surface-variant">Temukan jawaban atau hubungi tim kami.</p>
       </div>
 

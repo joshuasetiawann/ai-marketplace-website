@@ -13,9 +13,9 @@ export default function RegisterPage() {
   return (
     <AuthCard tab="register" title="Buat akun" sub="Gratis. Belanja & jual model AI dalam satu akun.">
       <form action={action} className="space-y-5">
-        <AuthField label="Nama Lengkap" icon="person" name="name" placeholder="Nama kamu" autoComplete="name" />
-        <AuthField label="Email" icon="mail" name="email" type="email" placeholder="kamu@email.com" autoComplete="email" />
-        <PasswordField name="password" placeholder="Min. 8 karakter" autoComplete="new-password" />
+        <AuthField label="Nama Lengkap" icon="person" name="name" placeholder="Nama kamu" autoComplete="name" required />
+        <AuthField label="Email" icon="mail" name="email" type="email" placeholder="kamu@email.com" autoComplete="email" required />
+        <PasswordField name="password" placeholder="Min. 8 karakter" autoComplete="new-password" required minLength={8} />
         {state.error && <p role="alert" className="text-sm text-red-400">{state.error}</p>}
         <button type="submit" disabled={pending} className={authSubmitClass}>
           {pending ? "Memproses…" : "Daftar"}

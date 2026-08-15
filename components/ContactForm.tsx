@@ -24,11 +24,11 @@ export default function ContactForm({ defaultName = "", defaultEmail = "" }: { d
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
           <span className="mb-2 block text-body-sm font-medium text-on-surface">Nama</span>
-          <input name="name" defaultValue={defaultName} placeholder="Nama kamu" className="input-field" />
+          <input name="name" defaultValue={defaultName} placeholder="Nama kamu" className="input-field" required />
         </label>
         <label className="block">
           <span className="mb-2 block text-body-sm font-medium text-on-surface">Email</span>
-          <input name="email" type="email" defaultValue={defaultEmail} placeholder="email@kamu.com" className="input-field" />
+          <input name="email" type="email" defaultValue={defaultEmail} placeholder="email@kamu.com" className="input-field" required />
         </label>
       </div>
       <label className="block">
@@ -37,7 +37,7 @@ export default function ContactForm({ defaultName = "", defaultEmail = "" }: { d
       </label>
       <label className="block">
         <span className="mb-2 block text-body-sm font-medium text-on-surface">Pesan</span>
-        <textarea name="body" rows={5} placeholder="Ceritakan kebutuhanmu…" className="input-field resize-none" />
+        <textarea name="body" rows={5} placeholder="Ceritakan kebutuhanmu…" className="input-field resize-none" required minLength={10} />
       </label>
       {state.error && <p role="alert" className="text-body-sm text-error">{state.error}</p>}
       <button type="submit" disabled={pending} className="btn-primary self-start px-6 py-3">

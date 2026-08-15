@@ -44,7 +44,7 @@ export default function PricingPage() {
   return (
     <div className="mx-auto max-w-[1200px] px-5 py-12 md:px-16">
       <div className="mb-12 text-center">
-        <h1 className="font-display text-headline-lg text-on-surface">Harga yang transparan</h1>
+        <h1 className="font-display text-headline-md text-on-surface md:text-headline-lg">Harga yang transparan</h1>
         <p className="mx-auto mt-3 max-w-xl text-body-lg text-on-surface-variant">
           Pilih paket sesuai kebutuhanmu. Tingkatkan atau turunkan kapan saja.
         </p>

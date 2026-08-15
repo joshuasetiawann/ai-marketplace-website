@@ -9,7 +9,7 @@ export default function ProfileNameForm({ initialName }: { initialName: string }
     <form action={action} className="flex flex-col gap-3 sm:flex-row sm:items-end">
       <label className="block flex-1">
         <span className="mb-2 block text-body-sm font-medium text-on-surface">Nama tampilan</span>
-        <input name="name" defaultValue={initialName} className="input-field" />
+        <input name="name" defaultValue={initialName} className="input-field" required />
       </label>
       <button type="submit" disabled={pending} className="btn-primary px-6 py-3">
         {pending ? "Menyimpan…" : "Simpan"}

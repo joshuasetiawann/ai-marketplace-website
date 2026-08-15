@@ -51,7 +51,7 @@ export default function PayoutClient({
           <form action={acctAction} className="flex flex-col gap-4">
             <label className="block">
               <span className="mb-2 block text-body-sm font-medium text-on-surface">Bank</span>
-              <select name="bank" defaultValue={bank ?? ""} className="input-field cursor-pointer appearance-none">
+              <select name="bank" defaultValue={bank ?? ""} className="input-field cursor-pointer appearance-none" required>
                 <option value="" className="bg-surface-container">Pilih bank…</option>
                 {VA_BANKS.map((b) => (
                   <option key={b.id} value={b.short} className="bg-surface-container">{b.short}</option>
@@ -60,7 +60,7 @@ export default function PayoutClient({
             </label>
             <label className="block">
               <span className="mb-2 block text-body-sm font-medium text-on-surface">Nomor Rekening</span>
-              <input name="account" inputMode="numeric" placeholder="cth. 1234567890" className="input-field" />
+              <input name="account" inputMode="numeric" placeholder="cth. 1234567890" className="input-field" required />
             </label>
             {acctState.error && <p className="text-body-sm text-error">{acctState.error}</p>}
             <div className="flex gap-3">

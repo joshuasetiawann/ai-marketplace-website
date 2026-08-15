@@ -27,18 +27,38 @@ export default function LoginPage() {
         <Suspense fallback={null}>
           <NextField />
         </Suspense>
-        <AuthField label="Email" icon="mail" name="email" type="email" placeholder="kamu@email.com" autoComplete="email" />
+        {/* "Email atau password salah" deliberately does not say which, so it is
+            bound to both fields — a screen reader otherwise announces the error
+            with nothing to tie it to. */}
+        <AuthField
+          label="Email"
+          icon="mail"
+          name="email"
+          type="email"
+          placeholder="kamu@email.com"
+          autoComplete="email"
+          required
+          aria-invalid={!!state.error}
+          aria-describedby={state.error ? "login-error" : undefined}
+        />
         <PasswordField
           name="password"
           placeholder="••••••••"
           autoComplete="current-password"
+          required
+          aria-invalid={!!state.error}
+          aria-describedby={state.error ? "login-error" : undefined}
           right={
             <Link href="/forgot-password" className="text-[12px] text-accent hover:underline">
               Lupa password?
             </Link>
           }
         />
-        {state.error && <p role="alert" className="text-sm text-red-400">{state.error}</p>}
+        {state.error && (
+          <p id="login-error" role="alert" className="text-sm text-red-400">
+            {state.error}
+          </p>
+        )}
         <button type="submit" disabled={pending} className={authSubmitClass}>
           {pending ? "Memproses…" : "Masuk"}
           {!pending && <Icon name="arrow_forward" size={17} />}

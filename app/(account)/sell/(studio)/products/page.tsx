@@ -54,11 +54,14 @@ export default async function SellerProductsPage() {
           {list.map((p) => {
             const s = STATUS[p.status] ?? STATUS.draft;
             return (
-              <div key={p.id} className="flex items-center gap-4 rounded-xl surface-card p-4">
+              // gap-x/gap-y + flex-wrap: at 360px the thumbnail, name, status pill
+              // and action menu could not share one line, and the pill and menu
+              // were clipped off the card. They now drop to a second row.
+              <div key={p.id} className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl surface-card p-4">
                 <div className="h-14 w-16 shrink-0 overflow-hidden rounded-lg">
                   <ModelArtwork seed={p.id} colors={p.art} icon={p.icon} className="h-full w-full" />
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-[8rem] flex-1">
                   <p className="truncate font-display text-body-md font-semibold text-on-surface">{p.name}</p>
                   <p className="text-[12px] text-on-surface-variant">
                     <span className="capitalize">{p.category}</span> ·{" "}

@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
         </div>
       ) : (
         <form action={action} className="space-y-5">
-          <AuthField label="Email" icon="mail" name="email" type="email" placeholder="kamu@email.com" autoComplete="email" />
+          <AuthField label="Email" icon="mail" name="email" type="email" placeholder="kamu@email.com" autoComplete="email" required />
           {state.error && <p role="alert" className="text-sm text-red-400">{state.error}</p>}
           <button type="submit" disabled={pending} className={authSubmitClass}>
             {pending ? "Mengirim…" : "Kirim tautan reset"}

@@ -60,7 +60,7 @@ export default function ProductForm({ product }: { product?: ProductFormValues }
 
       <label className="block">
         <span className={labelCls}>Nama Produk</span>
-        <input name="name" defaultValue={product?.name} placeholder="cth. Aurora Diffusion XL" className={field} />
+        <input name="name" defaultValue={product?.name} placeholder="cth. Aurora Diffusion XL" className={field} required />
       </label>
 
       <label className="block">
@@ -71,7 +71,7 @@ export default function ProductForm({ product }: { product?: ProductFormValues }
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="block">
           <span className={labelCls}>Kategori</span>
-          <select name="category" defaultValue={product?.category ?? ""} className={`${field} cursor-pointer appearance-none`}>
+          <select name="category" defaultValue={product?.category ?? ""} className={`${field} cursor-pointer appearance-none`} required>
             <option value="" className="bg-surface-container">Pilih…</option>
             {CATEGORIES.filter((c) => c.id !== "all").map((c) => (
               <option key={c.id} value={c.id} className="bg-surface-container">{c.label}</option>

@@ -29,7 +29,7 @@ export default async function OpenStorePage() {
       <div className="grid items-start gap-10 lg:grid-cols-[1fr_1.1fr]">
         <div>
           <p className="mb-3 font-label text-label-sm uppercase tracking-widest text-secondary">Mulai Berjualan</p>
-          <h1 className="mb-4 font-display text-headline-lg text-on-surface">Buka toko, jual model AI buatanmu</h1>
+          <h1 className="mb-4 font-display text-headline-md text-on-surface md:text-headline-lg">Buka toko, jual model AI buatanmu</h1>
           <p className="mb-8 text-body-lg text-on-surface-variant">
             Akun <b className="text-on-surface">{profile?.name || user.email}</b> kamu cukup satu — belanja dan jualan dari
             tempat yang sama, persis seperti marketplace favoritmu.

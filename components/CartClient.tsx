@@ -112,7 +112,7 @@ export default function CartClient({
         </div>
       </div>
 
-      <div className="rounded-xl surface-card p-6 lg:sticky lg:top-24">
+      <div className="rounded-xl surface-card p-6 lg:sticky lg:top-[calc(var(--nav-h)+1.5rem)]">
         <h2 className="mb-5 font-display text-title-md text-on-surface">Ringkasan Pesanan</h2>
 
         <form onSubmit={applyPromo} className="mb-5 flex gap-2">

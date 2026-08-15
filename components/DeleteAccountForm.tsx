@@ -26,7 +26,7 @@ export default function DeleteAccountForm() {
       <p className="text-body-sm text-error">
         Ini akan menghapus akunmu secara permanen. Masukkan password untuk konfirmasi.
       </p>
-      <input name="current" type="password" autoComplete="current-password" placeholder="Password" className="input-field" />
+      <input name="current" type="password" autoComplete="current-password" placeholder="Password" className="input-field" required />
       <div className="flex gap-2">
         <button type="submit" disabled={pending} className="btn-soft px-4 py-2 text-body-sm text-error">
           {pending ? "Menghapus…" : "Hapus permanen"}

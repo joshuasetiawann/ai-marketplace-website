@@ -6,6 +6,24 @@ import { toIDR, formatIDR } from "@/lib/pricing";
 
 export const metadata = { title: "Penjualan — Nexora AI" };
 
+/** One sales-row value: label + value on phones, bare value in the sm+ grid. */
+function Cell({
+  label,
+  className = "",
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <span className={`flex items-baseline justify-between gap-3 sm:block ${className}`}>
+      <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-outline sm:hidden">{label}</span>
+      <span className="truncate">{children}</span>
+    </span>
+  );
+}
+
 export default async function SellerSalesPage() {
   const supabase = await createServerClient();
   const {
@@ -51,7 +69,14 @@ export default async function SellerSalesPage() {
           </div>
           <div className="flex flex-col divide-y divide-white/5">
             {list.map((s) => (
-              <div key={s.id} className="grid grid-cols-2 gap-2 px-5 py-3 text-body-sm sm:grid-cols-[1.6fr_1fr_0.6fr_0.9fr_0.9fr] sm:items-center sm:gap-3">
+              // Below sm the header row is hidden, so a bare grid left five
+              // unlabelled values — including two different Rupiah amounts with
+              // nothing to say which was gross and which was net. Stack into a
+              // labelled card there; keep the aligned grid from sm up.
+              <div
+                key={s.id}
+                className="flex flex-col gap-1.5 px-5 py-3 text-body-sm sm:grid sm:grid-cols-[1.6fr_1fr_0.6fr_0.9fr_0.9fr] sm:items-center sm:gap-3"
+              >
                 <div className="min-w-0">
                   <p className="truncate text-on-surface">{s.product_name}</p>
                   <p className="text-[12px] text-on-surface-variant">
@@ -59,10 +84,18 @@ export default async function SellerSalesPage() {
                     {s.method ? ` · ${String(s.method).toUpperCase()}` : ""}
                   </p>
                 </div>
-                <span className="truncate text-on-surface-variant">{s.buyer_name}</span>
-                <span className="text-on-surface-variant sm:text-center">×{s.qty}</span>
-                <span className="text-on-surface sm:text-right">{formatIDR(toIDR(Number(s.gross)))}</span>
-                <span className="text-success sm:text-right">{formatIDR(toIDR(Number(s.net)))}</span>
+                <Cell label="Pembeli" className="text-on-surface-variant">
+                  {s.buyer_name}
+                </Cell>
+                <Cell label="Qty" className="text-on-surface-variant sm:text-center">
+                  ×{s.qty}
+                </Cell>
+                <Cell label="Kotor" className="text-on-surface sm:text-right">
+                  {formatIDR(toIDR(Number(s.gross)))}
+                </Cell>
+                <Cell label="Bersih" className="text-success sm:text-right">
+                  {formatIDR(toIDR(Number(s.net)))}
+                </Cell>
               </div>
             ))}
           </div>

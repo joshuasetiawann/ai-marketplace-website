@@ -29,7 +29,11 @@ export default async function SellerEarningsPage() {
 
       <div className="rounded-xl border border-primary-container/30 bg-primary-container/5 p-6">
         <p className="text-body-sm text-on-surface-variant">Saldo tersedia untuk dicairkan</p>
-        <p className="mt-1 font-display text-display-md text-primary-container">{formatIDR(toIDR(earnings.available))}</p>
+        {/* Rupiah runs long — "Rp 12.345.678" needs ~420px at the old fixed 56px,
+            which overflowed every phone. Scale it like the marketplace headings do. */}
+        <p className="mt-1 font-display text-headline-md leading-tight text-primary-container md:text-display-md">
+          {formatIDR(toIDR(earnings.available))}
+        </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <Link
             href="/sell/payouts"

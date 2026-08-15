@@ -16,7 +16,7 @@ export default function AboutPage() {
       <GlowOrb className="left-1/2 top-0 h-[400px] w-[600px] -translate-x-1/2" />
       <div className="text-center">
         <p className="font-label text-label-sm uppercase tracking-widest text-primary-container">Misi Kami</p>
-        <h1 className="mt-3 font-display text-headline-lg text-on-surface">
+        <h1 className="mt-3 font-display text-headline-md text-on-surface md:text-headline-lg">
           Marketplace AI yang <span className="text-gradient">presisi & mewah</span>
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-body-lg text-on-surface-variant">

@@ -28,7 +28,7 @@ export default function OpenStoreForm() {
       <div className="flex flex-col gap-4">
         <label className="block">
           <span className="mb-2 block text-body-sm font-medium text-on-surface">Nama Toko</span>
-          <input name="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="cth. Synthetix Labs" className="input-field" />
+          <input name="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="cth. Synthetix Labs" className="input-field" required />
           {handle && (
             <span className="mt-1.5 block text-[12px] text-on-surface-variant">
               URL toko: <span className="font-mono text-primary-container">nexora.ai/creator/{handle}</span>
@@ -38,7 +38,7 @@ export default function OpenStoreForm() {
         <label className="block">
           <span className="mb-2 block text-body-sm font-medium text-on-surface">Kategori Utama</span>
           <div className="relative">
-            <select name="category" defaultValue="" className="input-field cursor-pointer appearance-none pr-10">
+            <select name="category" defaultValue="" className="input-field cursor-pointer appearance-none pr-10" required>
               <option value="" className="bg-surface-container">Pilih kategori…</option>
               {CATEGORIES.filter((c) => c.id !== "all").map((c) => (
                 <option key={c.id} value={c.id} className="bg-surface-container">

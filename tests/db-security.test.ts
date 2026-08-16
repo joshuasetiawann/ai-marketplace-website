@@ -65,6 +65,25 @@ describe.skipIf(!run)("DB security (RLS + guards + RPCs)", () => {
     expect(error).toBeTruthy();
   });
 
+  it("hides profiles.role from signed-in users while is_admin() still answers", async () => {
+    const { error } = await user.from("profiles").select("id, role");
+    expect(error).toBeTruthy(); // column-level grant, not a row filter
+    expect((await user.rpc("is_admin")).data).toBe(false);
+    expect((await admin.rpc("is_admin")).data).toBe(true);
+  });
+
+  it("stops a seller from verifying or re-pointing their own payout account", async () => {
+    // Direct column write — the flag request_payout() trusts before money moves.
+    const direct = await user.from("stores").update({ payout_status: "verified" }).eq("owner_id", uid);
+    expect(direct.error).toBeTruthy();
+    // Swapping the destination while keeping an existing 'verified' flag.
+    const swap = await user.from("stores").update({ payout_account_masked: "••••9999" }).eq("owner_id", uid);
+    expect(swap.error).toBeTruthy();
+    // The admin RPC is not reachable from a non-admin session either.
+    const rpc = await user.rpc("set_payout_account_status", { p_owner: uid, p_status: "verified" });
+    expect(rpc.error).toBeTruthy();
+  });
+
   it("validates promo codes server-side", async () => {
     const { data: valid } = await user.rpc("validate_promo", { p_code: "NEXORA10", p_subtotal: 100 });
     expect(Number(valid)).toBe(10);

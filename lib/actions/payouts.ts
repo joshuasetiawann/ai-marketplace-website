@@ -40,15 +40,14 @@ export async function savePayoutAccount(_prev: PayoutState, formData: FormData):
   if (blocked) return blocked;
 
   const masked = "••••" + digits.slice(-4);
-  // ponytail: "verified" here means "an account is on file", not "we checked it
-  // belongs to this seller" — there is no penny-drop or name match. The UI no
-  // longer claims otherwise. Upgrade path when real money moves: write
-  // 'pending' instead and add an approval action to /admin/payouts, which
-  // request_payout() already gates on (it requires payout_status = 'verified').
-  const { error } = await supabase
-    .from("stores")
-    .update({ payout_bank: bank, payout_account_masked: masked, payout_status: "verified" })
-    .eq("owner_id", user.id);
+  // Via RPC, not a table update: the payout columns are no longer writable by
+  // the owner's own role, because request_payout() treats payout_status =
+  // 'verified' as proof the destination is real. The RPC always writes
+  // 'pending', so changing the account re-opens admin verification.
+  const { error } = await supabase.rpc("save_payout_account", {
+    p_bank: bank,
+    p_account_masked: masked,
+  });
   if (error) {
     logError("savePayoutAccount failed", error, { userId: user.id });
     return { error: dbMessage(error) };

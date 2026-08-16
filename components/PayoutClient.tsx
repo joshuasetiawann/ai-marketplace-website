@@ -10,15 +10,19 @@ import { toIDR, formatIDR } from "@/lib/pricing";
 export default function PayoutClient({
   bank,
   accountMasked,
-  verified,
+  status,
   available,
 }: {
   bank: string | null;
   accountMasked: string | null;
-  verified: boolean;
+  /** stores.payout_status — 'none' | 'pending' (admin belum verifikasi) | 'verified' */
+  status: string;
   available: number;
 }) {
-  const [editing, setEditing] = useState(!verified);
+  const verified = status === "verified";
+  const pending = status === "pending";
+  const saved = verified || pending;
+  const [editing, setEditing] = useState(!saved);
   const [acctState, acctAction, acctPending] = useActionState(savePayoutAccount, {} as PayoutState);
   const [payState, payAction, payPending] = useActionState(requestPayout, {} as PayoutState);
   const [amount, setAmount] = useState(available);
@@ -33,17 +37,21 @@ export default function PayoutClient({
           <Icon name="account_balance" size={20} className="text-primary-container" /> Rekening Pencairan
         </h3>
 
-        {verified && !editing ? (
-          <div className="flex items-center justify-between">
+        {saved && !editing ? (
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-body-md text-on-surface">
                 {bank} <span className="font-mono text-on-surface-variant">{accountMasked}</span>
               </p>
-              {/* "Terverifikasi" claimed a check that never happens — no penny
-                  drop, no name match. Say what is actually true. */}
-              <span className="inline-flex items-center gap-1 text-[12px] text-on-surface-variant">
-                <Icon name="check_circle" size={13} /> Rekening tersimpan
-              </span>
+              {pending ? (
+                <span className="inline-flex items-center gap-1 text-[12px] text-secondary">
+                  <Icon name="hourglass_top" size={13} /> Menunggu verifikasi admin
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[12px] text-success">
+                  <Icon name="check_circle" size={13} /> Terverifikasi admin
+                </span>
+              )}
             </div>
             <button onClick={() => setEditing(true)} className="btn-soft px-4 py-2 text-body-sm">
               Ubah
@@ -69,7 +77,7 @@ export default function PayoutClient({
               <button type="submit" disabled={acctPending} className="btn-primary px-6 py-2.5">
                 {acctPending ? "Menyimpan…" : "Simpan rekening"}
               </button>
-              {verified && (
+              {saved && (
                 <button type="button" onClick={() => setEditing(false)} className="btn-soft px-5 py-2.5">
                   Batal
                 </button>
@@ -77,7 +85,12 @@ export default function PayoutClient({
             </div>
           </form>
         )}
-        {acctState.ok && <p className="mt-3 text-body-sm text-success">Rekening tersimpan. Pastikan nomornya benar — pencairan dikirim ke rekening ini.</p>}
+        {acctState.ok && (
+          <p className="mt-3 text-body-sm text-success">
+            Rekening tersimpan dan dikirim ke admin untuk diverifikasi. Pencairan bisa diajukan setelah verifikasi
+            selesai.
+          </p>
+        )}
       </section>
 
       {/* Request payout */}
@@ -110,7 +123,13 @@ export default function PayoutClient({
             <Icon name="send" size={18} /> {payPending ? "Memproses…" : "Cairkan"}
           </button>
         </form>
-        {!verified && <p className="mt-3 text-[12px] text-on-surface-variant">Tambahkan rekening pencairan dulu.</p>}
+        {!verified && (
+          <p className="mt-3 text-[12px] text-on-surface-variant">
+            {pending
+              ? "Rekening kamu sedang diverifikasi admin. Pencairan aktif setelah disetujui."
+              : "Tambahkan rekening pencairan dulu."}
+          </p>
+        )}
         {payState.error && <p className="mt-3 text-body-sm text-error">{payState.error}</p>}
         {payState.ok && <p className="mt-3 text-body-sm text-success">Permintaan pencairan dikirim & sedang diproses.</p>}
       </section>

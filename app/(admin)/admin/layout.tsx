@@ -10,8 +10,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/admin");
 
-  const { data: profile } = await supabase.from("profiles").select("role, name").eq("id", user.id).single();
-  if (profile?.role !== "admin") redirect("/");
+  // role is not selectable over the API any more — ask is_admin() instead (see
+  // supabase/migrations/…_close_partial_findings.sql).
+  const [{ data: isAdmin }, { data: profile }] = await Promise.all([
+    supabase.rpc("is_admin"),
+    supabase.from("profiles").select("name").eq("id", user.id).single(),
+  ]);
+  if (isAdmin !== true) redirect("/");
 
   return (
     <div className="flex min-h-screen flex-col">

@@ -15,8 +15,12 @@ async function requireAdmin() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/admin");
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin") redirect("/");
+  // profiles.role is no longer selectable over the API (it let any signed-in
+  // user enumerate admins). is_admin() answers the same question without
+  // exposing the column — it is SECURITY DEFINER and only reads the caller's
+  // own row.
+  const { data: admin } = await supabase.rpc("is_admin");
+  if (admin !== true) redirect("/");
   return { supabase, user };
 }
 
@@ -52,6 +56,32 @@ export async function refundOrder(id: string): Promise<AdminResult> {
   }
   revalidatePath("/admin/orders");
   revalidatePath("/orders");
+  return { ok: true };
+}
+
+/**
+ * Approve or reject a seller's payout account.
+ *
+ * Sellers can only put an account into 'pending'; this is the only path to
+ * 'verified', which is what request_payout() requires before money can leave
+ * the platform. The RPC re-checks is_admin() server-side — the guard above is
+ * for the UI, not the authorization.
+ */
+export async function setPayoutAccountStatus(
+  ownerId: string,
+  action: "approve" | "reject",
+): Promise<AdminResult> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("set_payout_account_status", {
+    p_owner: ownerId,
+    p_status: action === "approve" ? "verified" : "none",
+  });
+  if (error) {
+    logError("set_payout_account_status failed", error, { ownerId, action });
+    return { error: dbMessage(error) };
+  }
+  revalidatePath("/admin/payouts");
+  revalidatePath("/sell/payouts");
   return { ok: true };
 }
 

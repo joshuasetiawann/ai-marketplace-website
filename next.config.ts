@@ -1,5 +1,47 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV === "development";
+
+// The only cross-origin traffic the browser makes is to Supabase (auth, 2FA
+// enrol/verify, realtime). Payment gateways are called server-side and the user
+// leaves via a full-page redirect, so they need no directive here.
+const supabaseOrigin = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").origin;
+  } catch {
+    return "";
+  }
+})();
+const connectSrc = ["'self'", supabaseOrigin, supabaseOrigin.replace(/^http/, "ws")]
+  .filter(Boolean)
+  .concat(isDev ? ["ws:"] : []); // dev: HMR socket
+
+const csp = [
+  "default-src 'self'",
+  // ponytail: 'unsafe-inline' instead of a nonce. Next inlines its RSC payload
+  // bootstrap in every document, and reading a nonce from proxy.ts opts every
+  // page into dynamic rendering — which would undo the "use cache" catalog
+  // layer. 'self' still blocks injected <script src="//evil">, and connect-src
+  // below caps where a payload could exfiltrate to. Upgrade to nonce +
+  // 'strict-dynamic' if this app ever renders user-authored HTML.
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  "style-src 'self' 'unsafe-inline'",
+  // data: is required — the 2FA enrolment QR is a data: URI.
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  `connect-src ${connectSrc.join(" ")}`,
+  "worker-src 'self' blob:",
+  "frame-src 'none'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+  // Tied to the backend's scheme, not NODE_ENV: a production build run against
+  // a local http Supabase would otherwise have every API call upgraded to
+  // https and fail.
+  ...(supabaseOrigin.startsWith("https:") ? ["upgrade-insecure-requests"] : []),
+].join("; ");
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
@@ -7,26 +49,7 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
   // HSTS only takes effect over HTTPS (ignored on localhost/http).
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
-  // Deliberately narrow: the four directives below need no nonce and cannot
-  // break this app (no iframes, no third-party form posts, no plugins), but
-  // they are what turns an injected script or a rewritten <base> from
-  // "executes" into "blocked". script-src/style-src are NOT set — Next inlines
-  // both, so locking them down needs nonce plumbing through the App Router;
-  // that is the next step, not a reason to ship none of this.
-  {
-    key: "Content-Security-Policy",
-    // No default-src on purpose: it would fall through to connect-src and cut
-    // the browser's calls to Supabase (2FA enrol/verify), and to img-src and
-    // cut the data: QR code. Adding those back means enumerating every origin
-    // and inlining 'unsafe-inline' for Next's own bootstrap — a bigger change
-    // that deserves its own pass with a live app in front of it.
-    value: [
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "object-src 'none'",
-    ].join("; "),
-  },
+  { key: "Content-Security-Policy", value: csp },
 ];
 
 const nextConfig: NextConfig = {

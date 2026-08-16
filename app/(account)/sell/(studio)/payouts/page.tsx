@@ -36,7 +36,7 @@ export default async function SellerPayoutsPage() {
       <PayoutClient
         bank={store?.payout_bank ?? null}
         accountMasked={store?.payout_account_masked ?? null}
-        verified={store?.payout_status === "verified"}
+        status={store?.payout_status ?? "none"}
         available={earnings.available}
       />
 

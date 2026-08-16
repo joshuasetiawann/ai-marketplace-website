@@ -1,13 +1,18 @@
 import AdminUserActions from "@/components/AdminUserActions";
-import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata = { title: "Pengguna — Console" };
 
 export default async function AdminUsersPage() {
-  const supabase = await createServerClient();
   const user = await getCurrentUser();
 
-  const { data: profiles } = await supabase
+  // profiles.role is not selectable over the API — column privileges are
+  // per-role, so "only admins may read it" cannot be a grant. Read it
+  // server-side with the service-role client instead, which is safe because the
+  // admin layout has already established the caller is an admin. Same pattern
+  // the seller payout page uses for bank details.
+  const { data: profiles } = await createAdminClient()
     .from("profiles")
     .select("id,name,role,is_seller,created_at")
     .order("created_at", { ascending: false });

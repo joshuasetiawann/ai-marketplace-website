@@ -1,6 +1,7 @@
 import ExploreClient from "@/components/ExploreClient";
 import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { getExploreCatalog, searchExploreCatalog, type ExploreParams } from "@/lib/catalog-data";
+import { clampPage, hasMorePages } from "@/lib/nav";
 import { PRICE_MAX_IDR, PRICE_STEP_IDR } from "@/lib/pricing";
 
 export const metadata = { title: "Jelajahi Model — Nexora AI" };
@@ -37,11 +38,8 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
     minRating: Number(sp.rating) || 0,
     maxIdr: parseMaxIdr(sp.max),
     sort: sp.sort ?? "trending",
-    // The query uses a cumulative range, so page N asks Postgres for
-    // N × EXPLORE_PAGE_SIZE rows in a single statement. Unclamped, ?page=100000
-    // turns this public URL into a 1.2M-row scan — and mints a cache entry per
-    // value on the way. 50 pages = 600 models, well past any real browse depth.
-    page: Math.min(50, Math.max(1, Number(sp.page) || 1)),
+    // Unclamped, ?page=100000 turns this public URL into a 1.2M-row scan.
+    page: clampPage(sp.page),
   };
 
   // Filter combos are cached; free-text search queries live (unbounded keys).
@@ -56,7 +54,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
     <ExploreClient
       models={models}
       total={total}
-      hasMore={models.length < total}
+      hasMore={hasMorePages(models.length, total, params.page)}
       wishlistedIds={(wishlistRes.data ?? []).map((w) => w.product_id)}
       loggedIn={!!user}
       params={{

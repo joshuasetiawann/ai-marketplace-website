@@ -391,8 +391,9 @@
     <p class="lede">
       Pemeriksaan menyeluruh atas seluruh kode aplikasi: 14 migrasi Postgres berikut RLS-nya,
       12 modul Server Action, alur pembayaran, dan 41 halaman/komponen antarmuka.
-      37 temuan, diurutkan dari yang paling mendesak &mdash; seluruhnya sudah dikerjakan
-      dalam empat commit di <span class="mono">fix/audit-2026-08-16</span>.
+      37 temuan, diurutkan dari yang paling mendesak &mdash; seluruhnya sudah ditutup penuh
+      dalam lima commit di <span class="mono">fix/audit-2026-08-16</span>, diverifikasi terhadap
+      Postgres hidup dan build produksi di peramban.
     </p>
     <div class="meta">
       <span>16 AGUSTUS 2026</span>
@@ -409,32 +410,32 @@
     <div class="tile t-hi"><span class="n">4</span><span class="k">Prioritas tinggi</span></div>
     <div class="tile t-md"><span class="n">15</span><span class="k">Prioritas sedang</span></div>
     <div class="tile t-lo"><span class="n">18</span><span class="k">Prioritas rendah</span></div>
-    <div class="tile t-all"><span class="n">37<span style="font-size:16px;color:var(--ink-3)">/37</span></span><span class="k">Sudah dikerjakan</span></div>
+    <div class="tile t-all"><span class="n">37<span style="font-size:16px;color:var(--ink-3)">/37</span></span><span class="k">Ditutup penuh</span></div>
   </div>
 
   <div class="panel" style="border-left:2px solid var(--md); margin-bottom:20px;">
-    <h3>Baca ini sebelum merge</h3>
+    <h3>Status akhir</h3>
     <ul class="checks">
       <li>
-        <b>Dua migrasi baru belum pernah dijalankan.</b> Docker mati sepanjang sesi ini, jadi
-        <code>cart_integrity</code> dan <code>profiles_exposure</code> ditulis dari pembacaan skema, bukan
-        diuji terhadap Postgres hidup. Jalankan <code>supabase db reset</code> lalu
-        <code>npm test</code> sebelum merge &mdash; suite <code>db-security.test.ts</code> yang ter-skip
-        adalah yang memverifikasi RLS-nya.
+        <b>Ketiga migrasi baru sudah dijalankan terhadap Postgres hidup.</b> Docker akhirnya menyala:
+        <code>supabase db reset</code> menerapkan <code>cart_integrity</code>, <code>profiles_exposure</code>,
+        dan <code>close_partial_findings</code> tanpa error, lalu <b>23 dari 23 test lulus</b> &mdash;
+        termasuk 8 test integrasi RLS/RPC di <code>db-security.test.ts</code> yang sebelumnya ter-skip.
+      </li>
+      <li>
+        <b>Tidak ada lagi temuan yang ditutup sebagian.</b> SEC-05, SEC-06, dan SEC-07 sudah ditutup penuh
+        di commit <code>1efa521</code>. Rinciannya di masing-masing entri di bawah.
       </li>
       <li>
         <b>Yang sudah diverifikasi:</b> <code>tsc --noEmit</code> bersih, <code>eslint</code> bersih,
-        <code>next build</code> sukses (semua 41 rute terkompilasi), 15 unit test lulus &mdash; 5 di antaranya
-        baru, menguji batas kuantitas keranjang.
+        <code>next build</code> sukses (42 rute), 23 test lulus, dan satu putaran browser di
+        <code>/</code>, <code>/settings</code> (enrol 2FA + QR <code>data:</code>),
+        <code>/admin/payouts</code>, <code>/admin/users</code> tanpa satu pun pelanggaran CSP di konsol.
       </li>
       <li>
         <b>SEC-02 diturunkan dari Tinggi ke Sedang</b> setelah dicek ulang: middleware sudah memaksa AAL2
         untuk <code>/settings</code>, jadi ini bukan bypass 2FA melainkan hilangnya langkah konfirmasi.
         Tetap diperbaiki, tapi bobotnya dikoreksi.
-      </li>
-      <li>
-        <b>Tiga temuan ditutup sebagian, dan itu disengaja</b> &mdash; SEC-05, SEC-06, SEC-07. Alasan dan
-        jalur lanjutannya ada di masing-masing entri di bawah.
       </li>
     </ul>
   </div>
@@ -451,7 +452,7 @@
         <li><b>Aset unduhan digerbangi entitlement</b> lewat RLS di <code>product_assets</code>, bukan lewat UI.</li>
         <li><b>Tanda tangan webhook Midtrans</b> (SHA-512) diverifikasi sebelum order disetel.</li>
         <li><b>Re-autentikasi</b> sudah ada di ganti password &amp; hapus akun dari halaman Pengaturan.</li>
-        <li><code>tsc --noEmit</code> <b>bersih</b>, <code>eslint</code> <b>bersih</b>, 10 unit test lulus.</li>
+        <li><code>tsc --noEmit</code> <b>bersih</b>, <code>eslint</code> <b>bersih</b>, dan suite test sudah ada sejak awal &mdash; 10 unit test saat audit dimulai, 23 sekarang.</li>
       </ul>
     </div>
 
@@ -462,7 +463,7 @@
       </p>
       <ul class="checks">
         <li><b>Diperiksa:</b> 14 migrasi SQL (skema, RLS, grant, trigger, RPC), 12 modul Server Action, adapter pembayaran (simulated/Midtrans/Xendit), middleware sesi, seluruh route <code>app/</code> dan komponen <code>components/</code>, konfigurasi Next/ESLint/Vitest/Playwright.</li>
-        <li><b>Tidak diverifikasi runtime:</b> <code>tests/db-security.test.ts</code> gagal karena Supabase lokal tidak menyala (Docker mati) &mdash; 6 test RLS ter-skip. Temuan basis data di bawah berasal dari pembacaan migrasi.</li>
+        <li><b>Temuan berasal dari pembacaan kode</b>, tapi perbaikannya diverifikasi runtime: 17 migrasi diterapkan ulang dari nol ke Postgres lokal, 23 test lulus (8 di antaranya menembak RLS/RPC sungguhan), dan build produksi ditelusuri di peramban.</li>
         <li><b>Tidak dijalankan:</b> uji lintas peramban, Lighthouse, dan audit kontras warna otomatis.</li>
       </ul>
     </div>
@@ -592,15 +593,21 @@
         Pola yang sama belum diterapkan ke <code>profiles</code>.
       </p>
       <div class="fix">
-        <b>Perbaikan &mdash; sebagian, disengaja</b>
-        <code>revoke select on profiles from anon</code> lalu
-        <code>grant select (id, name, art, is_seller, created_at)</code> &mdash; enumerasi anonim tertutup.
+        <b>Perbaikan &mdash; ditutup penuh</b>
+        SELECT dicabut dari <code>anon</code> <em>dan</em> <code>authenticated</code>, lalu di-grant ulang
+        per kolom: <code>id, name, art, is_seller, created_at</code>. Kolom <code>two_factor</code> dihapus
+        seluruhnya. <code>role</code> kini tidak terbaca lewat API oleh siapa pun.
         <br /><br />
-        <b>Sisa yang belum ditutup:</b> <code>authenticated</code> masih memegang akses seluruh kolom,
-        karena konsol admin menampilkan peran setiap pengguna dan hak kolom bersifat per-peran, bukan
-        per-baris. Jadi pengguna yang sudah login tetap bisa membaca peran orang lain. Menutupnya menuntut
-        view terbatas plus penyesuaian kueri konsol admin &mdash; perubahan tersendiri, bukan pergantian
-        <code>grant</code>.
+        Hak kolom bersifat per-peran, bukan per-baris, jadi "hanya admin boleh membacanya" memang tidak bisa
+        dinyatakan sebagai <code>grant</code>. Dua pembaca yang sah dipindahkan jalurnya:
+        <b>(1)</b> pertanyaan "apakah saya admin?" dijawab <code>is_admin()</code>, fungsi
+        <code>security definer</code> yang hanya menengok baris pemanggilnya sendiri &mdash; dipakai di
+        <code>requireAdmin()</code> dan di layout admin; <b>(2)</b> daftar pengguna di konsol dibaca lewat
+        klien service-role di server, di balik penjaga layout admin &mdash; pola yang sama dengan halaman
+        payout penjual untuk detail rekening.
+        <br /><br />
+        Diverifikasi: test <em>"hides profiles.role from signed-in users while is_admin() still answers"</em>
+        di <code>db-security.test.ts</code>.
       </div>
     </div>
 
@@ -619,15 +626,28 @@
         Ini menyesatkan penjual sekaligus membuka jalan pencairan ke rekening yang salah ketik.
       </p>
       <div class="fix">
-        <b>Perbaikan &mdash; sebagian, disengaja</b>
-        Yang diambil adalah opsi jujur: UI berhenti mengklaim "Terverifikasi" dan kini berbunyi
-        "Rekening tersimpan", disertai pengingat bahwa dana dikirim ke nomor itu. Alur pencairan tetap
-        berjalan.
+        <b>Perbaikan &mdash; ditutup penuh</b>
+        Verifikasi rekening kini benar-benar ada. Penjual hanya bisa <em>mengajukan</em>: rekening masuk
+        berstatus <code>pending</code>, admin menyetujui atau menolak dari <code>/admin/payouts</code> lewat
+        <code>set_payout_account_status()</code>, dan barulah <code>request_payout()</code> mengizinkan dana
+        keluar. Halaman <code>/sell/payouts</code> menampilkan status "Menunggu verifikasi admin".
         <br /><br />
-        <b>Sisa yang belum ditutup:</b> verifikasi rekening yang sebenarnya. Menulis <code>pending</code>
-        memerlukan aksi persetujuan di <code>/admin/payouts</code>, dan tanpa itu setiap penjual langsung
-        terkunci dari pencairan &mdash; jadi jalur lanjutannya ditandai <code>ponytail:</code> di
-        <code>lib/actions/payouts.ts</code>, bukan dikerjakan setengah jalan.
+        Menulis <code>pending</code> dari Server Action saja ternyata belum cukup &mdash; pemilik toko masih
+        memegang UPDATE atas kolom payout, jadi ia bisa mem-PATCH <code>payout_status=verified</code>
+        langsung lewat PostgREST, atau (lebih buruk) mempertahankan status terverifikasi lalu mengganti
+        <code>payout_bank</code>/<code>payout_account_masked</code> ke rekening lain sesudahnya. Grant
+        tingkat-tabel dicabut &mdash; REVOKE per-kolom terhadap peran yang memegang UPDATE tingkat-tabel
+        adalah <em>no-op senyap</em> di Postgres &mdash; sehingga dua RPC <code>security definer</code>
+        menjadi satu-satunya jalur tulis, dan <code>save_payout_account()</code> selalu mengembalikan status
+        ke <code>pending</code>. Mengganti rekening otomatis membuka ulang verifikasi.
+        <br /><br />
+        Baris lama yang terlanjur <code>verified</code> dikembalikan ke <code>pending</code> oleh migrasi:
+        semuanya klaim sepihak, dan mewariskannya diam-diam justru menggugurkan tujuan perbaikan ini.
+        <br /><br />
+        Diverifikasi: test <em>"stops a seller from verifying or re-pointing their own payout account"</em>,
+        plus satu putaran manual penuh &mdash; simpan &rarr; <code>pending</code> &rarr; pencairan ditolak
+        &rarr; admin setuju &rarr; <code>verified</code> &rarr; ganti rekening &rarr; kembali
+        <code>pending</code>.
       </div>
     </div>
 
@@ -641,17 +661,33 @@
         CSP adalah lapisan yang mengubah skrip suntikan semacam SEC-04 dari "tereksekusi" menjadi "diblokir".
       </p>
       <div class="fix">
-        <b>Perbaikan &mdash; sebagian, disengaja</b>
-        Terpasang: <code>frame-ancestors 'none'</code>, <code>base-uri 'self'</code>,
-        <code>form-action 'self'</code>, <code>object-src 'none'</code> &mdash; tanpa nonce, tanpa risiko
-        merusak apa pun di aplikasi ini.
+        <b>Perbaikan &mdash; ditutup penuh</b>
+        CSP lengkap kini terkirim di seluruh rute:
         <br /><br />
-        <b>Sengaja tidak dipasang:</b> <code>default-src 'self'</code>. Ia menurun ke
-        <code>connect-src</code> dan akan memutus panggilan peramban ke Supabase (enrol/verifikasi 2FA),
-        lalu ke <code>img-src</code> dan memutus QR ber-skema <code>data:</code>. Menambahkannya kembali
-        berarti mendaftar tiap origin dan menyisipkan <code>'unsafe-inline'</code> untuk bootstrap Next
-        sendiri &mdash; pekerjaan yang butuh aplikasi hidup di depan mata, bukan alasan untuk tidak
-        mengirim apa pun.
+        <code>default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
+        img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' &lt;supabase&gt; &lt;wss
+        supabase&gt;; worker-src 'self' blob:; frame-src 'none'; frame-ancestors 'none'; base-uri 'self';
+        form-action 'self'; object-src 'none'; upgrade-insecure-requests</code>
+        <br /><br />
+        <code>connect-src</code> diturunkan dari <code>NEXT_PUBLIC_SUPABASE_URL</code> (https + wss), jadi
+        tidak ada origin yang perlu ditulis manual. <code>data:</code> dipertahankan di <code>img-src</code>
+        untuk QR 2FA. <code>upgrade-insecure-requests</code> diikat ke skema backend, bukan ke
+        <code>NODE_ENV</code>, supaya build produksi yang diarahkan ke Supabase lokal (http) tetap jalan.
+        Gerbang pembayaran dipanggil dari server dan pengguna berpindah lewat redirect satu halaman penuh,
+        jadi tidak butuh direktif sendiri.
+        <br /><br />
+        <b>Satu kompromi yang disengaja:</b> <code>script-src</code> memakai <code>'unsafe-inline'</code>,
+        bukan nonce. Next menyisipkan bootstrap RSC inline di setiap dokumen, dan membaca nonce dari
+        <code>proxy.ts</code> akan memaksa <em>seluruh</em> halaman menjadi dynamic rendering &mdash;
+        membatalkan lapisan katalog <code>"use cache"</code> yang baru dibangun di PERF-01…04.
+        <code>'self'</code> tetap memblokir <code>&lt;script src="//evil"&gt;</code> dan
+        <code>connect-src</code> membatasi ke mana payload bisa mengirim data keluar. Ditandai
+        <code>ponytail:</code> di <code>next.config.ts</code> dengan jalur naiknya (nonce +
+        <code>'strict-dynamic'</code>) bila aplikasi ini kelak merender HTML tulisan pengguna.
+        <br /><br />
+        Diverifikasi di peramban terhadap build produksi: <code>/</code>, <code>/settings</code> (enrol 2FA
+        &mdash; panggilan Supabase dari peramban <em>dan</em> QR <code>data:</code> berhasil),
+        <code>/admin/payouts</code>, <code>/admin/users</code> &mdash; nol pelanggaran CSP di konsol.
       </div>
     </div>
 
@@ -1256,7 +1292,7 @@
   <section id="rencana">
     <div class="sec-head">
       <h2>Hasil perbaikan</h2>
-      <span class="count">4 commit &middot; branch fix/audit-2026-08-16</span>
+      <span class="count">5 commit &middot; branch fix/audit-2026-08-16</span>
     </div>
     <p class="sec-note">
       Dikerjakan berurutan dan di-commit terpisah per gelombang, supaya tiap kelompok bisa ditinjau
@@ -1305,6 +1341,12 @@
             <td class="ids">SEC-03, SEC-05 &hellip; SEC-10<br />BUG-03, BUG-06 &hellip; BUG-11<br />UX-08, UX-09, UX-12<br />PERF-01 &hellip; PERF-04</td>
             <td class="ids">55 berkas<br />+1 migrasi</td>
           </tr>
+          <tr>
+            <td class="wave">1efa521</td>
+            <td><b>Tutup sisa tiga temuan.</b> <code>role</code> dicabut dari <code>authenticated</code> dan dialihkan ke <code>is_admin()</code> + klien service-role; kolom payout dicabut dari pemilik toko sehingga hanya RPC <code>security definer</code> yang boleh menulis, dengan antrean verifikasi admin; CSP lengkap dengan <code>default-src</code>.</td>
+            <td class="ids">SEC-05<br />SEC-06<br />SEC-07</td>
+            <td class="ids">11 berkas<br />+1 migrasi, +2 test</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1312,16 +1354,17 @@
     <div class="panel" style="margin-top:20px;">
       <h3>Langkah berikutnya</h3>
       <ul class="checks">
-        <li><b>Nyalakan Docker, jalankan <code>supabase db reset</code> lalu <code>npm test</code></b> &mdash; itu yang mengaktifkan 6 test RLS yang ter-skip dan memverifikasi dua migrasi baru.</li>
-        <li><b>Klik-uji alur reset password dan 2FA</b>, dua jalur yang paling banyak berubah dan paling tidak bisa diverifikasi tanpa basis data hidup.</li>
-        <li><b>Identitas git di-set lokal-repo</b> (<code>thunityproject</code>) karena mesin ini belum punya &mdash; ubah dengan <code>git config user.name</code> sebelum push kalau perlu.</li>
+        <li><b>Jalankan ketiga migrasi di Supabase produksi</b> (<code>supabase db push</code>). Perhatikan efeknya: setiap rekening payout yang sudah ada dikembalikan ke <code>pending</code>, jadi antrean di <code>/admin/payouts</code> perlu dibersihkan sekali sebelum penjual bisa mencairkan lagi.</li>
+        <li><b>Klik-uji alur reset password lewat tautan email</b> &mdash; satu-satunya jalur yang belum diuji di peramban, karena butuh email masuk (Mailpit di <code>127.0.0.1:54324</code> untuk lokal).</li>
+        <li><b>Kalau nanti ada halaman yang merender HTML tulisan pengguna</b>, naikkan <code>script-src</code> ke nonce + <code>'strict-dynamic'</code> dan terima biaya dynamic rendering-nya. Sampai saat itu, <code>'unsafe-inline'</code> adalah tukar-tambah yang sadar.</li>
+        <li><b>Identitas git di-set lokal-repo</b> (<code>thunityproject</code>) karena mesin ini belum punya &mdash; ubah dengan <code>git config user.name</code> kalau perlu.</li>
       </ul>
     </div>
   </section>
 
   <div class="foot">
     <span>NEXORA AI &middot; AUDIT 2026-08-16</span>
-    <span>37 TEMUAN &middot; 37 DIKERJAKAN &middot; 3 DITUTUP SEBAGIAN</span>
+    <span>37 TEMUAN &middot; 37 DITUTUP &middot; 23/23 TEST LULUS</span>
   </div>
 
 </div>

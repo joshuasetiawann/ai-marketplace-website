@@ -2,6 +2,7 @@ import { createServerClient, getCurrentUser } from "@/lib/supabase/server";
 import Navbar, { type NavUser } from "@/components/Navbar";
 import MobileNav from "@/components/MobileNav";
 import Footer from "@/components/Footer";
+import { getCartCount } from "@/lib/cart";
 
 /**
  * The application chrome — header, bottom nav, footer — shared by every
@@ -27,9 +28,10 @@ export default async function AppShell({ children }: { children: React.ReactNode
   if (user) {
     const [{ data: profile }, cart, wishlist] = await Promise.all([
       supabase.from("profiles").select("name, is_seller").eq("id", user.id).single(),
-      // no { count: "exact" }: the badge needs the summed quantity, not the row
-      // count, so the extra counting query Postgres runs for it was pure waste.
-      supabase.from("cart_items").select("qty").eq("user_id", user.id),
+      // Through getCartCount, not a bare count of cart_items: a row survives its
+      // product leaving 'published', and counting those made the badge claim
+      // items the cart page could not show.
+      getCartCount(supabase, user.id),
       supabase.from("wishlist_items").select("product_id", { count: "exact", head: true }).eq("user_id", user.id),
     ]);
     navUser = {
@@ -37,7 +39,7 @@ export default async function AppShell({ children }: { children: React.ReactNode
       email: user.email || "",
       isSeller: profile?.is_seller ?? false,
     };
-    cartCount = (cart.data ?? []).reduce((n, r) => n + (r.qty ?? 1), 0);
+    cartCount = cart;
     wishlistCount = wishlist.count ?? 0;
   }
 

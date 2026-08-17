@@ -3,15 +3,18 @@
 import { createServerClient } from "@/lib/supabase/server";
 import { allow } from "@/lib/ratelimit";
 import { logError } from "@/lib/log";
+import { field, LIMITS } from "@/lib/form";
 
 export type ContactState = { error?: string; ok?: boolean };
 
 /** Store an inbound support/contact message (readable only by admins). */
 export async function sendContactMessage(_prev: ContactState, formData: FormData): Promise<ContactState> {
-  const name = String(formData.get("name") || "").trim();
-  const email = String(formData.get("email") || "").trim();
-  const subject = String(formData.get("subject") || "").trim();
-  const body = String(formData.get("body") || "").trim();
+  // Capped: this is the one write path open to anonymous callers, and every
+  // column behind it is unbounded `text`.
+  const name = field(formData, "name", LIMITS.short);
+  const email = field(formData, "email", LIMITS.short);
+  const subject = field(formData, "subject", LIMITS.line);
+  const body = field(formData, "body", LIMITS.body);
 
   if (!name || !email) return { error: "Nama dan email wajib diisi." };
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Email tidak valid." };

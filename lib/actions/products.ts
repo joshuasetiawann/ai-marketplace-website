@@ -5,6 +5,8 @@ import { revalidatePath, updateTag } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { dbMessage } from "@/lib/db-error";
 import { TAG_PRODUCTS, productTag } from "@/lib/cache-tags";
+import { field, tagList, LIMITS } from "@/lib/form";
+import { MAX_PRICE_USD } from "@/lib/pricing";
 
 export type ProductState = { error?: string };
 
@@ -22,12 +24,19 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
   const { supabase, user } = await requireSeller();
 
   const id = String(formData.get("id") || "");
-  const name = String(formData.get("name") || "").trim();
+  // Capped via field(): these land in `text` columns that are re-served on the
+  // cached public catalog, and the form's maxlength does not survive a direct
+  // Server Action POST.
+  const name = field(formData, "name", LIMITS.short);
   const price = Number(formData.get("price") || 0);
-  const category = String(formData.get("category") || "");
+  const category = field(formData, "category", LIMITS.short);
   if (!name) return { error: "Nama produk wajib diisi." };
   if (!category) return { error: "Pilih kategori." };
-  if (Number.isNaN(price) || price < 0) return { error: "Harga tidak valid." };
+  // Upper bound as well as lower: price_usd and orders.total_usd are both
+  // numeric(10,2), so price × MAX_QTY × PPN has to stay under 100 million or a
+  // listing priced high enough makes checkout fail for whoever carts it.
+  if (Number.isNaN(price) || price < 0 || price > MAX_PRICE_USD)
+    return { error: "Harga tidak valid." };
 
   const intent = String(formData.get("intent") || "draft");
   const status = intent === "submit" ? "under_review" : "draft";
@@ -39,18 +48,18 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
   const record = {
     owner_id: user.id,
     name,
-    tagline: String(formData.get("tagline") || "").trim(),
+    tagline: field(formData, "tagline", LIMITS.line),
     category,
-    tier: String(formData.get("tier") || "Free"),
+    tier: field(formData, "tier", LIMITS.short) || "Free",
     price_usd: price,
-    description: String(formData.get("description") || "").trim(),
-    icon: String(formData.get("icon") || "apps"),
-    art: [String(formData.get("art0") || "#0b3a44"), String(formData.get("art1") || "#00e5ff")],
-    use_cases: formData.getAll("use_cases").map(String),
-    use_case_tags: String(formData.get("use_case_tags") || "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean),
+    description: field(formData, "description", LIMITS.long),
+    icon: field(formData, "icon", LIMITS.short) || "apps",
+    art: [
+      field(formData, "art0", LIMITS.short) || "#0b3a44",
+      field(formData, "art1", LIMITS.short) || "#00e5ff",
+    ],
+    use_cases: formData.getAll("use_cases").map((v) => String(v).slice(0, LIMITS.short)).slice(0, 20),
+    use_case_tags: tagList(formData, "use_case_tags"),
     gallery,
     capabilities,
     specs,
@@ -73,8 +82,8 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
   if (productId) updateTag(productTag(productId));
 
   // Fulfillment lives in product_assets (entitlement-gated). Upsert when set.
-  const assetUrl = String(formData.get("asset_url") || "").trim();
-  const accessNote = String(formData.get("access_note") || "").trim();
+  const assetUrl = field(formData, "asset_url", LIMITS.line);
+  const accessNote = field(formData, "access_note", LIMITS.body);
   // This value is rendered as the href of the buyer's download button, so a
   // `javascript:`/`data:` URL would execute in their session. type="url" on the
   // input is a browser courtesy — a direct Server Action call skips it.
@@ -110,10 +119,11 @@ function parseCapabilities(raw: FormDataEntryValue | null): Capability[] {
     if (!Array.isArray(arr)) return [];
     return arr
       .filter((c) => c && typeof c.title === "string" && c.title.trim())
+      .slice(0, 20) // JSON arrives whole from a public POST — bound it
       .map((c) => ({
-        icon: String(c.icon || "bolt"),
-        title: String(c.title).trim(),
-        text: String(c.text || "").trim(),
+        icon: String(c.icon || "bolt").slice(0, LIMITS.short),
+        title: String(c.title).trim().slice(0, LIMITS.short),
+        text: String(c.text || "").trim().slice(0, LIMITS.line),
       }));
   } catch {
     return [];
@@ -125,8 +135,9 @@ function parseSpecs(raw: FormDataEntryValue | null): Record<string, string> {
     const obj = JSON.parse(String(raw || "{}"));
     if (!obj || typeof obj !== "object" || Array.isArray(obj)) return {};
     const out: Record<string, string> = {};
-    for (const [k, v] of Object.entries(obj)) {
-      if (k.trim() && v != null && String(v).trim()) out[k.trim()] = String(v).trim();
+    for (const [k, v] of Object.entries(obj).slice(0, 30)) {
+      if (k.trim() && v != null && String(v).trim())
+        out[k.trim().slice(0, LIMITS.short)] = String(v).trim().slice(0, LIMITS.line);
     }
     return out;
   } catch {

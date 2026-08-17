@@ -6,6 +6,17 @@ export const USD_TO_IDR = 15800;
 export const PRICE_MAX_IDR = 2_000_000;
 export const PRICE_STEP_IDR = 50_000;
 
+/**
+ * Ceiling for a listing price, in USD (enforced in saveProduct).
+ *
+ * orders.total_usd is numeric(10,2) — it tops out just under 100 million. A
+ * cart line is price × qty (qty ≤ MAX_QTY = 99) plus 11% PPN, so anything up to
+ * ~910k is arithmetically safe; 100k is far above any real listing and leaves
+ * the margin obvious. Without it, one absurdly priced product makes checkout
+ * fail with a numeric-overflow error for whoever puts it in their cart.
+ */
+export const MAX_PRICE_USD = 100_000;
+
 export const toIDR = (usd: number) => Math.round(usd * USD_TO_IDR);
 
 export const formatIDR = (n: number) =>

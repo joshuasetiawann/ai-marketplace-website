@@ -6,6 +6,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { dbMessage } from "@/lib/db-error";
 import { hasRequiredAal, AAL_REQUIRED } from "@/lib/auth-guard";
 import { logError } from "@/lib/log";
+import { field, LIMITS } from "@/lib/form";
 
 export type PayoutState = { error?: string; ok?: boolean };
 
@@ -30,7 +31,7 @@ async function requireStepUp(supabase: Awaited<ReturnType<typeof requireUser>>["
 
 /** Save / verify a payout bank account on the seller's store. */
 export async function savePayoutAccount(_prev: PayoutState, formData: FormData): Promise<PayoutState> {
-  const bank = String(formData.get("bank") || "").trim();
+  const bank = field(formData, "bank", LIMITS.short);
   const digits = String(formData.get("account") || "").replace(/\D/g, "");
   if (!bank) return { error: "Pilih bank." };
   if (digits.length < 6) return { error: "Nomor rekening tidak valid." };

@@ -8,12 +8,13 @@ import { hasRequiredAal, AAL_REQUIRED } from "@/lib/auth-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { TAG_PRODUCTS, TAG_STORES, productTag } from "@/lib/cache-tags";
 import { env } from "@/lib/env";
+import { field, LIMITS } from "@/lib/form";
 
 export type AccountState = { error?: string; ok?: boolean };
 
 /** Update the display name on the profile + auth metadata. */
 export async function updateProfileName(_prev: AccountState, formData: FormData): Promise<AccountState> {
-  const name = String(formData.get("name") || "").trim();
+  const name = field(formData, "name", LIMITS.short);
   if (!name) return { error: "Nama tidak boleh kosong." };
 
   const supabase = await createServerClient();

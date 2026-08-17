@@ -39,7 +39,12 @@ export async function moderateProduct(id: string, action: "approve" | "reject"):
 
 /** Promote/demote a user's role. */
 export async function setUserRole(id: string, role: "user" | "admin"): Promise<AdminResult> {
-  const { supabase } = await requireAdmin();
+  const { supabase, user } = await requireAdmin();
+  // The users table already hides this button on your own row, but a Server
+  // Action is a public POST — and demoting yourself is unrecoverable from the
+  // UI: `role` is not writable by a non-admin, so the last admin who does it
+  // locks everyone out of /admin until someone edits the database by hand.
+  if (id === user.id) return { error: "Kamu tidak bisa mengubah peran akunmu sendiri." };
   const { error } = await supabase.from("profiles").update({ role }).eq("id", id);
   if (error) return { error: dbMessage(error) };
   revalidatePath("/admin/users");

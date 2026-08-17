@@ -4,6 +4,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { dbMessage } from "@/lib/db-error";
 import { TAG_PRODUCTS, productTag } from "@/lib/cache-tags";
+import { field, LIMITS } from "@/lib/form";
 
 export type ReviewState = { error?: string; ok?: boolean };
 
@@ -21,11 +22,15 @@ export async function postReview(
   formData: FormData,
 ): Promise<ReviewState> {
   const productId = String(formData.get("productId") || "");
-  const rating = Number(formData.get("rating") || 0);
-  const body = String(formData.get("body") || "").trim();
+  // reviews.rating is an int column: the star picker only ever sends whole
+  // numbers, but a direct Server Action call sending 3.7 would reach Postgres
+  // as a type error instead of a message the reviewer can act on.
+  const rating = Math.round(Number(formData.get("rating") || 0));
+  const body = field(formData, "body", LIMITS.body);
 
   if (!productId) return { error: "Produk tidak valid." };
-  if (rating < 1 || rating > 5) return { error: "Pilih rating 1–5 bintang." };
+  if (!Number.isFinite(rating) || rating < 1 || rating > 5)
+    return { error: "Pilih rating 1–5 bintang." };
 
   const supabase = await createServerClient();
   const {

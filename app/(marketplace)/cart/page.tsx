@@ -14,11 +14,13 @@ export default async function CartPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/cart");
 
-  const { lines, subtotal, taxes, total } = await getCart(supabase, user.id);
+  const { lines, unavailable, subtotal, taxes, total } = await getCart(supabase, user.id);
 
   return (
     <div className="mx-auto max-w-[1440px] px-5 py-10 md:px-16">
-      {lines.length === 0 ? (
+      {/* Withdrawn items still block checkout, so a cart holding only those is
+          not an empty cart — it needs the page, not the empty state. */}
+      {lines.length === 0 && unavailable.length === 0 ? (
         <>
           <h1 className="mb-8 font-display text-headline-md text-on-surface md:text-headline-lg">Keranjang</h1>
           <EmptyState
@@ -42,6 +44,9 @@ export default async function CartPage() {
               <h1 className="font-display text-headline-md text-on-surface md:text-headline-lg">Keranjang</h1>
               <p className="mt-1 text-body-md text-on-surface-variant">
                 <span className="font-semibold text-on-surface">{lines.length} item</span> siap di-checkout.
+                {unavailable.length > 0 && (
+                  <span className="text-error"> {unavailable.length} item tidak tersedia lagi.</span>
+                )}
               </p>
             </div>
             <CheckoutSteps current={1} />
@@ -52,7 +57,7 @@ export default async function CartPage() {
               <Icon name="add" size={16} /> Tambah lagi
             </Link>
           </div>
-          <CartClient lines={lines} subtotal={subtotal} taxes={taxes} total={total} />
+          <CartClient lines={lines} unavailable={unavailable} subtotal={subtotal} taxes={taxes} total={total} />
         </>
       )}
     </div>

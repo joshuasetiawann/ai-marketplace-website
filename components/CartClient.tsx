@@ -14,11 +14,13 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
 
 export default function CartClient({
   lines,
+  unavailable,
   subtotal,
   taxes,
   total,
 }: {
   lines: CartLine[];
+  unavailable: string[];
   subtotal: number;
   taxes: number;
   total: number;
@@ -55,6 +57,10 @@ export default function CartClient({
       router.refresh();
     });
 
+  // checkout() rejects the whole cart while a withdrawn product is still in it,
+  // so send the buyer to the offending rows instead of to that error.
+  const blocked = unavailable.length > 0;
+
   // Discount is applied to the subtotal before PPN — mirrors the checkout RPC so
   // the total shown here equals the amount actually charged.
   const discount = applied ? r2(subtotal * applied.rate) : 0;
@@ -63,8 +69,11 @@ export default function CartClient({
   const grandTotal = discount > 0 ? r2(discSubtotal * 1.11) : total;
 
   return (
+    // min-w-0 on both columns: a grid item defaults to min-width:auto, so it
+    // refuses to shrink below its content and the whole page scrolled sideways
+    // at phone widths — 547px of document inside a 390px viewport.
     <div className="grid items-start gap-8 lg:grid-cols-[1.6fr_1fr]">
-      <div className="flex flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-4">
         {lines.map((m) => (
           <div key={m.id} className="flex items-center gap-4 rounded-xl surface-card p-4 animate-fade-in">
             <Link href={`/model/${m.id}`} aria-label={m.name} className="h-20 w-24 shrink-0 overflow-hidden rounded-lg">
@@ -99,6 +108,31 @@ export default function CartClient({
           </div>
         ))}
 
+        {/* The product behind these rows is no longer readable (seller pulled or
+            is revising it), so there is no name or price to show — but checkout
+            refuses the whole cart until they are gone, and nothing else in the
+            UI could remove them. */}
+        {unavailable.map((pid) => (
+          <div key={pid} className="flex items-center gap-4 rounded-xl border border-error/30 bg-error/[0.04] p-4">
+            <div className="flex h-20 w-24 shrink-0 items-center justify-center rounded-lg bg-error/10">
+              <Icon name="visibility_off" size={22} className="text-error" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-body-lg font-semibold text-on-surface">Produk tidak tersedia lagi</p>
+              <p className="text-body-sm text-on-surface-variant">
+                Penjual menarik atau sedang merevisi model ini. Hapus dulu supaya checkout bisa jalan.
+              </p>
+            </div>
+            <button
+              onClick={() => remove(pid)}
+              disabled={isPending}
+              className="btn-soft shrink-0 px-4 py-2 text-body-sm disabled:opacity-40"
+            >
+              <Icon name="delete" size={16} /> Hapus
+            </button>
+          </div>
+        ))}
+
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl surface-card px-5 py-4">
           <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-outline">Metode Pembayaran</span>
           {["QRIS", "Virtual Account", "E-Wallet", "Kartu"].map((m) => (
@@ -112,7 +146,7 @@ export default function CartClient({
         </div>
       </div>
 
-      <div className="rounded-xl surface-card p-6 lg:sticky lg:top-[calc(var(--nav-h)+1.5rem)]">
+      <div className="min-w-0 rounded-xl surface-card p-6 lg:sticky lg:top-[calc(var(--nav-h)+1.5rem)]">
         <h2 className="mb-5 font-display text-title-md text-on-surface">Ringkasan Pesanan</h2>
 
         <form onSubmit={applyPromo} className="mb-5 flex gap-2">
@@ -142,9 +176,20 @@ export default function CartClient({
           <span className="font-display text-headline-md text-primary-container">{formatIDR(toIDR(grandTotal))}</span>
         </div>
 
-        <Link href={applied ? `/checkout?promo=${encodeURIComponent(applied.code)}` : "/checkout"} className="btn-primary mt-6 w-full py-3.5">
-          Lanjut ke Pembayaran <Icon name="arrow_forward" size={18} />
-        </Link>
+        {blocked ? (
+          <>
+            <button disabled className="btn-primary mt-6 w-full cursor-not-allowed py-3.5 opacity-40">
+              Lanjut ke Pembayaran <Icon name="arrow_forward" size={18} />
+            </button>
+            <p role="alert" className="mt-3 text-center text-body-sm text-error">
+              Hapus {unavailable.length} item yang tidak tersedia dulu.
+            </p>
+          </>
+        ) : (
+          <Link href={applied ? `/checkout?promo=${encodeURIComponent(applied.code)}` : "/checkout"} className="btn-primary mt-6 w-full py-3.5">
+            Lanjut ke Pembayaran <Icon name="arrow_forward" size={18} />
+          </Link>
+        )}
         <div className="mt-4 flex items-center justify-center gap-2 text-[12px] text-on-surface-variant">
           <Icon name="verified_user" size={14} className="text-primary-container" /> Checkout aman terenkripsi SSL 256-bit
         </div>

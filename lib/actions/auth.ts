@@ -5,6 +5,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { safeNext } from "@/lib/nav";
 import { allow } from "@/lib/ratelimit";
+import { field, LIMITS } from "@/lib/form";
 
 export type AuthState = { error?: string; ok?: boolean };
 
@@ -45,8 +46,8 @@ export async function registerUser(
   _prev: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
-  const name = String(formData.get("name") || "").trim();
-  const email = String(formData.get("email") || "").trim();
+  const name = field(formData, "name", LIMITS.short);
+  const email = field(formData, "email", LIMITS.short);
   const password = String(formData.get("password") || "");
 
   if (!name || !email) return { error: "Nama dan email wajib diisi." };

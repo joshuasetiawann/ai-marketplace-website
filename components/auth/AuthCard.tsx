@@ -80,6 +80,27 @@ export function PasswordField({
 }
 
 /**
+ * Where the local mail catcher is listening.
+ *
+ * Derived from the Supabase API URL rather than hardcoded: this used to say
+ * `http://127.0.0.1:54324`, which became a dead link the moment the local ports
+ * moved off the CLI defaults (see supabase/config.toml — they collide with
+ * Windows' dynamic port range).
+ *
+ * ponytail: assumes Mailpit sits 3 ports above the API, which is how both the
+ * CLI defaults and this project's config.toml are laid out. If that ever stops
+ * holding, read an explicit NEXT_PUBLIC_MAILPIT_URL instead.
+ */
+function mailpitUrl(): string {
+  try {
+    const api = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
+    return `${api.protocol}//${api.hostname}:${Number(api.port) + 3}`;
+  } catch {
+    return "http://127.0.0.1:44324";
+  }
+}
+
+/**
  * Dev-only pointer to the local mail catcher. Local Supabase never delivers to a
  * real inbox — every auth mail lands in Mailpit — so without this the screen
  * says "check your email" about a message that will never arrive.
@@ -90,7 +111,7 @@ export function DevMailHint() {
     <p className="rounded-lg border border-line bg-base px-3 py-2 text-[12px] text-muted">
       Dev lokal: email tidak dikirim ke inbox asli.{" "}
       <a
-        href="http://127.0.0.1:54324"
+        href={mailpitUrl()}
         target="_blank"
         rel="noreferrer"
         className="text-accent hover:underline"

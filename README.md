@@ -143,9 +143,16 @@ npm run dev                   # dev server → http://localhost:3000
 
 | Service | URL | What it's for |
 | --- | --- | --- |
-| Studio | http://127.0.0.1:54323 | Browse tables, run SQL |
-| **Mailpit** | http://127.0.0.1:54324 | **Every auth email lands here** — local Supabase never sends to a real inbox |
-| API | http://127.0.0.1:54321 | The URL for `NEXT_PUBLIC_SUPABASE_URL` |
+| Studio | http://127.0.0.1:44323 | Browse tables, run SQL |
+| **Mailpit** | http://127.0.0.1:44324 | **Every auth email lands here** — local Supabase never sends to a real inbox |
+| API | http://127.0.0.1:44321 | The URL for `NEXT_PUBLIC_SUPABASE_URL` |
+
+These are `443xx`, not the CLI's default `543xx`. Windows' TCP dynamic port range
+is 49152–65535, so the defaults sit inside it: after a Docker Desktop restart
+WinNAT can reserve them and `supabase start` then either fails with *"ports are
+not available … forbidden by its access permissions"* or reports success while
+the containers come up with **no host binding at all**. `443xx` is below that
+range, so it cannot happen. See the comment at the top of `supabase/config.toml`.
 
 ```bash
 npm run build                 # production build → .next/

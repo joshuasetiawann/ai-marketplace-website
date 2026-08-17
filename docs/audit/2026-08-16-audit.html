@@ -395,7 +395,7 @@
       dalam tujuh commit yang kini ada di <span class="mono">main</span>, diverifikasi terhadap
       Postgres hidup dan build produksi di peramban. Empat temuan prioritas tinggi
       diperiksa ulang setelah rilis, dan perburuan bug lanjutan menambah
-      <b>4 temuan baru</b> &mdash; semuanya juga sudah ditutup.
+      <b>14 temuan baru</b> &mdash; semuanya juga sudah ditutup.
     </p>
     <div class="meta">
       <span>16 AGUSTUS 2026</span>
@@ -409,10 +409,10 @@
 <div class="wrap">
 
   <div class="tiles">
-    <div class="tile t-hi"><span class="n">5</span><span class="k">Prioritas tinggi</span></div>
-    <div class="tile t-md"><span class="n">18</span><span class="k">Prioritas sedang</span></div>
-    <div class="tile t-lo"><span class="n">18</span><span class="k">Prioritas rendah</span></div>
-    <div class="tile t-all"><span class="n">41<span style="font-size:16px;color:var(--ink-3)">/41</span></span><span class="k">Ditutup penuh</span></div>
+    <div class="tile t-hi"><span class="n">6</span><span class="k">Prioritas tinggi</span></div>
+    <div class="tile t-md"><span class="n">22</span><span class="k">Prioritas sedang</span></div>
+    <div class="tile t-lo"><span class="n">23</span><span class="k">Prioritas rendah</span></div>
+    <div class="tile t-all"><span class="n">51<span style="font-size:16px;color:var(--ink-3)">/51</span></span><span class="k">Ditutup penuh</span></div>
   </div>
 
   <div class="panel" style="border-left:2px solid var(--md); margin-bottom:20px;">
@@ -437,14 +437,23 @@
         BUG-01 lolos juga, tapi menyisakan satu akibat &mdash; lihat entrinya.
       </li>
       <li>
-        <b>Perburuan bug lanjutan menemukan 4 temuan baru</b> di luar 37 yang diaudit &mdash; satu di
-        antaranya (NEW-01, keranjang terkunci oleh produk yang ditarik penjual) berprioritas tinggi dan
-        bisa dipicu hanya dengan penjual menyunting listingnya. Semuanya ditutup di
-        <code>26e70da</code>; rinciannya di bagian <a href="#susulan">Temuan susulan</a>.
+        <b>Perburuan bug lanjutan menemukan 14 temuan baru</b> di luar 37 yang diaudit &mdash; dua di
+        antaranya berprioritas tinggi: NEW-01 (keranjang terkunci oleh produk yang ditarik penjual,
+        cukup dipicu dengan penjual menyunting listingnya) dan NEW-05 (tanda tangan Midtrans
+        dibandingkan tidak konstan-waktu, kesimpulan SEC-09 yang keliru). Ditutup di
+        <code>26e70da</code> dan <code>f89cc05</code>; rinciannya di bagian
+        <a href="#susulan">Temuan susulan</a>.
+      </li>
+      <li>
+        <b>Tiga perbaikan audit ini sendiri ternyata belum tuntas</b> &mdash; SEC-09 melewatkan
+        Midtrans (NEW-05), BUG-07 hanya memperbaiki <code>signIn()</code> dan bukan middleware
+        (NEW-07b), dan NEW-01 hanya menyentuh <code>/cart</code> dan bukan <code>/checkout</code>
+        (NEW-07a). Pola yang berulang: memperbaiki jalur yang disebut laporan, bukan semua jalur yang
+        melewatinya.
       </li>
       <li>
         <b>Yang sudah diverifikasi:</b> <code>tsc --noEmit</code> bersih, <code>eslint</code> bersih,
-        <code>next build</code> sukses (42 rute), 35 test lulus, dan satu putaran browser di
+        <code>next build</code> sukses (42 rute), 40 test lulus, dan satu putaran browser di
         <code>/</code>, <code>/settings</code> (enrol 2FA + QR <code>data:</code>),
         <code>/admin/payouts</code>, <code>/admin/users</code> tanpa satu pun pelanggaran CSP di konsol.
       </li>
@@ -479,7 +488,7 @@
       </p>
       <ul class="checks">
         <li><b>Diperiksa:</b> 14 migrasi SQL (skema, RLS, grant, trigger, RPC), 12 modul Server Action, adapter pembayaran (simulated/Midtrans/Xendit), middleware sesi, seluruh route <code>app/</code> dan komponen <code>components/</code>, konfigurasi Next/ESLint/Vitest/Playwright.</li>
-        <li><b>Temuan berasal dari pembacaan kode</b>, tapi perbaikannya diverifikasi runtime: 17 migrasi diterapkan ulang dari nol ke Postgres lokal, 35 test lulus (8 di antaranya menembak RLS/RPC sungguhan), dan build produksi ditelusuri di peramban.</li>
+        <li><b>Temuan berasal dari pembacaan kode</b>, tapi perbaikannya diverifikasi runtime: 17 migrasi diterapkan ulang dari nol ke Postgres lokal, 40 test lulus (8 di antaranya menembak RLS/RPC sungguhan), dan build produksi ditelusuri di peramban.</li>
         <li><b>Tidak dijalankan:</b> uji lintas peramban, Lighthouse, dan audit kontras warna otomatis.</li>
       </ul>
     </div>
@@ -1318,12 +1327,13 @@
   <section id="susulan">
     <div class="sec-head">
       <h2>Temuan susulan</h2>
-      <span class="count">4 temuan &middot; di luar 37 yang diaudit</span>
+      <span class="count">14 temuan &middot; di luar 37 yang diaudit</span>
     </div>
     <p class="sec-note">
       Perburuan bug lanjutan setelah ke-37 temuan ditutup, dengan pertanyaan yang berbeda:
-      bukan "apakah perbaikannya bertahan?" melainkan "apa lagi yang rusak?". Empatnya bisa
-      dicapai lewat alur UI biasa, bukan skenario karangan.
+      bukan "apakah perbaikannya bertahan?" melainkan "apa lagi yang rusak?". Semuanya bisa
+      dicapai lewat alur UI biasa, bukan skenario karangan &mdash; dan dua di antaranya
+      (NEW-05, NEW-07) adalah perbaikan audit ini sendiri yang ternyata belum tuntas.
     </p>
 
     <div class="find f-hi">
@@ -1422,6 +1432,144 @@
         <code>specs</code> ikut dibatasi. Ditambah <code>MAX_PRICE_USD</code>: harga &times; kuantitas
         &times; PPN harus tetap muat di <code>numeric(10,2)</code> milik <code>orders.total_usd</code>,
         kalau tidak satu listing berharga absurd bisa mematikan checkout siapa pun yang mengeranjangnya.
+        <br /><br />
+        <b>Susulan (<code>f89cc05</code>).</b> Plafonnya kini juga dipasang di formulirnya
+        (<code>maxLength</code>, <code>max</code>) supaya batasnya kelihatan di kolomnya, bukan diam-diam
+        memotong saat disimpan.
+      </div>
+    </div>
+
+    <div class="find f-hi">
+      <div class="f-top"><span class="f-id">NEW-05</span><span class="chip">Tinggi</span></div>
+      <h4>Tanda tangan Midtrans dibandingkan tidak konstan-waktu</h4>
+      <span class="loc">lib/payment-gateway/midtrans.ts</span>
+      <p>
+        SEC-09 memperbaiki persis masalah ini untuk Xendit, lalu menyimpulkan Midtrans aman
+        <em>karena membandingkan hash SHA-512</em>. Kesimpulan itu salah: digest-nya diturunkan dari
+        server key, jadi <code>!==</code> yang berhenti di byte pertama yang berbeda membocorkan digest
+        yang diharapkan &mdash; byte demi byte &mdash; kepada siapa pun yang bisa mengulang satu
+        notifikasi dan mengukur waktu jawabannya.
+      </p>
+      <p>
+        Ujungnya: notifikasi "paid" palsu untuk order tersebut, yang berarti barang dikirim tanpa
+        pembayaran. Menghash tidak menghapus kebutuhan perbandingan konstan-waktu.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        <code>secretEquals()</code> di <code>lib/payment-gateway/verify.ts</code>, dipakai kedua adapter.
+        <code>tests/payment-verify.test.ts</code> mengunci tepiannya &mdash; termasuk masukan cacat yang
+        dikendalikan penyerang, karena <code>timingSafeEqual</code> yang melempar pada panjang berbeda
+        akan mematikan endpoint-nya semudah membocorkan rahasianya.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">NEW-06</span><span class="chip">Sedang</span></div>
+      <h4>Refund dan pencairan bisa dieksekusi satu klik, tanpa konfirmasi</h4>
+      <span class="loc">components/AdminOrderActions.tsx &middot; components/AdminPayoutActions.tsx</span>
+      <p>
+        Tombol "Refund" memindahkan uang, mengurangi pendapatan penjual, dan mencabut akses unduhan
+        pembeli &mdash; tanpa dialog apa pun. Karena <code>refund_order()</code> hanya menerima order
+        berstatus <code>paid</code>, salah klik di daftar tidak bisa dibatalkan dari layar itu. Sama
+        untuk "Tandai dibayar" / "Tolak" pencairan, yang keduanya status terminal.
+      </p>
+      <p>
+        Ini kelas yang sama dengan SEC-02 ("2FA bisa dimatikan satu klik") &mdash; dan daftar produk
+        penjual sudah memakai <code>confirm()</code> untuk hapus produk, tindakan yang lebih ringan.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        Langkah konfirmasi di ketiga tombol, memakai pola yang sudah ada di aplikasi.
+        Dibuktikan dua arah di peramban: batal &rarr; order tetap <code>paid</code>, setuju &rarr;
+        <code>refunded</code>.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">NEW-07</span><span class="chip">Sedang</span></div>
+      <h4><code>/checkout</code> masih buntu, dan 2FA masih melupakan tujuan</h4>
+      <span class="loc">app/(marketplace)/checkout/page.tsx &middot; lib/supabase/middleware.ts</span>
+      <p>
+        Dua perbaikan yang ternyata separuh jalan. <b>(a)</b> NEW-01 hanya menyentuh
+        <code>/cart</code> &mdash; padahal <code>/checkout</code> memakai <code>getCart()</code> yang
+        sama dan mengabaikan <code>unavailable</code>, jadi pembeli yang langsung ke sana tetap mengisi
+        formulir lalu menabrak dinding. <b>(b)</b> BUG-07 memperbaiki <code>signIn()</code>, tapi
+        middleware masih menulis <code>url.search = ""</code> saat mengalihkan sesi AAL1 ke
+        <code>/login/2fa</code> &mdash; sehingga siapa pun yang meminta <code>/orders</code> mendarat di
+        <code>/dashboard</code> setelah lolos 2FA.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        <code>/checkout</code> mengalihkan ke <code>/cart</code>, satu-satunya tempat tombol Hapus-nya
+        ada. Middleware membawa <code>next</code> seperti <code>signIn()</code>.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">NEW-08</span><span class="chip">Sedang</span></div>
+      <h4>Enrolment 2FA yang ditinggalkan menumpuk faktor tak terverifikasi</h4>
+      <span class="loc">components/TwoFactorSettings.tsx</span>
+      <p>
+        Menutup tab di langkah QR meninggalkan satu faktor <code>unverified</code>, dan
+        <code>enroll()</code> menambah satu lagi setiap kali. <code>refresh()</code> hanya mencari faktor
+        <code>verified</code>, jadi sisa itu tidak pernah terlihat maupun dibersihkan &mdash; menumpuk
+        sampai batas faktor per-pengguna GoTrue menolak percobaan berikutnya, dengan galat yang tidak
+        bisa dibersihkan pengguna dari layar itu.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        Sapu faktor tak terverifikasi sebelum memulai enrolment baru. Faktor tak terverifikasi tidak
+        melindungi apa pun, jadi tidak ada yang hilang.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">NEW-09</span><span class="chip">Rendah</span></div>
+      <h4>Hitungan "Pelanggan" memakai nama, bukan identitas</h4>
+      <span class="loc">lib/seller.ts (getSellerEarnings)</span>
+      <p>
+        <code>new Set(s.map((x) =&gt; x.buyer_name)).size</code> &mdash; dua pelanggan bernama sama
+        dihitung satu, dan satu pelanggan yang mengganti nama profilnya dihitung dua. Kolom
+        <code>sales.buyer_id</code> sudah ada sejak awal.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        Hitung dengan <code>buyer_id</code>. <code>buyer_name</code> memang snapshot saat transaksi
+        &mdash; berguna untuk ditampilkan, bukan untuk dijadikan kunci.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">NEW-10</span><span class="chip">Rendah</span></div>
+      <h4>State klien tidak pernah sinkron ulang dengan prop server</h4>
+      <span class="loc">components/PayoutClient.tsx &middot; components/ModelCard.tsx &middot; components/ProductDetailClient.tsx</span>
+      <p>
+        Tiga komponen menginisialisasi state dari prop sekali lalu tidak pernah mengikutinya lagi.
+        Kolom jumlah pencairan menahan saldo lama setelah pencairan berhasil, sehingga pengajuan
+        berikutnya mengirim angka lebih besar dari saldo dan ditolak server. Ikon wishlist hanya
+        bergerak lewat toggle optimistis, jadi ia melenceng dari wishlist yang sebenarnya setelah
+        <code>router.refresh()</code> atau navigasi mundur ke render yang di-cache.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        Pola derive-state-from-props yang sudah dipakai <code>ExploreClient</code> untuk slider harga:
+        sesuaikan saat render, tanpa effect.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">NEW-11</span><span class="chip">Rendah</span></div>
+      <h4>Dua aksi membuang hasilnya dan gagal dalam diam</h4>
+      <span class="loc">components/WishlistAddAll.tsx &middot; components/ModelCard.tsx</span>
+      <p>
+        <code>await addManyToCart(ids)</code> lalu <code>router.push("/cart")</code> tanpa memeriksa
+        apa pun: kalau gagal, pengguna mendarat di keranjang yang tidak berubah tanpa satu kata
+        penjelasan. <code>ModelCard.onAddToCart</code> menangani <code>needsAuth</code> tapi menelan
+        <code>error</code> sepenuhnya.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        Keduanya memeriksa hasilnya dan menampilkan pesan lewat <code>role="alert"</code>.
       </div>
     </div>
   </section>
@@ -1430,7 +1578,7 @@
   <section id="rencana">
     <div class="sec-head">
       <h2>Hasil perbaikan</h2>
-      <span class="count">7 commit &middot; sudah di main</span>
+      <span class="count">8 commit &middot; sudah di main</span>
     </div>
     <p class="sec-note">
       Dikerjakan berurutan dan di-commit terpisah per gelombang, supaya tiap kelompok bisa ditinjau
@@ -1497,6 +1645,12 @@
             <td class="ids">NEW-01 &hellip; NEW-04</td>
             <td class="ids">15 berkas<br />+1 modul, +4 test</td>
           </tr>
+          <tr>
+            <td class="wave">f89cc05</td>
+            <td><b>Sepuluh bug lagi.</b> Tanda tangan Midtrans konstan-waktu; konfirmasi untuk refund dan pencairan; <code>/checkout</code> tidak lagi buntu; 2FA membawa tujuan awal; enrolment 2FA yang ditinggalkan disapu; hitungan pelanggan pakai <code>buyer_id</code>; state klien sinkron ulang dengan prop; dua aksi berhenti gagal dalam diam.</td>
+            <td class="ids">NEW-05 &hellip; NEW-11</td>
+            <td class="ids">18 berkas<br />+1 modul, +5 test</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1515,7 +1669,7 @@
 
   <div class="foot">
     <span>NEXORA AI &middot; AUDIT 2026-08-16</span>
-    <span>41 TEMUAN &middot; 41 DITUTUP &middot; 35/35 TEST LULUS</span>
+    <span>51 TEMUAN &middot; 51 DITUTUP &middot; 40/40 TEST LULUS</span>
   </div>
 
 </div>

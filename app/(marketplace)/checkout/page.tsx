@@ -18,10 +18,15 @@ export default async function CheckoutPage({
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/checkout");
 
-  const [{ lines, subtotal, taxes, total }, { data: profile }] = await Promise.all([
+  const [{ lines, unavailable, subtotal, taxes, total }, { data: profile }] = await Promise.all([
     getCart(supabase, user.id),
     supabase.from("profiles").select("name").eq("id", user.id).single(),
   ]);
+
+  // checkout() refuses the whole cart while a withdrawn product is still in it,
+  // and the only Hapus button for those rows lives on /cart. Landing here with
+  // one would otherwise mean filling in the form and then hitting a wall.
+  if (unavailable.length > 0) redirect("/cart");
 
   // validate any promo server-side and recompute the totals to match the RPC
   const { promo } = await searchParams;

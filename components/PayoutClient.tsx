@@ -26,6 +26,15 @@ export default function PayoutClient({
   const [acctState, acctAction, acctPending] = useActionState(savePayoutAccount, {} as PayoutState);
   const [payState, payAction, payPending] = useActionState(requestPayout, {} as PayoutState);
   const [amount, setAmount] = useState(available);
+  // Resync when the balance changes under us — after a successful payout the
+  // page revalidates with a lower `available`, and a stale amount would submit
+  // more than the seller has and come back rejected. (Derive-from-props: adjust
+  // during render, no effect.)
+  const [prevAvailable, setPrevAvailable] = useState(available);
+  if (prevAvailable !== available) {
+    setPrevAvailable(available);
+    setAmount(available);
+  }
 
   const canRequest = verified && available >= MIN_PAYOUT_USD;
 

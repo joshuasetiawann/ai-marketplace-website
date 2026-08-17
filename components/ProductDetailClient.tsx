@@ -39,6 +39,15 @@ export default function ProductDetailClient({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
+  // Resync the heart when the server prop changes (router.refresh, back/forward
+  // to a cached render). Without this the optimistic toggle is the only thing
+  // that ever moves it, so it drifts out of step with the real wishlist.
+  const [prevWishlisted, setPrevWishlisted] = useState(wishlisted);
+  if (prevWishlisted !== wishlisted) {
+    setPrevWishlisted(wishlisted);
+    setSaved(wishlisted);
+  }
+
   const guard = () => {
     if (!loggedIn) {
       router.push(`/login?next=/model/${model.id}`);

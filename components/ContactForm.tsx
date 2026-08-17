@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Icon from "./Icon";
 import { sendContactMessage, type ContactState } from "@/lib/actions/contact";
+import { LIMITS } from "@/lib/form";
 
 export default function ContactForm({ defaultName = "", defaultEmail = "" }: { defaultName?: string; defaultEmail?: string }) {
   const [state, action, pending] = useActionState(sendContactMessage, {} as ContactState);
@@ -24,20 +25,20 @@ export default function ContactForm({ defaultName = "", defaultEmail = "" }: { d
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
           <span className="mb-2 block text-body-sm font-medium text-on-surface">Nama</span>
-          <input name="name" defaultValue={defaultName} placeholder="Nama kamu" className="input-field" required />
+          <input name="name" defaultValue={defaultName} maxLength={LIMITS.short} placeholder="Nama kamu" className="input-field" required />
         </label>
         <label className="block">
           <span className="mb-2 block text-body-sm font-medium text-on-surface">Email</span>
-          <input name="email" type="email" defaultValue={defaultEmail} placeholder="email@kamu.com" className="input-field" required />
+          <input name="email" type="email" defaultValue={defaultEmail} maxLength={LIMITS.short} placeholder="email@kamu.com" className="input-field" required />
         </label>
       </div>
       <label className="block">
         <span className="mb-2 block text-body-sm font-medium text-on-surface">Subjek</span>
-        <input name="subject" placeholder="Ada yang bisa kami bantu?" className="input-field" />
+        <input name="subject" maxLength={LIMITS.line} placeholder="Ada yang bisa kami bantu?" className="input-field" />
       </label>
       <label className="block">
         <span className="mb-2 block text-body-sm font-medium text-on-surface">Pesan</span>
-        <textarea name="body" rows={5} placeholder="Ceritakan kebutuhanmu…" className="input-field resize-none" required minLength={10} />
+        <textarea name="body" rows={5} maxLength={LIMITS.body} placeholder="Ceritakan kebutuhanmu…" className="input-field resize-none" required minLength={10} />
       </label>
       {state.error && <p role="alert" className="text-body-sm text-error">{state.error}</p>}
       <button type="submit" disabled={pending} className="btn-primary self-start px-6 py-3">

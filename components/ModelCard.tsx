@@ -26,6 +26,15 @@ export default function ModelCard({
   const [saved, setSaved] = useState(wishlisted);
   const [pending, startTransition] = useTransition();
 
+  // Resync from the server prop — the card is reused across router.refresh()
+  // and cached back-navigations, where only the prop knows the truth.
+  const [prevWishlisted, setPrevWishlisted] = useState(wishlisted);
+  if (prevWishlisted !== wishlisted) {
+    setPrevWishlisted(wishlisted);
+    setSaved(wishlisted);
+  }
+  const [err, setErr] = useState("");
+
   const requireLogin = () => {
     router.push("/login?next=/explore");
     return true;
@@ -33,12 +42,14 @@ export default function ModelCard({
 
   const onWishlist = () => {
     if (!loggedIn) return requireLogin();
+    setErr("");
     setSaved((s) => !s);
     startTransition(async () => {
       const res = await toggleWishlist(model.id);
       if (res?.needsAuth || res?.error) {
         setSaved((s) => !s); // revert optimistic toggle on failure
         if (res?.needsAuth) router.push("/login");
+        else if (res?.error) setErr(res.error);
       }
     });
   };
@@ -48,6 +59,7 @@ export default function ModelCard({
     startTransition(async () => {
       const res = await addToCart(model.id);
       if (res?.needsAuth) router.push("/login");
+      else if (res?.error) setErr(res.error);
     });
   };
 
@@ -109,6 +121,12 @@ export default function ModelCard({
         </div>
 
         <p className="line-clamp-2 flex-1 text-body-sm text-on-surface-variant">{model.tagline}</p>
+
+        {err && (
+          <p role="alert" className="text-[12px] text-error">
+            {err}
+          </p>
+        )}
 
         <div className="mt-1 flex items-center justify-between border-t pt-4 hairline">
           <span className="font-semibold text-on-surface">

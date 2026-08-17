@@ -9,13 +9,22 @@ export default function AdminPayoutActions({ id }: { id: string }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState("");
-  const act = (action: "paid" | "rejected") =>
+  // Both outcomes are terminal — processPayout() refuses to re-open a payout
+  // that is already paid or rejected, so a misclick in a list of rows cannot be
+  // undone from this screen. Same guard the seller product list already uses.
+  const act = (action: "paid" | "rejected") => {
+    const q =
+      action === "paid"
+        ? "Tandai pencairan ini sudah dibayar? Tidak bisa dibatalkan."
+        : "Tolak pencairan ini? Tidak bisa dibatalkan.";
+    if (!confirm(q)) return;
     start(async () => {
       setErr("");
       const res = await processPayout(id, action);
       if (res?.error) setErr(res.error);
       else router.refresh();
     });
+  };
 
   return (
     <div className="flex items-center gap-2">

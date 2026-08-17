@@ -36,6 +36,15 @@ export default function TwoFactorSettings() {
   const startEnroll = async () => {
     setError("");
     setBusy(true);
+    // Abandoning enrolment (closing the tab at the QR step) leaves an unverified
+    // factor behind, and enroll() adds another one every time. They pile up
+    // silently until GoTrue's per-user factor limit rejects the next attempt —
+    // with an error the user has no way to clear from this screen. Sweep them
+    // first: an unverified factor protects nothing, so nothing is lost.
+    const { data: existing } = await supabase.auth.mfa.listFactors();
+    for (const f of existing?.all ?? [])
+      if (f.status !== "verified") await supabase.auth.mfa.unenroll({ factorId: f.id });
+
     const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
     setBusy(false);
     if (error) return setError(error.message);

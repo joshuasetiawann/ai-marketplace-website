@@ -10,7 +10,14 @@ try {
 }
 
 export default defineConfig({
-  resolve: { alias: { "@": path.resolve(__dirname, ".") } },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "."),
+      // `server-only` throws by design outside a React Server Component build.
+      // Stub it so plain-Node modules that carry the marker stay testable.
+      "server-only": path.resolve(__dirname, "tests/stubs/server-only.ts"),
+    },
+  },
   test: {
     include: ["tests/**/*.test.ts"],
     environment: "node",

@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash } from "crypto";
 import type { PaymentGateway, PaymentInit, WebhookOutcome } from "./types";
+import { secretEquals } from "./verify";
 
 // Midtrans (Snap) adapter. To go live: set MIDTRANS_SERVER_KEY (+ optionally
 // MIDTRANS_IS_PRODUCTION=true), point the Midtrans dashboard's Payment
@@ -48,11 +49,13 @@ export const midtransGateway: PaymentGateway = {
     };
     if (!body.order_id || !body.status_code || !body.gross_amount) return null;
 
-    // Verify the notification is genuinely from Midtrans.
+    // Verify the notification is genuinely from Midtrans. Constant-time: the
+    // digest is derived from the server key, so a plain `!==` leaks it to
+    // anyone who can replay one notification and time the answer.
     const expected = createHash("sha512")
       .update(body.order_id + body.status_code + body.gross_amount + key())
       .digest("hex");
-    if (body.signature_key !== expected) return null;
+    if (!secretEquals(body.signature_key, expected)) return null;
 
     const status = body.transaction_status;
     if ((status === "capture" && body.fraud_status !== "challenge") || status === "settlement") {

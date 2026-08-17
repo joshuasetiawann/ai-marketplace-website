@@ -10,13 +10,18 @@ export default function AdminOrderActions({ id }: { id: string }) {
   const [pending, start] = useTransition();
   const [err, setErr] = useState("");
 
-  const act = () =>
+  // Refund moves money, reverses the sellers' revenue and revokes the buyer's
+  // download entitlement — and refund_order() only accepts an order still in
+  // 'paid', so there is no way back from a misclick.
+  const act = () => {
+    if (!confirm("Refund pesanan ini? Akses unduhan pembeli dicabut dan pendapatan penjual dikurangi. Tidak bisa dibatalkan.")) return;
     start(async () => {
       setErr("");
       const res = await refundOrder(id);
       if (res?.error) setErr(res.error);
       else router.refresh();
     });
+  };
 
   return (
     <div className="flex items-center gap-2">

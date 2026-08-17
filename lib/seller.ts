@@ -19,7 +19,7 @@ export async function getSellerEarnings(
   sellerId: string,
 ): Promise<SellerEarnings> {
   const [{ data: sales }, { data: payouts }] = await Promise.all([
-    supabase.from("sales").select("gross,fee,net,qty,buyer_name").eq("seller_id", sellerId).eq("status", "paid"),
+    supabase.from("sales").select("gross,fee,net,qty,buyer_id").eq("seller_id", sellerId).eq("status", "paid"),
     supabase.from("payouts").select("amount_usd,status").eq("seller_id", sellerId),
   ]);
 
@@ -38,6 +38,9 @@ export async function getSellerEarnings(
     available: Math.max(0, r2(net - withdrawn)),
     salesCount: s.length,
     unitsSold: s.reduce((n, x) => n + (Number(x.qty) || 1), 0),
-    customers: new Set(s.map((x) => x.buyer_name)).size,
+    // by buyer_id, not buyer_name: the name is a snapshot taken at sale time, so
+    // two customers called "Budi" counted as one and anyone who renamed their
+    // profile counted twice.
+    customers: new Set(s.map((x) => x.buyer_id).filter(Boolean)).size,
   };
 }

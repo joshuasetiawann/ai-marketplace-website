@@ -4,7 +4,8 @@ import { useActionState, useState } from "react";
 import Icon from "./Icon";
 import { saveProduct, type ProductState } from "@/lib/actions/products";
 import { CATEGORIES, USE_CASES, TIERS, type Capability } from "@/lib/catalog";
-import { formatIDR, toIDR } from "@/lib/pricing";
+import { formatIDR, toIDR, MAX_PRICE_USD } from "@/lib/pricing";
+import { LIMITS } from "@/lib/form";
 
 export type ProductFormValues = {
   id?: string;
@@ -60,12 +61,14 @@ export default function ProductForm({ product }: { product?: ProductFormValues }
 
       <label className="block">
         <span className={labelCls}>Nama Produk</span>
-        <input name="name" defaultValue={product?.name} placeholder="cth. Aurora Diffusion XL" className={field} required />
+        {/* maxLength mirrors the server-side caps in lib/form.ts, so the limit
+            is visible in the field instead of silently truncating on save. */}
+        <input name="name" defaultValue={product?.name} maxLength={LIMITS.short} placeholder="cth. Aurora Diffusion XL" className={field} required />
       </label>
 
       <label className="block">
         <span className={labelCls}>Tagline</span>
-        <input name="tagline" defaultValue={product?.tagline} placeholder="Satu kalimat yang menjual" className={field} />
+        <input name="tagline" defaultValue={product?.tagline} maxLength={LIMITS.line} placeholder="Satu kalimat yang menjual" className={field} />
       </label>
 
       <div className="grid gap-5 sm:grid-cols-2">
@@ -94,6 +97,7 @@ export default function ProductForm({ product }: { product?: ProductFormValues }
           name="price"
           type="number"
           min={0}
+          max={MAX_PRICE_USD}
           step="1"
           value={price}
           onChange={(e) => setPrice(Number(e.target.value))}
@@ -106,12 +110,12 @@ export default function ProductForm({ product }: { product?: ProductFormValues }
 
       <label className="block">
         <span className={labelCls}>Deskripsi</span>
-        <textarea name="description" rows={4} defaultValue={product?.description} placeholder="Jelaskan apa yang membuat model ini istimewa…" className={`${field} resize-none`} />
+        <textarea name="description" rows={4} defaultValue={product?.description} maxLength={LIMITS.long} placeholder="Jelaskan apa yang membuat model ini istimewa…" className={`${field} resize-none`} />
       </label>
 
       <label className="block">
         <span className={labelCls}>Tag kegunaan <span className="text-outline">(pisahkan dengan koma)</span></span>
-        <input name="use_case_tags" defaultValue={product?.useCaseTags?.join(", ")} placeholder="Concept Art, Editorial, Product Shots" className={field} />
+        <input name="use_case_tags" defaultValue={product?.useCaseTags?.join(", ")} maxLength={LIMITS.line} placeholder="Concept Art, Editorial, Product Shots" className={field} />
       </label>
 
       <div>
@@ -211,7 +215,7 @@ export default function ProductForm({ product }: { product?: ProductFormValues }
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="block">
           <span className={labelCls}>Ikon</span>
-          <input name="icon" defaultValue={product?.icon ?? "auto_awesome"} placeholder="auto_awesome" className={field} />
+          <input name="icon" defaultValue={product?.icon ?? "auto_awesome"} maxLength={LIMITS.short} placeholder="auto_awesome" className={field} />
         </label>
         <label className="block">
           <span className={labelCls}>Jumlah pratinjau galeri</span>
@@ -233,11 +237,11 @@ export default function ProductForm({ product }: { product?: ProductFormValues }
         <p className="mb-3 text-[12px] text-on-surface-variant">Hanya terlihat oleh pembeli yang sudah membayar.</p>
         <label className="mb-3 block">
           <span className={labelCls}>Tautan unduhan / akses</span>
-          <input name="asset_url" type="url" defaultValue={product?.assetUrl} placeholder="https://…" className={field} />
+          <input name="asset_url" type="url" defaultValue={product?.assetUrl} maxLength={LIMITS.line} placeholder="https://…" className={field} />
         </label>
         <label className="block">
           <span className={labelCls}>Catatan akses</span>
-          <textarea name="access_note" rows={2} defaultValue={product?.accessNote} placeholder="Instruksi aktivasi, endpoint API, dsb." className={`${field} resize-none`} />
+          <textarea name="access_note" rows={2} defaultValue={product?.accessNote} maxLength={LIMITS.body} placeholder="Instruksi aktivasi, endpoint API, dsb." className={`${field} resize-none`} />
         </label>
       </fieldset>
 

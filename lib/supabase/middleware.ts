@@ -64,7 +64,10 @@ export async function updateSession(request: NextRequest) {
       if (aal?.nextLevel === "aal2" && aal.currentLevel === "aal1") {
         const url = request.nextUrl.clone();
         url.pathname = "/login/2fa";
-        url.search = "";
+        // Carry the destination through the challenge, like signIn() does.
+        // Dropping it sent everyone to /dashboard after 2FA, no matter which
+        // page they had actually asked for.
+        url.search = `?next=${encodeURIComponent(path + request.nextUrl.search)}`;
         return NextResponse.redirect(url);
       }
     } catch {

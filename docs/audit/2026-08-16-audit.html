@@ -392,9 +392,10 @@
       Pemeriksaan menyeluruh atas seluruh kode aplikasi: 14 migrasi Postgres berikut RLS-nya,
       12 modul Server Action, alur pembayaran, dan 41 halaman/komponen antarmuka.
       37 temuan, diurutkan dari yang paling mendesak &mdash; seluruhnya sudah ditutup penuh
-      dalam enam commit yang kini ada di <span class="mono">main</span>, diverifikasi terhadap
+      dalam tujuh commit yang kini ada di <span class="mono">main</span>, diverifikasi terhadap
       Postgres hidup dan build produksi di peramban. Empat temuan prioritas tinggi
-      diperiksa ulang setelah rilis; hasilnya di bawah.
+      diperiksa ulang setelah rilis, dan perburuan bug lanjutan menambah
+      <b>4 temuan baru</b> &mdash; semuanya juga sudah ditutup.
     </p>
     <div class="meta">
       <span>16 AGUSTUS 2026</span>
@@ -408,10 +409,10 @@
 <div class="wrap">
 
   <div class="tiles">
-    <div class="tile t-hi"><span class="n">4</span><span class="k">Prioritas tinggi</span></div>
-    <div class="tile t-md"><span class="n">15</span><span class="k">Prioritas sedang</span></div>
+    <div class="tile t-hi"><span class="n">5</span><span class="k">Prioritas tinggi</span></div>
+    <div class="tile t-md"><span class="n">18</span><span class="k">Prioritas sedang</span></div>
     <div class="tile t-lo"><span class="n">18</span><span class="k">Prioritas rendah</span></div>
-    <div class="tile t-all"><span class="n">37<span style="font-size:16px;color:var(--ink-3)">/37</span></span><span class="k">Ditutup penuh</span></div>
+    <div class="tile t-all"><span class="n">41<span style="font-size:16px;color:var(--ink-3)">/41</span></span><span class="k">Ditutup penuh</span></div>
   </div>
 
   <div class="panel" style="border-left:2px solid var(--md); margin-bottom:20px;">
@@ -436,8 +437,14 @@
         BUG-01 lolos juga, tapi menyisakan satu akibat &mdash; lihat entrinya.
       </li>
       <li>
+        <b>Perburuan bug lanjutan menemukan 4 temuan baru</b> di luar 37 yang diaudit &mdash; satu di
+        antaranya (NEW-01, keranjang terkunci oleh produk yang ditarik penjual) berprioritas tinggi dan
+        bisa dipicu hanya dengan penjual menyunting listingnya. Semuanya ditutup di
+        <code>26e70da</code>; rinciannya di bagian <a href="#susulan">Temuan susulan</a>.
+      </li>
+      <li>
         <b>Yang sudah diverifikasi:</b> <code>tsc --noEmit</code> bersih, <code>eslint</code> bersih,
-        <code>next build</code> sukses (42 rute), 31 test lulus, dan satu putaran browser di
+        <code>next build</code> sukses (42 rute), 35 test lulus, dan satu putaran browser di
         <code>/</code>, <code>/settings</code> (enrol 2FA + QR <code>data:</code>),
         <code>/admin/payouts</code>, <code>/admin/users</code> tanpa satu pun pelanggaran CSP di konsol.
       </li>
@@ -472,7 +479,7 @@
       </p>
       <ul class="checks">
         <li><b>Diperiksa:</b> 14 migrasi SQL (skema, RLS, grant, trigger, RPC), 12 modul Server Action, adapter pembayaran (simulated/Midtrans/Xendit), middleware sesi, seluruh route <code>app/</code> dan komponen <code>components/</code>, konfigurasi Next/ESLint/Vitest/Playwright.</li>
-        <li><b>Temuan berasal dari pembacaan kode</b>, tapi perbaikannya diverifikasi runtime: 17 migrasi diterapkan ulang dari nol ke Postgres lokal, 31 test lulus (8 di antaranya menembak RLS/RPC sungguhan), dan build produksi ditelusuri di peramban.</li>
+        <li><b>Temuan berasal dari pembacaan kode</b>, tapi perbaikannya diverifikasi runtime: 17 migrasi diterapkan ulang dari nol ke Postgres lokal, 35 test lulus (8 di antaranya menembak RLS/RPC sungguhan), dan build produksi ditelusuri di peramban.</li>
         <li><b>Tidak dijalankan:</b> uji lintas peramban, Lighthouse, dan audit kontras warna otomatis.</li>
       </ul>
     </div>
@@ -1307,11 +1314,123 @@
     </div>
   </section>
 
+  <!-- ── SUSULAN ────────────────────────────────────────────────────────── -->
+  <section id="susulan">
+    <div class="sec-head">
+      <h2>Temuan susulan</h2>
+      <span class="count">4 temuan &middot; di luar 37 yang diaudit</span>
+    </div>
+    <p class="sec-note">
+      Perburuan bug lanjutan setelah ke-37 temuan ditutup, dengan pertanyaan yang berbeda:
+      bukan "apakah perbaikannya bertahan?" melainkan "apa lagi yang rusak?". Empatnya bisa
+      dicapai lewat alur UI biasa, bukan skenario karangan.
+    </p>
+
+    <div class="find f-hi">
+      <div class="f-top"><span class="f-id">NEW-01</span><span class="chip">Tinggi</span></div>
+      <h4>Produk yang ditarik penjual mengunci keranjang pembeli</h4>
+      <span class="loc">lib/cart.ts (getCart) &middot; components/AppShell.tsx &middot; checkout()</span>
+      <p>
+        Kebijakan <code>products_read</code> hanya memperlihatkan <code>status = 'published'</code>
+        kepada pembeli &mdash; dan <code>saveProduct()</code> selalu mengembalikan listing yang diedit ke
+        <code>draft</code>/<code>under_review</code>. Jadi <b>satu suntingan biasa dari penjual</b> membuat
+        join <code>products</code> pada baris keranjang orang lain mengembalikan <code>null</code>.
+      </p>
+      <p>
+        <code>getCart()</code> membuang baris itu diam-diam (<code>if (!p) return null</code>), tapi barisnya
+        tetap ada di basis data. Akibatnya tiga permukaan saling berbeda: badge navbar menghitung
+        <code>cart_items</code> mentah, halaman keranjang menampilkan lebih sedikit, dan
+        <code>checkout()</code> menolak <em>seluruh</em> keranjang dengan
+        "Keranjang berisi produk yang tidak tersedia." &mdash; menyebut barang yang pembeli tidak bisa
+        lihat maupun hapus. Buntu total, tanpa jalan keluar di UI.
+      </p>
+      <p>
+        Diukur langsung di Postgres hidup: <b>badge 3, halaman 1, checkout mati</b>.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        <code>partitionCartRows()</code> memisahkan baris sehat dari baris mati alih-alih membuangnya.
+        Keranjang merender tiap baris mati sebagai kartu "Produk tidak tersedia lagi" dengan tombol
+        Hapus, tombol checkout dinonaktifkan selama masih ada, dan badge navbar melewati join yang sama
+        supaya angkanya cocok.
+        <br /><br />
+        Barisnya <em>tidak</em> dihapus otomatis: kalau admin menerbitkan ulang produknya, item itu
+        muncul kembali di keranjang &mdash; sudah dibuktikan di test. Menghapus diam-diam akan
+        menghilangkan pilihan pembeli tanpa memberi tahu.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">NEW-02</span><span class="chip">Sedang</span></div>
+      <h4><code>/cart</code> menggeser layar ke samping di setiap ponsel</h4>
+      <span class="loc">components/CartClient.tsx</span>
+      <p>
+        Dokumen selebar <b>547px di dalam viewport 390px</b>. Penyebabnya bukan isi keranjangnya:
+        item grid punya <code>min-width: auto</code> secara bawaan, jadi kolomnya menolak menyusut di
+        bawah lebar min-content kontennya dan mendorong seluruh halaman.
+      </p>
+      <p>
+        Lolos dari UX-03, yang memeriksa daftar produk penjual dan daftar pengguna admin tapi tidak
+        halaman keranjang.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        <code>min-w-0</code> pada kedua kolom grid. Lima pola grid pecahan lain di aplikasi ikut
+        diperiksa di peramban pada 390px &mdash; hanya keranjang yang meluber.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">NEW-03</span><span class="chip">Sedang</span></div>
+      <h4>Admin bisa menurunkan perannya sendiri dan mengunci semua orang</h4>
+      <span class="loc">lib/actions/admin.ts (setUserRole)</span>
+      <p>
+        Tabel pengguna memang menyembunyikan tombolnya di baris sendiri (<code>isSelf</code> &rarr;
+        "Kamu"), tapi Server Action adalah endpoint POST publik &mdash; persis pelajaran SEC-01 dan
+        SEC-03. Memanggil <code>setUserRole(idSendiri, "user")</code> langsung tetap berhasil.
+      </p>
+      <p>
+        Tidak bisa dipulihkan lewat UI: kolom <code>role</code> tidak bisa ditulis oleh non-admin
+        (SEC-05), jadi admin terakhir yang melakukannya mengunci <em>semua orang</em> dari
+        <code>/admin</code> sampai ada yang menyunting basis data langsung.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        Tolak di server saat <code>id === user.id</code>. Dengan penjaga ini, platform tidak bisa lagi
+        mencapai nol admin lewat aksi UI mana pun.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">NEW-04</span><span class="chip">Sedang</span></div>
+      <h4>Tidak ada batas panjang di seluruh kolom teks &mdash; termasuk formulir anonim</h4>
+      <span class="loc">lib/actions/{contact,products,reviews,seller,account,auth,payouts}.ts</span>
+      <p>
+        Setiap kolom teks di skema ini bertipe <code>text</code> &mdash; tanpa batas &mdash; dan
+        <code>maxlength</code> di formulir tidak ikut terkirim pada panggilan Server Action langsung.
+        <code>sendContactMessage</code> adalah satu-satunya jalur tulis yang terbuka untuk pemanggil
+        anonim; deskripsi produk bahkan disajikan ulang di katalog publik yang di-cache.
+      </p>
+      <p>
+        Sekelas dengan BUG-01: masukan publik tanpa plafon. Bedanya yang ini menulis ke basis data.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        <code>lib/form.ts</code> dengan <code>field()</code> + tangga <code>LIMITS</code>
+        (120 / 200 / 5.000 / 20.000 karakter), dipakai di tujuh modul action. Jumlah item pada
+        <code>use_cases</code>, <code>use_case_tags</code>, <code>capabilities</code>, dan
+        <code>specs</code> ikut dibatasi. Ditambah <code>MAX_PRICE_USD</code>: harga &times; kuantitas
+        &times; PPN harus tetap muat di <code>numeric(10,2)</code> milik <code>orders.total_usd</code>,
+        kalau tidak satu listing berharga absurd bisa mematikan checkout siapa pun yang mengeranjangnya.
+      </div>
+    </div>
+  </section>
+
   <!-- ── RENCANA ────────────────────────────────────────────────────────── -->
   <section id="rencana">
     <div class="sec-head">
       <h2>Hasil perbaikan</h2>
-      <span class="count">6 commit &middot; sudah di main</span>
+      <span class="count">7 commit &middot; sudah di main</span>
     </div>
     <p class="sec-note">
       Dikerjakan berurutan dan di-commit terpisah per gelombang, supaya tiap kelompok bisa ditinjau
@@ -1372,6 +1491,12 @@
             <td class="ids">BUG-01</td>
             <td class="ids">2 berkas<br />+8 test</td>
           </tr>
+          <tr>
+            <td class="wave">26e70da</td>
+            <td><b>Perburuan bug lanjutan.</b> Produk yang ditarik penjual tidak lagi mengunci keranjang pembeli; <code>/cart</code> berhenti menggeser layar di ponsel; admin tidak bisa menurunkan perannya sendiri; plafon panjang untuk seluruh kolom teks dan harga.</td>
+            <td class="ids">NEW-01 &hellip; NEW-04</td>
+            <td class="ids">15 berkas<br />+1 modul, +4 test</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1390,7 +1515,7 @@
 
   <div class="foot">
     <span>NEXORA AI &middot; AUDIT 2026-08-16</span>
-    <span>37 TEMUAN &middot; 37 DITUTUP &middot; 31/31 TEST LULUS</span>
+    <span>41 TEMUAN &middot; 41 DITUTUP &middot; 35/35 TEST LULUS</span>
   </div>
 
 </div>

@@ -395,7 +395,7 @@
       dalam tujuh commit yang kini ada di <span class="mono">main</span>, diverifikasi terhadap
       Postgres hidup dan build produksi di peramban. Empat temuan prioritas tinggi
       diperiksa ulang setelah rilis, dan perburuan bug lanjutan menambah
-      <b>14 temuan baru</b> &mdash; semuanya juga sudah ditutup.
+      <b>16 temuan baru</b> &mdash; semuanya juga sudah ditutup.
     </p>
     <div class="meta">
       <span>16 AGUSTUS 2026</span>
@@ -410,9 +410,9 @@
 
   <div class="tiles">
     <div class="tile t-hi"><span class="n">6</span><span class="k">Prioritas tinggi</span></div>
-    <div class="tile t-md"><span class="n">22</span><span class="k">Prioritas sedang</span></div>
-    <div class="tile t-lo"><span class="n">23</span><span class="k">Prioritas rendah</span></div>
-    <div class="tile t-all"><span class="n">51<span style="font-size:16px;color:var(--ink-3)">/51</span></span><span class="k">Ditutup penuh</span></div>
+    <div class="tile t-md"><span class="n">23</span><span class="k">Prioritas sedang</span></div>
+    <div class="tile t-lo"><span class="n">24</span><span class="k">Prioritas rendah</span></div>
+    <div class="tile t-all"><span class="n">53<span style="font-size:16px;color:var(--ink-3)">/53</span></span><span class="k">Ditutup penuh</span></div>
   </div>
 
   <div class="panel" style="border-left:2px solid var(--md); margin-bottom:20px;">
@@ -437,7 +437,7 @@
         BUG-01 lolos juga, tapi menyisakan satu akibat &mdash; lihat entrinya.
       </li>
       <li>
-        <b>Perburuan bug lanjutan menemukan 14 temuan baru</b> di luar 37 yang diaudit &mdash; dua di
+        <b>Perburuan bug lanjutan menemukan 16 temuan baru</b> di luar 37 yang diaudit &mdash; dua di
         antaranya berprioritas tinggi: NEW-01 (keranjang terkunci oleh produk yang ditarik penjual,
         cukup dipicu dengan penjual menyunting listingnya) dan NEW-05 (tanda tangan Midtrans
         dibandingkan tidak konstan-waktu, kesimpulan SEC-09 yang keliru). Ditutup di
@@ -1327,7 +1327,7 @@
   <section id="susulan">
     <div class="sec-head">
       <h2>Temuan susulan</h2>
-      <span class="count">14 temuan &middot; di luar 37 yang diaudit</span>
+      <span class="count">16 temuan &middot; di luar 37 yang diaudit</span>
     </div>
     <p class="sec-note">
       Perburuan bug lanjutan setelah ke-37 temuan ditutup, dengan pertanyaan yang berbeda:
@@ -1572,13 +1572,64 @@
         Keduanya memeriksa hasilnya dan menampilkan pesan lewat <code>role="alert"</code>.
       </div>
     </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">NEW-12</span><span class="chip">Sedang</span></div>
+      <h4>Konsol admin menggeser layar ke samping di setiap rute</h4>
+      <span class="loc">app/(admin)/admin/layout.tsx</span>
+      <p>
+        395px dokumen di dalam viewport 390px, di <em>semua</em> halaman
+        <code>/admin</code>. Header memakai <code>justify-between</code> polos, jadi wordmark +
+        lencana "Internal" + pasangan Marketplace/Keluar tidak bisa menyusut di bawah lebar
+        kontennya.
+      </p>
+      <p>
+        Kelas yang sama dengan NEW-02 (keranjang) dan UX-03. Bilah tab <code>AdminNav</code> ternyata
+        <em>bukan</em> penyebabnya &mdash; ia sudah menggulir di dalam
+        <code>overflow-x-auto</code>-nya sendiri, seperti seharusnya.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        <code>flex-wrap</code> + <code>min-w-0</code> pada wordmark, dan <code>px-5</code> di bawah
+        <code>sm</code> supaya seragam dengan sisa aplikasi. Ditemukan dengan menyusuri
+        <em>setiap</em> rute pada 390px terhadap build produksi.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">NEW-13</span><span class="chip">Rendah</span></div>
+      <h4>Port Supabase lokal berada di dalam rentang port dinamis Windows</h4>
+      <span class="loc">supabase/config.toml &middot; components/auth/AuthCard.tsx</span>
+      <p>
+        Default CLI (<code>543xx</code>) berada di dalam rentang port dinamis TCP Windows
+        (49152&ndash;65535). Setelah Docker Desktop di-restart, WinNAT mencadangkan
+        54299&ndash;54698 &mdash; dua kali dalam satu sesi &mdash; dan <code>supabase start</code>
+        lalu <b>gagal</b> dengan "ports are not available &hellip; forbidden by its access
+        permissions", atau lebih buruk: <b>melaporkan sukses</b> sementara semua kontainer naik
+        tanpa host binding sama sekali, sehingga tidak ada yang bisa menjangkau basis data.
+        Membersihkannya butuh shell Administrator.
+      </p>
+      <p>
+        Bukan bug aplikasi, tapi ia memblokir seluruh pengembangan lokal &mdash; termasuk 8 test
+        integrasi RLS/RPC, yang jadi ter-skip dalam senyap.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        Port dipindah ke <code>443xx</code>, di bawah rentang dinamis, jadi tabrakannya tidak bisa
+        terjadi lagi. Dibuktikan dengan me-restart Docker Desktop lalu start dari nol:
+        kong mengikat <code>0.0.0.0:44321-&gt;8000/tcp</code>, API menjawab 200, 40/40 test lulus.
+        Sekalian: <code>DevMailHint</code> berhenti menanam URL Mailpit secara literal &mdash; ia
+        menurunkannya dari URL API Supabase, karena tautan lama itu langsung mati begitu port
+        berubah.
+      </div>
+    </div>
   </section>
 
   <!-- ── RENCANA ────────────────────────────────────────────────────────── -->
   <section id="rencana">
     <div class="sec-head">
       <h2>Hasil perbaikan</h2>
-      <span class="count">8 commit &middot; sudah di main</span>
+      <span class="count">10 commit &middot; sudah di main</span>
     </div>
     <p class="sec-note">
       Dikerjakan berurutan dan di-commit terpisah per gelombang, supaya tiap kelompok bisa ditinjau
@@ -1651,6 +1702,18 @@
             <td class="ids">NEW-05 &hellip; NEW-11</td>
             <td class="ids">18 berkas<br />+1 modul, +5 test</td>
           </tr>
+          <tr>
+            <td class="wave">611151b</td>
+            <td><b>Buka blokir dev lokal.</b> Port Supabase dipindah keluar dari rentang port dinamis Windows, yang dua kali membuat <code>supabase start</code> naik tanpa host binding. URL Mailpit tidak lagi ditanam literal.</td>
+            <td class="ids">NEW-13</td>
+            <td class="ids">3 berkas</td>
+          </tr>
+          <tr>
+            <td class="wave">9d16e76</td>
+            <td><b>Konsol admin responsif.</b> Header <code>/admin</code> berhenti mendorong halaman keluar viewport ponsel.</td>
+            <td class="ids">NEW-12</td>
+            <td class="ids">1 berkas</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1658,8 +1721,28 @@
     <div class="panel" style="margin-top:20px;">
       <h3>Langkah berikutnya</h3>
       <ul class="checks">
-        <li><b>Jalankan ketiga migrasi di Supabase produksi</b> (<code>supabase db push</code>). Perhatikan efeknya: setiap rekening payout yang sudah ada dikembalikan ke <code>pending</code>, jadi antrean di <code>/admin/payouts</code> perlu dibersihkan sekali sebelum penjual bisa mencairkan lagi.</li>
-        <li><b>Klik-uji alur reset password lewat tautan email</b> &mdash; satu-satunya jalur yang belum diuji di peramban, karena butuh email masuk (Mailpit di <code>127.0.0.1:54324</code> untuk lokal).</li>
+        <li>
+          <b>Jalankan ketiga migrasi di Supabase produksi</b> (<code>supabase db push</code>).
+          <em>Belum bisa saya kerjakan:</em> repo ini tidak tertaut ke proyek Supabase mana pun
+          (<code>supabase/.temp/project-ref</code> tidak ada, tidak ada access token), jadi butuh
+          <code>supabase login</code> + <code>supabase link --project-ref &lt;ref&gt;</code> dengan
+          kredensialmu sendiri. Perhatikan efeknya: setiap rekening payout yang sudah ada dikembalikan
+          ke <code>pending</code>, jadi antrean di <code>/admin/payouts</code> perlu dibersihkan sekali
+          sebelum penjual bisa mencairkan lagi.
+        </li>
+        <li><b>Klik-uji alur reset password lewat tautan email</b> &mdash; satu-satunya jalur yang belum diuji di peramban, karena butuh email masuk (Mailpit di <code>127.0.0.1:44324</code> untuk lokal).</li>
+        <li>
+          <b>Soft-404: <code>notFound()</code> menjawab HTTP 200</b> di seluruh aplikasi &mdash;
+          <code>/model/&lt;uuid-ngawur&gt;</code> dan <code>/legal/&lt;apa-saja&gt;</code> merender
+          badan "tidak ditemukan" dengan status 200, sementara rute yang benar-benar tidak cocok
+          (<code>/nope</code>) menjawab 404 dengan benar. Penyebabnya di lapisan framework: status
+          sudah terkirim bersama shell sebelum bagian dinamisnya sempat memanggil
+          <code>notFound()</code>. <code>dynamicParams = false</code> sudah dicoba dan tidak
+          mengubah apa pun (rutenya dinamis karena cookie), jadi tidak ada perbaikan tingkat
+          aplikasi yang jujur &mdash; dicatat, bukan ditambal. Dampaknya terbatas: sitemap hanya
+          memuat 17 URL yang semuanya valid dan <code>robots.txt</code> menutup area privat, jadi
+          crawler tidak sampai ke URL karangan.
+        </li>
         <li><b>Kalau nanti ada halaman yang merender HTML tulisan pengguna</b>, naikkan <code>script-src</code> ke nonce + <code>'strict-dynamic'</code> dan terima biaya dynamic rendering-nya. Sampai saat itu, <code>'unsafe-inline'</code> adalah tukar-tambah yang sadar.</li>
         <li><b>Identitas git di-set lokal-repo</b> (<code>thunityproject</code>) karena mesin ini belum punya &mdash; ubah dengan <code>git config user.name</code> kalau perlu.</li>
         <li><b>Hapus <code>archive/main-pre-squash</code> di GitHub</b> kalau force-push ke <code>main</code> sudah dianggap aman &mdash; cabang itu cuma jaring pengaman.</li>
@@ -1669,7 +1752,7 @@
 
   <div class="foot">
     <span>NEXORA AI &middot; AUDIT 2026-08-16</span>
-    <span>51 TEMUAN &middot; 51 DITUTUP &middot; 40/40 TEST LULUS</span>
+    <span>53 TEMUAN &middot; 53 DITUTUP &middot; 40/40 TEST LULUS</span>
   </div>
 
 </div>

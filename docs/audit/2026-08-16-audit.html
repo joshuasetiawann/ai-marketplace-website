@@ -392,8 +392,9 @@
       Pemeriksaan menyeluruh atas seluruh kode aplikasi: 14 migrasi Postgres berikut RLS-nya,
       12 modul Server Action, alur pembayaran, dan 41 halaman/komponen antarmuka.
       37 temuan, diurutkan dari yang paling mendesak &mdash; seluruhnya sudah ditutup penuh
-      dalam lima commit di <span class="mono">fix/audit-2026-08-16</span>, diverifikasi terhadap
-      Postgres hidup dan build produksi di peramban.
+      dalam enam commit yang kini ada di <span class="mono">main</span>, diverifikasi terhadap
+      Postgres hidup dan build produksi di peramban. Empat temuan prioritas tinggi
+      diperiksa ulang setelah rilis; hasilnya di bawah.
     </p>
     <div class="meta">
       <span>16 AGUSTUS 2026</span>
@@ -419,7 +420,7 @@
       <li>
         <b>Ketiga migrasi baru sudah dijalankan terhadap Postgres hidup.</b> Docker akhirnya menyala:
         <code>supabase db reset</code> menerapkan <code>cart_integrity</code>, <code>profiles_exposure</code>,
-        dan <code>close_partial_findings</code> tanpa error, lalu <b>23 dari 23 test lulus</b> &mdash;
+        dan <code>close_partial_findings</code> tanpa error, lalu <b>23 dari 23 test lulus saat itu</b> &mdash;
         termasuk 8 test integrasi RLS/RPC di <code>db-security.test.ts</code> yang sebelumnya ter-skip.
       </li>
       <li>
@@ -427,8 +428,16 @@
         di commit <code>1efa521</code>. Rinciannya di masing-masing entri di bawah.
       </li>
       <li>
+        <b>Keempat temuan prioritas tinggi diperiksa ulang setelah rilis</b> &mdash; terhadap kode yang
+        benar-benar terkirim, bukan terhadap laporan ini. SEC-01 terbukti menggigit
+        (sesi login password melaporkan <code>amr: ["password"]</code>, jadi daftar-tolaknya bukan
+        no-op), BUG-02 dibuktikan lewat siklus penuh <code>create_pending_order</code> &rarr;
+        <code>finalize_order</code> di Postgres hidup, UX-01 diperiksa di peramban pada lebar 390px.
+        BUG-01 lolos juga, tapi menyisakan satu akibat &mdash; lihat entrinya.
+      </li>
+      <li>
         <b>Yang sudah diverifikasi:</b> <code>tsc --noEmit</code> bersih, <code>eslint</code> bersih,
-        <code>next build</code> sukses (42 rute), 23 test lulus, dan satu putaran browser di
+        <code>next build</code> sukses (42 rute), 31 test lulus, dan satu putaran browser di
         <code>/</code>, <code>/settings</code> (enrol 2FA + QR <code>data:</code>),
         <code>/admin/payouts</code>, <code>/admin/users</code> tanpa satu pun pelanggaran CSP di konsol.
       </li>
@@ -463,7 +472,7 @@
       </p>
       <ul class="checks">
         <li><b>Diperiksa:</b> 14 migrasi SQL (skema, RLS, grant, trigger, RPC), 12 modul Server Action, adapter pembayaran (simulated/Midtrans/Xendit), middleware sesi, seluruh route <code>app/</code> dan komponen <code>components/</code>, konfigurasi Next/ESLint/Vitest/Playwright.</li>
-        <li><b>Temuan berasal dari pembacaan kode</b>, tapi perbaikannya diverifikasi runtime: 17 migrasi diterapkan ulang dari nol ke Postgres lokal, 23 test lulus (8 di antaranya menembak RLS/RPC sungguhan), dan build produksi ditelusuri di peramban.</li>
+        <li><b>Temuan berasal dari pembacaan kode</b>, tapi perbaikannya diverifikasi runtime: 17 migrasi diterapkan ulang dari nol ke Postgres lokal, 31 test lulus (8 di antaranya menembak RLS/RPC sungguhan), dan build produksi ditelusuri di peramban.</li>
         <li><b>Tidak dijalankan:</b> uji lintas peramban, Lighthouse, dan audit kontras warna otomatis.</li>
       </ul>
     </div>
@@ -774,6 +783,16 @@
       <div class="fix">
         <b>Perbaikan &mdash; sudah diterapkan</b>
         Batasi atas: <code>Math.min(50, Math.max(1, Number(sp.page) || 1))</code>. Satu baris.
+        <br /><br />
+        <b>Susulan (<code>f8051cb</code>).</b> Pemeriksaan ulang menemukan akibat yang tertinggal:
+        <code>hasMore</code> masih dihitung <code>models.length &lt; total</code> saja. Dengan katalog
+        di atas 600 model, tombol "Muat lebih banyak" tetap muncul di halaman 50 padahal server
+        sudah menjepit permintaannya &mdash; menekannya mengambil ulang baris yang sama, selamanya.
+        Plafonnya dan kedua aturan yang membacanya dipindah ke <code>lib/nav.ts</code>, bersebelahan
+        dengan <code>safeNext()</code>: ketiganya membatasi hal yang sama, yaitu nilai URL yang
+        dikendalikan penyerang. <code>tests/nav.test.ts</code> mengunci tepiannya &mdash; termasuk
+        kasus "tombolnya tidak pernah mati" dan penolakan open-redirect <code>safeNext</code> yang
+        selama ini belum punya test sama sekali.
       </div>
     </div>
 
@@ -1292,7 +1311,7 @@
   <section id="rencana">
     <div class="sec-head">
       <h2>Hasil perbaikan</h2>
-      <span class="count">5 commit &middot; branch fix/audit-2026-08-16</span>
+      <span class="count">6 commit &middot; sudah di main</span>
     </div>
     <p class="sec-note">
       Dikerjakan berurutan dan di-commit terpisah per gelombang, supaya tiap kelompok bisa ditinjau
@@ -1347,6 +1366,12 @@
             <td class="ids">SEC-05<br />SEC-06<br />SEC-07</td>
             <td class="ids">11 berkas<br />+1 migrasi, +2 test</td>
           </tr>
+          <tr>
+            <td class="wave">f8051cb</td>
+            <td><b>Periksa ulang yang prioritas tinggi.</b> SEC-01, BUG-02, UX-01 terbukti bertahan terhadap kode terkirim + Postgres hidup. BUG-01 menyisakan tombol "muat lebih banyak" yang mati di plafon halaman; plafon dan kedua aturan pembacanya dipindah ke <code>lib/nav.ts</code>.</td>
+            <td class="ids">BUG-01</td>
+            <td class="ids">2 berkas<br />+8 test</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1358,13 +1383,14 @@
         <li><b>Klik-uji alur reset password lewat tautan email</b> &mdash; satu-satunya jalur yang belum diuji di peramban, karena butuh email masuk (Mailpit di <code>127.0.0.1:54324</code> untuk lokal).</li>
         <li><b>Kalau nanti ada halaman yang merender HTML tulisan pengguna</b>, naikkan <code>script-src</code> ke nonce + <code>'strict-dynamic'</code> dan terima biaya dynamic rendering-nya. Sampai saat itu, <code>'unsafe-inline'</code> adalah tukar-tambah yang sadar.</li>
         <li><b>Identitas git di-set lokal-repo</b> (<code>thunityproject</code>) karena mesin ini belum punya &mdash; ubah dengan <code>git config user.name</code> kalau perlu.</li>
+        <li><b>Hapus <code>archive/main-pre-squash</code> di GitHub</b> kalau force-push ke <code>main</code> sudah dianggap aman &mdash; cabang itu cuma jaring pengaman.</li>
       </ul>
     </div>
   </section>
 
   <div class="foot">
     <span>NEXORA AI &middot; AUDIT 2026-08-16</span>
-    <span>37 TEMUAN &middot; 37 DITUTUP &middot; 23/23 TEST LULUS</span>
+    <span>37 TEMUAN &middot; 37 DITUTUP &middot; 31/31 TEST LULUS</span>
   </div>
 
 </div>

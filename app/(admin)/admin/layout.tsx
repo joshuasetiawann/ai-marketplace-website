@@ -20,8 +20,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-        <Link href="/admin" className="flex items-center gap-2.5 font-geist text-lg font-bold">
+      {/* flex-wrap + min-w-0: at 390px the wordmark, the "Internal" badge and the
+          Marketplace/Keluar pair together exceed the viewport, and neither side
+          of a bare justify-between can shrink — the whole console scrolled
+          sideways. */}
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-white/10 px-5 py-4 sm:px-6">
+        <Link href="/admin" className="flex min-w-0 items-center gap-2.5 font-geist text-lg font-bold">
           Nexora <span className="text-success">Console</span>
           <span className="rounded border border-white/15 px-2 py-0.5 font-mono text-[10px] font-normal uppercase tracking-[0.14em] text-on-surface-variant">
             Internal
@@ -40,7 +44,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </form>
         </div>
       </header>
-      <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
+      <div className="mx-auto w-full max-w-5xl flex-1 px-5 py-8 sm:px-6">
         {/* v2 green console header (docs/design/v2 frame "admin") */}
         <div className="mb-6 flex items-center gap-4 rounded-2xl border border-success/15 bg-gradient-to-br from-success/[0.05] to-transparent p-6 md:p-8">
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-success/25 bg-success/10 text-success">

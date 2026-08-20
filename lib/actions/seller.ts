@@ -39,23 +39,3 @@ export async function openStore(_prev: SellerState, formData: FormData): Promise
   updateTag(TAG_STORES);
   redirect("/sell");
 }
-
-/** Update store details from the seller studio. */
-export async function saveStore(_prev: SellerState, formData: FormData): Promise<SellerState> {
-  const name = field(formData, "name", LIMITS.short);
-  const tagline = field(formData, "tagline", LIMITS.line);
-  const category = field(formData, "category", LIMITS.short);
-  if (!name) return { error: "Nama toko wajib diisi." };
-
-  const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { error } = await supabase.from("stores").update({ name, tagline, category }).eq("owner_id", user.id);
-  if (error) return { error: dbMessage(error) };
-  revalidatePath("/sell");
-  updateTag(TAG_STORES);
-  return {};
-}

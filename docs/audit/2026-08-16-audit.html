@@ -410,9 +410,9 @@
 
   <div class="tiles">
     <div class="tile t-hi"><span class="n">6</span><span class="k">Prioritas tinggi</span></div>
-    <div class="tile t-md"><span class="n">23</span><span class="k">Prioritas sedang</span></div>
-    <div class="tile t-lo"><span class="n">24</span><span class="k">Prioritas rendah</span></div>
-    <div class="tile t-all"><span class="n">53<span style="font-size:16px;color:var(--ink-3)">/53</span></span><span class="k">Ditutup penuh</span></div>
+    <div class="tile t-md"><span class="n">26</span><span class="k">Prioritas sedang</span></div>
+    <div class="tile t-lo"><span class="n">25</span><span class="k">Prioritas rendah</span></div>
+    <div class="tile t-all"><span class="n">57<span style="font-size:16px;color:var(--ink-3)">/57</span></span><span class="k">Ditutup penuh</span></div>
   </div>
 
   <div class="panel" style="border-left:2px solid var(--md); margin-bottom:20px;">
@@ -1327,7 +1327,7 @@
   <section id="susulan">
     <div class="sec-head">
       <h2>Temuan susulan</h2>
-      <span class="count">16 temuan &middot; di luar 37 yang diaudit</span>
+      <span class="count">20 temuan &middot; di luar 37 yang diaudit</span>
     </div>
     <p class="sec-note">
       Perburuan bug lanjutan setelah ke-37 temuan ditutup, dengan pertanyaan yang berbeda:
@@ -1623,13 +1623,111 @@
         berubah.
       </div>
     </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">NEW-14</span><span class="chip">Sedang</span></div>
+      <h4>Metode pembayaran masuk ke basis data apa adanya dari POST publik</h4>
+      <span class="loc">lib/actions/checkout.ts &middot; lib/payments.ts</span>
+      <p>
+        <code>placeOrder()</code> membaca <code>method</code> dengan
+        <code>String(formData.get("method") || "qris")</code> &mdash; tanpa plafon panjang, tanpa
+        daftar-izin. Nilainya ditulis ke <code>orders.method</code> dan ke <b>setiap</b> baris
+        <code>sales.method</code>; keduanya <code>text</code> polos tanpa constraint, dan kolom itu
+        dirender di konsol admin serta halaman penjualan penjual.
+      </p>
+      <p>
+        Picker-nya UI klien, dan Server Action adalah endpoint POST publik &mdash; jadi yang
+        membatasi isinya cuma kesopanan peramban. Kelas yang sama dengan NEW-04, yang memasang
+        plafon <code>field()</code> di semua aksi lain <em>kecuali</em> checkout: pola &quot;menambal
+        jalur yang disebut laporan, bukan semua jalur yang lewat situ&quot; yang sudah dicatat audit ini.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        <code>method</code> dan <code>promo</code> dibaca lewat <code>field(&hellip;, LIMITS.short)</code>
+        seperti aksi lain, lalu <code>method</code> dicocokkan ke <code>PAYMENT_CHANNELS</code>.
+        Daftar itu <em>diturunkan</em> dari <code>VA_BANKS</code> + <code>EWALLETS</code> yang sudah
+        ada, jadi bank baru tidak bisa kelupaan didaftarkan. Default diam ke <code>&quot;qris&quot;</code>
+        ikut hilang: method yang absen sekarang ditolak, bukan ditagih sebagai QRIS.
+        Dikunci <code>tests/payments.test.ts</code> (3 test).
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">NEW-15</span><span class="chip">Sedang</span></div>
+      <h4>Kode promo bisa ditebak tanpa batas</h4>
+      <span class="loc">lib/actions/promo.ts</span>
+      <p>
+        <code>checkPromo()</code> adalah Server Action tanpa autentikasi dan tanpa rate limit yang
+        menjawab persis satu pertanyaan: &quot;kode ini nyata atau tidak?&quot;. Kodenya kata pendek, jadi
+        tanpa plafon ia kamus gratis untuk diskon orang lain &mdash; dan <code>validate_promo</code>
+        di-<code>grant</code> ke <code>anon</code>, jadi tidak perlu punya akun.
+      </p>
+      <p>
+        Yang <em>tidak</em> bocor: uangnya. Diskon yang benar-benar ditagih dihitung ulang di dalam
+        <code>checkout()</code> dari keranjang asli, jadi <code>subtotal</code> kiriman klien di sini
+        cuma memengaruhi angka yang ditampilkan.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        <code>allow("promo", 20, 60_000)</code> lewat limiter yang sudah dipakai checkout dan auth,
+        plus plafon panjang untuk kodenya.
+      </div>
+    </div>
+
+    <div class="find f-lo">
+      <div class="f-top"><span class="f-id">NEW-16</span><span class="chip">Rendah</span></div>
+      <h4>Jumlah pencairan <code>1e999</code> gagal dengan pesan yang tidak bisa ditindaklanjuti</h4>
+      <span class="loc">lib/actions/payouts.ts</span>
+      <p>
+        <code>requestPayout()</code> memakai <code>Number.isNaN</code>, dan
+        <code>Number("1e999")</code> bukan NaN &mdash; ia <code>Infinity</code>. JSON tidak punya cara
+        mengirim Infinity, jadi supabase-js mem-post <code>p_amount_usd: null</code>. Di Postgres
+        <code>null &lt; 50</code> bernilai NULL, bukan true, jadi <b>kedua</b> guard numerik
+        <code>request_payout()</code> terlewat begitu saja.
+      </p>
+      <p>
+        Bukan lubang uang: <code>payouts.amount_usd</code> berstatus <code>not null</code>, jadi
+        insert-nya tetap ditolak dengan 23502 &mdash; hanya saja <code>dbMessage()</code> tidak
+        memetakan kode itu, sehingga penjual dapat &quot;coba lagi&quot; generik untuk kesalahan ketik yang
+        sebenarnya bisa dijelaskan.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        <code>!Number.isFinite(amount)</code>, satu kata, menutupnya di depan dengan pesan yang sudah ada.
+      </div>
+    </div>
+
+    <div class="find f-md">
+      <div class="f-top"><span class="f-id">NEW-17</span><span class="chip">Sedang</span></div>
+      <h4>Kotak pencarian /explore membuang teksnya sendiri setelah Back</h4>
+      <span class="loc">components/ExploreClient.tsx</span>
+      <p>
+        Slider harga sudah sinkron ulang dengan prop-nya (NEW-09), kotak pencarian belum. Cari
+        &quot;vision&quot;, tekan Back: teksnya <em>tetap terlihat</em> di input sementara hasil di bawahnya
+        sudah tidak terfilter. Lalu karena <code>buildUrl()</code> membaca prop <code>q</code> &mdash;
+        bukan isi input &mdash; klik filter berikutnya menyusun URL tanpa teks itu, dan pencarian yang
+        masih terpampang di layar hilang untuk selamanya.
+      </p>
+      <p>
+        Persis kelas yang sudah dicatat audit ini dua kali: perbaikan dipasang di jalur yang disebut
+        laporan, tidak di jalur sebelahnya yang lewat mekanisme sama.
+      </p>
+      <div class="fix">
+        <b>Perbaikan &mdash; sudah diterapkan</b>
+        Pola derive-from-props yang sama seperti slider (menyesuaikan state saat render, tanpa
+        effect), plus penanda <code>sentQ</code> supaya hanya <code>q</code> yang datang dari luar
+        yang diadopsi &mdash; ketikan yang masuk saat push kita sendiri masih di jalan tidak ikut
+        tertimpa. Disimpan sebagai state, bukan ref, karena <code>react-hooks/refs</code> melarang
+        membaca ref saat render.
+      </div>
+    </div>
   </section>
 
   <!-- ── RENCANA ────────────────────────────────────────────────────────── -->
   <section id="rencana">
     <div class="sec-head">
       <h2>Hasil perbaikan</h2>
-      <span class="count">10 commit &middot; sudah di main</span>
+      <span class="count">11 commit &middot; sudah di main</span>
     </div>
     <p class="sec-note">
       Dikerjakan berurutan dan di-commit terpisah per gelombang, supaya tiap kelompok bisa ditinjau
@@ -1714,6 +1812,12 @@
             <td class="ids">NEW-12</td>
             <td class="ids">1 berkas</td>
           </tr>
+          <tr>
+            <td class="wave">127a882</td>
+            <td><b>Sisir kode yang belum diaudit.</b> Metode pembayaran dibatasi daftar-izin sebelum masuk basis data; kode promo tidak lagi bisa ditebak tanpa batas; <code>1e999</code> ditolak di depan, bukan di kolom NOT NULL; kotak pencarian <code>/explore</code> berhenti membuang teksnya sendiri setelah Back.</td>
+            <td class="ids">NEW-14 &hellip; NEW-17</td>
+            <td class="ids">5 berkas<br />+3 test</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1752,7 +1856,7 @@
 
   <div class="foot">
     <span>NEXORA AI &middot; AUDIT 2026-08-16</span>
-    <span>53 TEMUAN &middot; 53 DITUTUP &middot; 40/40 TEST LULUS</span>
+    <span>57 TEMUAN &middot; 57 DITUTUP &middot; 43/43 TEST LULUS</span>
   </div>
 
 </div>

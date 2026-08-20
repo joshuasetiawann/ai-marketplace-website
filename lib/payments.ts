@@ -20,3 +20,21 @@ export const PAYMENT_GROUPS = [
   { id: "va", label: "Virtual Account", icon: "account_balance", desc: "Transfer via ATM / m-banking" },
   { id: "ewallet", label: "E-Wallet", icon: "account_balance_wallet", desc: "GoPay, OVO, DANA, ShopeePay" },
 ] as const;
+
+/**
+ * Every channel the checkout form can submit — `qris`, or a group plus its
+ * chosen provider (see CheckoutClient's `channel`). The picker is UI, and a
+ * Server Action is a public POST endpoint: without this list `method` is an
+ * unbounded attacker-controlled string written to orders.method and sales.method
+ * (plain `text`, no constraint) and then rendered on the admin and seller
+ * screens. Derived from the lists above so a new bank can't be forgotten here.
+ */
+export const PAYMENT_CHANNELS: readonly string[] = [
+  "qris",
+  ...VA_BANKS.map((b) => `va-${b.id}`),
+  ...EWALLETS.map((w) => `ewallet-${w.id}`),
+];
+
+export function isPaymentChannel(value: string): boolean {
+  return PAYMENT_CHANNELS.includes(value);
+}

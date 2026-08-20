@@ -61,7 +61,11 @@ export async function savePayoutAccount(_prev: PayoutState, formData: FormData):
 /** Request a withdrawal from the available balance (validated server-side by RPC). */
 export async function requestPayout(_prev: PayoutState, formData: FormData): Promise<PayoutState> {
   const amount = Number(formData.get("amount") || 0);
-  if (Number.isNaN(amount) || amount <= 0) return { error: "Masukkan jumlah pencairan." };
+  // isFinite, not !isNaN: "1e999" parses to Infinity, and JSON has no way to send
+  // that — supabase-js would post p_amount_usd: null, which slips past both of
+  // request_payout()'s numeric guards and only fails on the NOT NULL column, as
+  // a generic "coba lagi" the seller can't act on.
+  if (!Number.isFinite(amount) || amount <= 0) return { error: "Masukkan jumlah pencairan." };
 
   const { supabase } = await requireUser();
   const blocked = await requireStepUp(supabase);

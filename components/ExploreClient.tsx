@@ -88,14 +88,37 @@ export default function ExploreClient({
   };
   const go = (patch: Patch, opts?: { scroll?: boolean }) => router.push(buildUrl(patch), opts);
 
+  // the q we pushed ourselves — anything else arriving in props came from
+  // outside this component (Back/Forward, "Hapus semua"). State, not a ref:
+  // the resync below reads it while rendering.
+  const [sentQ, setSentQ] = useState(q);
+
   // debounced search
   useEffect(() => {
     const t = setTimeout(() => {
-      if (search.trim() !== q) go({ q: search.trim() });
+      const next = search.trim();
+      if (next !== q) {
+        setSentQ(next);
+        go({ q: next });
+      }
     }, 400);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
+
+  // Same resync for the search box, which had none: after a search, pressing Back
+  // left the typed text sitting in the input while the results below were
+  // unfiltered — and because buildUrl() reads the `q` prop, the next filter click
+  // then dropped that visible text from the URL for good. Only adopt a q we did
+  // not send, so keystrokes typed while our own push is in flight survive.
+  const [prevQ, setPrevQ] = useState(q);
+  if (prevQ !== q) {
+    setPrevQ(q);
+    if (q !== sentQ) {
+      setSentQ(q);
+      setSearch(q);
+    }
+  }
 
   // resync slider when the URL param changes from outside (chip ✕, Hapus semua) —
   // React's derive-state-from-props pattern (adjust during render, no effect)

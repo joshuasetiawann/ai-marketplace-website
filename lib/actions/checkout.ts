@@ -8,6 +8,8 @@ import { allow } from "@/lib/ratelimit";
 import { logError } from "@/lib/log";
 import { getGateway, type PaymentStart } from "@/lib/payment-gateway";
 import { toIDR } from "@/lib/pricing";
+import { isPaymentChannel } from "@/lib/payments";
+import { field, LIMITS } from "@/lib/form";
 
 export type CheckoutState = { error?: string };
 
@@ -19,10 +21,16 @@ export async function placeOrder(
   _prev: CheckoutState,
   formData: FormData,
 ): Promise<CheckoutState> {
-  const method = String(formData.get("method") || "qris");
-  const promo = String(formData.get("promo") || "").trim();
+  // Both fields land in the database exactly as posted — `method` on the order
+  // and on every sales row, `promo` on the order — and the picker that produces
+  // them is client-side UI, so neither is trustworthy here. Bound them the way
+  // every other action does (lib/form.ts) and check `method` against the list it
+  // is supposed to come from.
+  const method = field(formData, "method", LIMITS.short);
+  const promo = field(formData, "promo", LIMITS.short);
   const agree = formData.get("agree") === "on";
   if (!agree) return { error: "Setujui syarat & ketentuan dulu." };
+  if (!isPaymentChannel(method)) return { error: "Metode pembayaran tidak dikenal." };
   if (!(await allow("checkout", 15, 60_000)))
     return { error: "Terlalu banyak percobaan. Coba lagi sebentar." };
 

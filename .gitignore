@@ -46,6 +46,12 @@ yarn-error.log*
 /.playwright
 /.playwright-mcp
 
+# scripts/design-shots.mjs output (its header already promised this)
+/design-shots
+
+# per-machine agent settings — shared config lives in .claude/settings.json
+.claude/settings.local.json
+
 # vercel
 .vercel
 
